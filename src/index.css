@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0a0908;
+  --color-gold: #c9a227;
+  --color-gold-light: #e3c463;
+  --color-cream: #f3ecd9;
+  --color-muted: #a99f8b;
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  --bg: #0a0908;
+  --gold: #c9a227;
+  --gold-light: #e3c463;
+  --cream: #f3ecd9;
+  --muted: #a99f8b;
+
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  font: 16px/1.6 var(--sans);
+  color-scheme: dark;
+  color: var(--cream);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  color: var(--cream);
+  margin: 0;
+}
+
+@property --frame-reveal {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+@keyframes frame-draw {
+  to {
+    --frame-reveal: 97%;
+  }
+}
+
+.frame-draw-animate {
+  --frame-reveal: 0%;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 var(--frame-reveal), transparent calc(var(--frame-reveal) + 3%), transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 var(--frame-reveal), transparent calc(var(--frame-reveal) + 3%), transparent 100%);
+  animation:
+    frame-draw 6.5s linear 0.3s forwards,
+    frame-fade-in 0.6s ease-out 0.3s forwards;
+}
+
+@keyframes frame-fade-in {
+  to {
+    opacity: 1;
+  }
+}

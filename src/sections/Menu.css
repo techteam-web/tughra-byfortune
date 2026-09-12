@@ -1,0 +1,45 @@
+.luxury-btn {
+  --mx: 82%;
+  position: relative;
+  overflow: visible;
+}
+
+/* Copper glow border that follows the cursor horizontally */
+.luxury-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2.5px;
+
+  background: radial-gradient(
+    circle at var(--mx) 50%,
+    rgba(255, 215, 180, 1) 0%,
+    rgba(230, 150, 100, 0.95) 14%,
+    rgba(164, 91, 59, 0.7) 30%,
+    rgba(120, 70, 50, 0.25) 48%,
+    rgba(255, 255, 255, 0.06) 68%
+  );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.luxury-arrow {
+  border: 1px solid rgba(225, 160, 115, 0.45);
+  color: #efc4a5;
+  transition:
+    transform 0.35s ease,
+    background 0.35s ease;
+}
+
+.luxury-btn:hover .luxury-arrow {
+  transform: translateX(3px);
+  background: rgba(220, 140, 90, 0.08);
+}

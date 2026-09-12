@@ -1,0 +1,25 @@
+.inner {
+  position: fixed;
+  inset: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #0a0908;
+}
+
+.inner .page {
+  position: relative;
+  background-color: #0a0908;
+}
+
+.inner .slide {
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: black;
+  /* raised above this site's z-10 overlay text/nav so the curtain fully covers during transition */
+  z-index: 50;
+  pointer-events: none;
+}
