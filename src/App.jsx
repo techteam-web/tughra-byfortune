@@ -6,12 +6,17 @@ import Menu from './sections/Menu.jsx'
 import Gallery from './sections/Gallery.jsx'
 import FloorPlans from './sections/FloorPlans.jsx'
 import Location from './sections/Location.jsx'
+import Amenities from './sections/Amenities.jsx'
+import ViewsPage from './components/ViewsPage.jsx'
+import Preloader from './components/Preloader.jsx'
 
 function App() {
   const [view, setView] = useState('hero')
+  const [isLoading, setIsLoading] = useState(true)
 
   return (
     <MotionConfig reducedMotion="never">
+      {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
       <AnimatePresence mode="wait">
         {view === 'hero' && (
           <Inner key="hero">
@@ -36,6 +41,16 @@ function App() {
         {view === 'location' && (
           <Inner key="location">
             <Location onClose={() => setView('menu')} />
+          </Inner>
+        )}
+        {view === 'views' && (
+          <Inner key="views">
+            <ViewsPage onClose={() => setView('menu')} />
+          </Inner>
+        )}
+        {view === 'amenities' && (
+          <Inner key="amenities">
+            <Amenities onClose={() => setView('menu')} />
           </Inner>
         )}
       </AnimatePresence>

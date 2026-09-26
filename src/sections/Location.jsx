@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import BackButton from '../components/BackButton.jsx'
 
 // Mumbai Central railway station — the project's location.
 const MUMBAI_CENTRAL = [72.8194, 18.9696]
@@ -241,6 +242,7 @@ function Location({ onClose }) {
             <span className="mt-1.5 block text-[10px] tracking-[3px] text-muted">MUMBAI CENTRAL</span>
           </span>
         </button>
+        <BackButton onClick={onClose} />
       </div>
 
       {/* Left copy — on mobile the horizontal darkening gradient above doesn't

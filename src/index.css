@@ -81,3 +81,30 @@ h1 {
     opacity: 1;
   }
 }
+@import "tailwindcss";
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.35);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.65);
+}
+
+@media (max-width: 768px) {
+ #dynamic-panel , #autorotate {
+   display: none !important;
+
+  }
+  #top-controls {
+    left: 14px !important;
+    top: 24px !important;
+  }
+}

@@ -1,112 +1,83 @@
 import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
-import { TOWER_VIEWBOX, TOWER_OUTLINE_PATH } from './towerOutline.js'
-import './Preloader.css'
 
 gsap.registerPlugin(DrawSVGPlugin)
 
-const OUTLINE_DURATION = 1.8
-const IMAGE_FADE_DURATION = 0.7
-const HOLD_DURATION = 0.4
-const EXIT_DURATION = 0.7
+const WORDMARK = 'TUGHRA'
 
 function Preloader({ onComplete }) {
   const rootRef = useRef(null)
-  const outlineRef = useRef(null)
-  const imageRef = useRef(null)
-  const barRef = useRef(null)
-  const percentRef = useRef(null)
+  const leftPanelRef = useRef(null)
+  const rightPanelRef = useRef(null)
+  const letterRefs = useRef([])
+  const lineRef = useRef(null)
 
   useLayoutEffect(() => {
-    const tl = gsap.timeline({
-      defaults: { ease: 'power2.inOut' },
-      onComplete: () => onComplete?.(),
-    })
+    const letters = letterRefs.current
+    // Each letter is its own <text>, so its dash pattern only ever covers
+    // its own glyph - drawn in sequence, left to right, like it's being written.
+    const lengths = letters.map((el) => el.getComputedTextLength())
 
-    tl.set(outlineRef.current, { drawSVG: '0%' })
+    const ctx = gsap.context(() => {
+      letters.forEach((el, i) => {
+        gsap.set(el, { strokeDasharray: lengths[i], strokeDashoffset: lengths[i], fillOpacity: 0 })
+      })
+      gsap.set(lineRef.current, { drawSVG: '0%' })
 
-    // Draw the traced outline, then dissolve into the real tower render.
-    tl.to(outlineRef.current, { drawSVG: '100%', duration: OUTLINE_DURATION }, 0)
-    tl.to(imageRef.current, { opacity: 1, duration: IMAGE_FADE_DURATION }, OUTLINE_DURATION - 0.3)
-    tl.to(outlineRef.current, { opacity: 0, duration: IMAGE_FADE_DURATION }, OUTLINE_DURATION - 0.3)
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.inOut' },
+        onComplete: () => onComplete?.(),
+      })
 
-    // Percentage counter + progress bar run the whole time the tower is
-    // being revealed, reaching 100% exactly as the image finishes fading in.
-    const counter = { value: 0 }
-    tl.to(
-      counter,
-      {
-        value: 100,
-        duration: OUTLINE_DURATION + IMAGE_FADE_DURATION - 0.3,
-        ease: 'power1.inOut',
-        onUpdate: () => {
-          const pct = Math.round(counter.value)
-          if (percentRef.current) percentRef.current.textContent = `${pct}%`
-          if (barRef.current) barRef.current.style.width = `${pct}%`
-        },
-      },
-      0
-    )
+      // "TUGHRA" is written letter by letter, stroke first, then filled in
+      tl.to(letters, { strokeDashoffset: 0, duration: 0.45, stagger: 0.16, ease: 'power1.inOut' }, 0.15)
+        .to(letters, { fillOpacity: 1, duration: 0.35, stagger: 0.16, ease: 'power1.out' }, 0.35)
+        // A straight gold line draws from the very top down to the bottom
+        .to(lineRef.current, { drawSVG: '100%', duration: 1.1, ease: 'power2.inOut' }, '+=0.2')
+        // The moment the line lands, everything happens at once: it flares,
+        // it and the letters clear out, and the curtain opens - no gap
+        .addLabel('open')
+        .to(lineRef.current, { attr: { 'stroke-width': 3 }, filter: 'drop-shadow(0 0 18px rgba(201,162,39,0.9))', duration: 0.15 }, 'open')
+        .to([letters, lineRef.current], { opacity: 0, duration: 0.4 }, 'open')
+        .to(leftPanelRef.current, { xPercent: -100, duration: 1.1, ease: 'power4.inOut' }, 'open')
+        .to(rightPanelRef.current, { xPercent: 100, duration: 1.1, ease: 'power4.inOut' }, 'open')
+        .to(rootRef.current, { autoAlpha: 0, duration: 0.2 })
+    }, rootRef)
 
-    tl.to({ v: 0 }, { v: 1, duration: HOLD_DURATION })
-    tl.to(rootRef.current, { opacity: 0, duration: EXIT_DURATION })
-
-    return () => tl.kill()
+    return () => ctx.revert()
   }, [onComplete])
 
   return (
-    <div className="preloader" ref={rootRef}>
-      <div className="preloader__glow" />
+    <div ref={rootRef} className="fixed inset-0 z-[100]" aria-hidden="true">
+      <div ref={leftPanelRef} className="absolute inset-y-0 left-0 w-1/2" style={{ background: '#0a0908' }} />
+      <div ref={rightPanelRef} className="absolute inset-y-0 right-0 w-1/2" style={{ background: '#0a0908' }} />
 
-      <div className="preloader__brand">
-        <strong className="preloader__wordmark">TUGHRA</strong>
-        <span className="preloader__place">MUMBAI CENTRAL</span>
-      </div>
+      {/* Straight line, drawn top to bottom through dead centre */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none">
+        <line ref={lineRef} x1="50%" y1="0" x2="50%" y2="100%" stroke="#c9a227" strokeWidth="1.5" />
+      </svg>
 
-      <div className="preloader__tower">
-        <svg
-          className="preloader__tower-svg"
-          viewBox={TOWER_VIEWBOX}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <filter id="preloader-glow" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          <path
-            ref={outlineRef}
-            d={TOWER_OUTLINE_PATH}
-            fill="none"
-            stroke="#c17f45"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#preloader-glow)"
-          />
-        </svg>
-        <img
-          ref={imageRef}
-          src="/assets/img/menu_crop.png"
-          alt=""
-          aria-hidden="true"
-          className="preloader__tower-img"
-        />
-      </div>
-
-      <div className="preloader__progress">
-        <span className="preloader__percent" ref={percentRef}>
-          0%
-        </span>
-        <div className="preloader__bar-track">
-          <div className="preloader__bar-fill" ref={barRef} />
+      <div className="absolute inset-0 flex items-center justify-center px-6">
+        <div className="flex">
+          {WORDMARK.split('').map((letter, i) => (
+            <svg key={i} viewBox="0 0 70 100" style={{ width: 'clamp(28px, 6vw, 56px)', height: 'auto' }}>
+              <text
+                ref={(el) => (letterRefs.current[i] = el)}
+                x="50%"
+                y="68"
+                textAnchor="middle"
+                className="font-serif"
+                fontSize="70"
+                fill="#f3ecd9"
+                stroke="#f3ecd9"
+                strokeWidth="1"
+              >
+                {letter}
+              </text>
+            </svg>
+          ))}
         </div>
-        <span className="preloader__caption">Loading Elevated Living</span>
       </div>
     </div>
   )

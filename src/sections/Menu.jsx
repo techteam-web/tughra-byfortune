@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import menuBg from '../assets/render/menu.webp'
+import BackButton from '../components/BackButton.jsx'
 import './Menu.css'
 
 const MENU_ITEMS = [
@@ -8,12 +9,14 @@ const MENU_ITEMS = [
 
   { num: '02', title: 'FLOOR PLANS', subtitle: 'FIND YOUR PERFECT SPACE', key: 'floors' },
   { num: '03', title: 'LOCATION', subtitle: 'AT THE CENTRE OF IT ALL', key: 'location' },
-  { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE' },
+  { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views' },
+  { num: '05', title: 'AMENITIES', subtitle: 'REFINED LEISURE', key: 'amenities' },
+
 
 ]
 
 function Menu({ onClose, onSelect }) {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const rootRef = useRef(null)
 
   useLayoutEffect(() => {
@@ -48,18 +51,14 @@ function Menu({ onClose, onSelect }) {
           </span>
         </button>
 
-        <div className="flex items-center gap-8 text-[11px] uppercase tracking-[2px] text-cream/80">
-          <span className="flex items-center gap-2">
-            Mumbai, India
-            <span className="h-px w-6 bg-muted/60" />
-          </span>
-         
+        <div className="flex items-center gap-6">
+          <BackButton onClick={onClose} label="Home" icon="home" />
         </div>
       </div>
 
       {/* Menu list */}
       <nav className="absolute left-6 top-1/2 z-10 w-full max-w-[300px] -translate-y-1/2 md:left-24">
-        <ul className="flex flex-col gap-2.5" onMouseLeave={() => setActiveIndex(0)}>
+        <ul className="flex flex-col gap-2.5" onMouseLeave={() => setActiveIndex(-1)}>
           {MENU_ITEMS.map((item, i) => {
             const active = i === activeIndex
             return (
