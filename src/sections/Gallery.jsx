@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import placeholder from '../assets/render/menu.webp'
+import placeholder from '../assets/render/menu.png'
 import BackButton from '../components/BackButton.jsx'
 
 // Add more entries here as gallery photos come in - the crossfade, Ken Burns

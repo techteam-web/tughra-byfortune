@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import placeholderBg from '../assets/render/menu.webp'
+import placeholderBg from '../assets/render/menu.png'
 import BackButton from '../components/BackButton.jsx'
 
 // Add more entries here as amenity photos/copy come in - the panel count,

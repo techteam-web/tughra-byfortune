@@ -45,7 +45,7 @@ function App() {
         )}
         {view === 'views' && (
           <Inner key="views">
-            <ViewsPage onClose={() => setView('menu')} />
+            <ViewsPage onClose={() => setView('menu')} onHome={() => setView('hero')} />
           </Inner>
         )}
         {view === 'amenities' && (

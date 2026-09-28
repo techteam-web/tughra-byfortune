@@ -43,3 +43,23 @@
   transform: translateX(3px);
   background: rgba(220, 140, 90, 0.08);
 }
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2.2s linear infinite;
+}
+
+/* The 360° elevation scrubber's reel — draggable, but with no visible scrollbar */
+.scrubber-track {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrubber-track::-webkit-scrollbar {
+  display: none;
+}

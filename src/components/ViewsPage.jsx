@@ -1,58 +1,69 @@
-import React, { useEffect, useLayoutEffect, useRef , useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import Marzipano from 'marzipano';
 import { APP_DATA } from "../data"
+import BackButton from './BackButton.jsx'
 import '../sections/Menu.css'
 
-const ViewsPage = ({ onClose }) => {
+const ViewsPage = ({ onClose, onHome }) => {
 
   // --- DATA MAPPING ---
-// We map the floors so we can easily look up the exact scene ID based on Time and Floor.
+  // We map the floors so we can easily look up the exact scene ID based on Time and Floor.
 
-const FLOOR_DATA = [
-  { label: 'Terrace', height: '108.9m', day: '18-day_0003_terrace---1089m', evening: '19-evening_0086_terrace---1089m', night: '38-night_0090_terrace---1089m' },
-  { label: '17th Floor', height: '104.7m', day: '17-day_0004_17th-floor---1047m', evening: '20-evening_0085_17th-floor---1047m', night: '39-night_0091_17th-floor---1047m' },
-  { label: '16th Floor', height: '100.5m', day: '16-day_0005_16th-floor-1005m', evening: '21-evening_0084_16th-floor---1005m', night: '40-night_0092_16th-floor---1005m' },
-  { label: '15th Floor', height: '96.6m', day: '15-day_0007_15th-floor---966m', evening: '22-evening_0083_15th-floor---966m', night: '41-night_0093_15th-floor---966m' },
-  { label: '14th Floor', height: '92.7m', day: '14-day_0008_14th-floor---927m', evening: '23-evening_0082_14th-floor---927m', night: '42-night_0094_14th-floor---927m' },
-  { label: '13th Floor', height: '88.8m', day: '13-day_0009_13th-floor---888', evening: '24-evening_0081_13th-floor---888m', night: '43-night_0095_13th-floor---888m' },
-  { label: '12th Floor', height: '84.9m', day: '12-day_0010_12th-floor---849m', evening: '25-evening_0080_12th-floor---849m', night: '44-night_0096_12th-floor---849m' },
-  { label: '11th Floor', height: '81m', day: '11-day_0011_11th-floor---81m', evening: '26-evening_0079_11th-floor---81m', night: '45-night_0097_11th-floor---81m' },
-  { label: '10th Floor', height: '77.1m', day: '10-day_0012_10th-floor---771m', evening: '27-evening_0078_10th-floor---771m', night: '46-night_0098_10th-floor---771m' },
-  { label: '9th Floor', height: '73.2m', day: '9-day_0013_9th-floor---732m', evening: '28-evening_0077_9th-floor---732m', night: '47-night_0099_9th-floor---732m' },
-  { label: '8th Floor', height: '69.3m', day: '8-day_0014_8th-floor---693m', evening: '29-evening_0076_8th-floor---693m', night: '48-night_0100_8th-floor--693m' },
-  { label: '7th Floor', height: '65.4m', day: '7-day_0016_7th-floor---654m', evening: '30-evening_0075_7th-floor---654m', night: '49-night_0101_7th-floor---654m' },
-  { label: '6th Floor', height: '61.5m', day: '6-day_0021_6th-floor---615m', evening: '31-evening_0074_6th-floor---615m', night: '50-night_0102_6th-floor---615m' },
-  { label: '5th Floor', height: '57.6m', day: '5-day_0022_5th-floor---576m', evening: '32-evening_0073_5th-floor---576m', night: '51-night_0103_5th-floor---576m' },
-  { label: '4th Floor', height: '53.7m', day: '4-day_0023_4th-floor---537m', evening: '33-evening_0072_4th-floor---537m', night: '52-night_0104_4th-floor---537m' },
-  { label: '3rd Floor', height: '49.8m', day: '3-day_0024_3rd-floor---498m', evening: '34-evening_0071_3rd-floor---498m', night: '53-night_0105_3rd-floor---498m' },
-  { label: '2nd Floor', height: '45.9m', day: '2-day_0025_2nd-floor----459m', evening: '35-evening_0070_2nd-floor---459m', night: '54-night_0106_2nd-floor---459m' },
-  { label: '1st Floor', height: '42m', day: '1-day_0026_1st-floor----42m', evening: '36-evening_0069_1st-floor---42m', night: '55-night_0107_1st-floor---42m' },
-  { label: 'Podium', height: '37.65m', day: '0-day_0027_podium-hight-3765m', evening: '37-evening_0068_podium-3765m', night: '56-night_0108_podium---3765m' }
-];
+  const FLOOR_DATA = [
+    { label: 'Terrace', short: 'TER', height: '108.9m', day: '18-day_0003_terrace---1089m', evening: '19-evening_0086_terrace---1089m', night: '38-night_0090_terrace---1089m' },
+    { label: '17th Floor', short: '17', height: '104.7m', day: '17-day_0004_17th-floor---1047m', evening: '20-evening_0085_17th-floor---1047m', night: '39-night_0091_17th-floor---1047m' },
+    { label: '16th Floor', short: '16', height: '100.5m', day: '16-day_0005_16th-floor-1005m', evening: '21-evening_0084_16th-floor---1005m', night: '40-night_0092_16th-floor---1005m' },
+    { label: '15th Floor', short: '15', height: '96.6m', day: '15-day_0007_15th-floor---966m', evening: '22-evening_0083_15th-floor---966m', night: '41-night_0093_15th-floor---966m' },
+    { label: '14th Floor', short: '14', height: '92.7m', day: '14-day_0008_14th-floor---927m', evening: '23-evening_0082_14th-floor---927m', night: '42-night_0094_14th-floor---927m' },
+    { label: '13th Floor', short: '13', height: '88.8m', day: '13-day_0009_13th-floor---888', evening: '24-evening_0081_13th-floor---888m', night: '43-night_0095_13th-floor---888m' },
+    { label: '12th Floor', short: '12', height: '84.9m', day: '12-day_0010_12th-floor---849m', evening: '25-evening_0080_12th-floor---849m', night: '44-night_0096_12th-floor---849m' },
+    { label: '11th Floor', short: '11', height: '81m', day: '11-day_0011_11th-floor---81m', evening: '26-evening_0079_11th-floor---81m', night: '45-night_0097_11th-floor---81m' },
+    { label: '10th Floor', short: '10', height: '77.1m', day: '10-day_0012_10th-floor---771m', evening: '27-evening_0078_10th-floor---771m', night: '46-night_0098_10th-floor---771m' },
+    { label: '9th Floor', short: '9', height: '73.2m', day: '9-day_0013_9th-floor---732m', evening: '28-evening_0077_9th-floor---732m', night: '47-night_0099_9th-floor---732m' },
+    { label: '8th Floor', short: '8', height: '69.3m', day: '8-day_0014_8th-floor---693m', evening: '29-evening_0076_8th-floor---693m', night: '48-night_0100_8th-floor--693m' },
+    { label: '7th Floor', short: '7', height: '65.4m', day: '7-day_0016_7th-floor---654m', evening: '30-evening_0075_7th-floor---654m', night: '49-night_0101_7th-floor---654m' },
+    { label: '6th Floor', short: '6', height: '61.5m', day: '6-day_0021_6th-floor---615m', evening: '31-evening_0074_6th-floor---615m', night: '50-night_0102_6th-floor---615m' },
+    { label: '5th Floor', short: '5', height: '57.6m', day: '5-day_0022_5th-floor---576m', evening: '32-evening_0073_5th-floor---576m', night: '51-night_0103_5th-floor---576m' },
+    { label: '4th Floor', short: '4', height: '53.7m', day: '4-day_0023_4th-floor---537m', evening: '33-evening_0072_4th-floor---537m', night: '52-night_0104_4th-floor---537m' },
+    { label: '3rd Floor', short: '3', height: '49.8m', day: '3-day_0024_3rd-floor---498m', evening: '34-evening_0071_3rd-floor---498m', night: '53-night_0105_3rd-floor---498m' },
+    { label: '2nd Floor', short: '2', height: '45.9m', day: '2-day_0025_2nd-floor----459m', evening: '35-evening_0070_2nd-floor---459m', night: '54-night_0106_2nd-floor---459m' },
+    { label: '1st Floor', short: '1', height: '42m', day: '1-day_0026_1st-floor----42m', evening: '36-evening_0069_1st-floor---42m', night: '55-night_0107_1st-floor---42m' },
+    { label: 'Podium', short: 'POD', height: '37.65m', day: '0-day_0027_podium-hight-3765m', evening: '37-evening_0068_podium-3765m', night: '56-night_0108_podium---3765m' }
+  ];
 
-const TIMES_OF_DAY = ['day', 'evening', 'night'];
-const TILE_BASE_PATH = '/Fortune-panos/app-files/tiles';
+  const TIMES_OF_DAY = ['day', 'evening', 'night'];
+  const TILE_BASE_PATH = '/Fortune-panos/app-files/tiles';
+  const SLIDER_HEIGHT = 'min(40vh, 300px)'; // shared by the slider track and its floor-number ruler
 
- const panoElementRef = useRef(null); // Connects to the HTML div
+  const panoElementRef = useRef(null); // Connects to the HTML div
   const viewerRef = useRef(null);      // Stores the Marzipano Viewer instance
   const scenesRef = useRef({});        // Stores all our created scenes
 
-  const autorotateRef = useRef(null); // Ref to store the autorotate configuration
-  const backButtonRef = useRef(null); // Ref for the Back button (for future use)
-  const panelRef = useRef(null); // Scopes the entrance animation to the settings panel
+  const autorotateRef = useRef(null);   // Ref to store the autorotate configuration
+  const flashRef = useRef(null);        // Cinematic flash overlay fired on every scene change
+  const toastRef = useRef(null);        // Transient "now viewing" toast
+  const toastTimeoutRef = useRef(null);
+  const dockRef = useRef(null);         // The bottom control dock — fades on idle
+  const topLeftRef = useRef(null);      // Home/Back cluster — fades on idle
+  const sliderRef = useRef(null);       // The draggable elevation slider track
+  const sliderDraggingRef = useRef(false);
+  const lastWheelRef = useRef(0);
+
+  // Real elevation profile of the tower, so the slider represents the actual
+  // roofline-to-podium travel rather than just a flat list index.
+  const FLOOR_HEIGHTS = FLOOR_DATA.map((f) => parseFloat(f.height));
+  const MIN_HEIGHT = Math.min(...FLOOR_HEIGHTS);
+  const MAX_HEIGHT = Math.max(...FLOOR_HEIGHTS);
+  // 0 at the roofline, 1 at the podium
+  const railFractionFor = (idx) => (MAX_HEIGHT - FLOOR_HEIGHTS[idx]) / (MAX_HEIGHT - MIN_HEIGHT);
 
   // UI State
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState('day');
   const [currentFloorIdx, setCurrentFloorIdx] = useState(0); // 0 is Terrace based on our array
-  const [isAutoRotating, setIsAutoRotating] = useState(false); // Auto-rotate toggle
-  const [hoveredTime, setHoveredTime] = useState(null); // Tracks which time button is hovered, like Menu's activeIndex
-  const [hoveredFloorIdx, setHoveredFloorIdx] = useState(null); // Tracks which floor row is hovered, like Menu's activeIndex
-  const [handleBackButton, setHandleBackButton] = useState(null); // Placeholder for back button logic
-
-
-const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
+  const [isAutoRotating, setIsAutoRotating] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+  const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
 
   useEffect(() => {
     // 1. Initialize Viewer
@@ -61,16 +72,15 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
 
     //  Setup Autorotate movement
     autorotateRef.current = Marzipano.autorotate({
-        yawSpeed: 0.05,        // Speed of rotation (adjust as needed)
-        targetPitch: 0,        // Looks straight ahead while rotating
-        targetFov: Math.PI / 2 // Standard zoom level
+      yawSpeed: 0.05,        // Speed of rotation (adjust as needed)
+      targetPitch: 0,        // Looks straight ahead while rotating
+      targetFov: Math.PI / 2 // Standard zoom level
     });
 
     // 2. Create all scenes
     APP_DATA.scenes.forEach((sceneData) => {
       const source = Marzipano.ImageUrlSource.fromString(
-        `${TILE_BASE_PATH}/${sceneData.id}/{z}/{f}/{y}/{x}.jpg`,
-        { cubeMapPreviewUrl: `${TILE_BASE_PATH}/${sceneData.id}/preview.jpg` }
+        `${TILE_BASE_PATH}/${sceneData.id}/{z}/{f}/{y}/{x}.jpg`
       );
       const geometry = new Marzipano.CubeGeometry(sceneData.levels);
       const limiter = Marzipano.RectilinearView.limit.traditional(sceneData.faceSize, 100 * Math.PI / 180, 120 * Math.PI / 180);
@@ -90,6 +100,72 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
     };
   }, []);
 
+  // Idle system — the whole chrome breathes down to near-invisible after a few
+  // seconds of stillness, then snaps back the instant the guest moves or touches
+  // the screen, so the panorama itself stays the hero of the page.
+  useEffect(() => {
+    let timer;
+    const wake = () => {
+      setIsIdle(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsIdle(true), 4200);
+    };
+    window.addEventListener('pointermove', wake);
+    window.addEventListener('pointerdown', wake);
+    window.addEventListener('wheel', wake);
+    wake();
+    return () => {
+      window.removeEventListener('pointermove', wake);
+      window.removeEventListener('pointerdown', wake);
+      window.removeEventListener('wheel', wake);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    gsap.to([dockRef.current, topLeftRef.current], {
+      opacity: isIdle ? 0.16 : 1,
+      y: isIdle ? 10 : 0,
+      duration: 0.7,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+  }, [isIdle]);
+
+  // A brief gold flash + punch-in zoom on the panorama itself, so every floor
+  // or time-of-day change reads as a deliberate cinematic cut rather than a jump cut.
+  const triggerSceneTransition = () => {
+    if (flashRef.current) {
+      gsap.fromTo(
+        flashRef.current,
+        { opacity: 0 },
+        { opacity: 0.4, duration: 0.16, yoyo: true, repeat: 1, ease: 'power1.inOut' }
+      );
+    }
+    if (panoElementRef.current) {
+      gsap.fromTo(
+        panoElementRef.current,
+        { scale: 1.025, filter: 'brightness(1.35)' },
+        { scale: 1, filter: 'brightness(1)', duration: 0.7, ease: 'power3.out' }
+      );
+    }
+  };
+
+  // A transient "now viewing" toast — feedback without permanent on-screen clutter.
+  const showToast = (floorIdx, time) => {
+    if (!toastRef.current) return;
+    toastRef.current.textContent = `${FLOOR_DATA[floorIdx].label.toUpperCase()}  ·  ${time.toUpperCase()}  ·  ${FLOOR_DATA[floorIdx].height}`;
+    gsap.killTweensOf(toastRef.current);
+    gsap.fromTo(
+      toastRef.current,
+      { opacity: 0, y: -10, scale: 0.96, filter: 'blur(4px)' },
+      { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power3.out' }
+    );
+    clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      gsap.to(toastRef.current, { opacity: 0, y: -8, duration: 0.5, ease: 'power2.in' });
+    }, 1900);
+  };
 
   // Sync function logic
   const switchSceneSynced = (newTime, newFloorIdx) => {
@@ -101,16 +177,18 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
     const newScene = scenesRef.current[targetSceneId];
 
     if (oldScene && newScene) {
-        const oldView = oldScene.view();
-        newScene.view().setParameters({
-            yaw: oldView.yaw(),
-            pitch: oldView.pitch(),
-            fov: oldView.fov()
-        });
+      const oldView = oldScene.view();
+      newScene.view().setParameters({
+        yaw: oldView.yaw(),
+        pitch: oldView.pitch(),
+        fov: oldView.fov()
+      });
 
-        newScene.switchTo();
-        setCurrentTime(newTime);
-        setCurrentFloorIdx(newFloorIdx);
+      newScene.switchTo();
+      triggerSceneTransition();
+      showToast(newFloorIdx, newTime);
+      setCurrentTime(newTime);
+      setCurrentFloorIdx(newFloorIdx);
     }
   };
 
@@ -124,21 +202,20 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
 
   // Toggle Auto Rotate
   const toggleAutoRotate = () => {
-      const viewer = viewerRef.current;
-      if (isAutoRotating) {
-          viewer.stopMovement();
-        viewer.setIdleMovement(Infinity, null);
-      } else {
-          viewer.startMovement(autorotateRef.current);
-          viewer.setIdleMovement(3000, autorotateRef.current);
-          // Restarts auto-rotate 3 seconds after user stops dragging
-      }
-      setIsAutoRotating(!isAutoRotating);
+    const viewer = viewerRef.current;
+    if (isAutoRotating) {
+      viewer.stopMovement();
+      viewer.setIdleMovement(Infinity, null);
+    } else {
+      viewer.startMovement(autorotateRef.current);
+      viewer.setIdleMovement(3000, autorotateRef.current);
+      // Restarts auto-rotate 3 seconds after user stops dragging
+    }
+    setIsAutoRotating(!isAutoRotating);
   };
 
-  const handleBackButtonClick = () => {
-    onClose?.();
-  };
+  const handleBackButtonClick = () => onClose?.();
+  const handleHomeButtonClick = () => onHome?.();
 
   // Same cursor-tracked copper glow used by the Menu's list items
   const handleGlowMove = (e) => {
@@ -151,33 +228,63 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
     e.currentTarget.style.setProperty('--mx', '50%');
   };
 
-  // Same fade + slide-in stagger the Menu uses for its list items
-  useLayoutEffect(() => {
-    if (isCollapsed) return;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        '.panel-item',
-        { opacity: 0, x: -16 },
-        { opacity: 1, x: 0, duration: 0.5, stagger: 0.05, ease: 'power2.out' }
-      );
-    }, panelRef);
-    return () => ctx.revert();
-  }, [isCollapsed]);
+  // --- Elevation Slider: a single continuous gold-fill track, dragged or
+  // clicked directly — the building becomes something you physically scrub
+  // through, roofline at the top, podium at the bottom.
+  const floorFromPointer = (clientY) => {
+    const el = sliderRef.current;
+    if (!el) return currentFloorIdx;
+    const rect = el.getBoundingClientRect();
+    const fraction = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+    let best = 0;
+    let bestDist = Infinity;
+    FLOOR_DATA.forEach((_, idx) => {
+      const dist = Math.abs(railFractionFor(idx) - fraction);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+    });
+    return best;
+  };
 
-  // Cinematic entrance for the surrounding chrome, once on mount.
+  const handleSliderPointerDown = (e) => {
+    sliderDraggingRef.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const idx = floorFromPointer(e.clientY);
+    if (idx !== currentFloorIdx) switchSceneSynced(currentTime, idx);
+  };
+  const handleSliderPointerMove = (e) => {
+    if (!sliderDraggingRef.current) return;
+    const idx = floorFromPointer(e.clientY);
+    if (idx !== currentFloorIdx) switchSceneSynced(currentTime, idx);
+  };
+  const handleSliderPointerUp = () => {
+    sliderDraggingRef.current = false;
+  };
+  const handleSliderWheel = (e) => {
+    e.preventDefault();
+    const now = Date.now();
+    if (now - lastWheelRef.current < 90) return;
+    lastWheelRef.current = now;
+    stepFloor(e.deltaY > 0 ? 1 : -1);
+  };
+
+  const stepFloor = (dir) => {
+    const next = Math.min(FLOOR_DATA.length - 1, Math.max(0, currentFloorIdx + dir));
+    if (next !== currentFloorIdx) switchSceneSynced(currentTime, next);
+  };
+
+  // Cinematic entrance for the surrounding chrome, once on mount — a soft
+  // focus-pull (blur + scale) rather than a plain fade, so the controls feel
+  // like they resolve out of the panorama itself.
   useLayoutEffect(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.fromTo(
       '.views-chrome',
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.7, stagger: 0.08 },
-      0.15
-    );
-    tl.fromTo(
-      '.views-hint',
-      { opacity: 0, y: 14 },
-      { opacity: 0.7, y: 0, duration: 0.7, clearProps: 'opacity' },
-      0.3
+      { opacity: 0, y: 16, scale: 0.94, filter: 'blur(6px)' },
+      { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.85, stagger: 0.1, clearProps: 'filter,scale' },
+      0.2
     );
     return () => tl.kill();
   }, []);
@@ -213,339 +320,245 @@ const [currentSceneId, setCurrentSceneId] = useState(APP_DATA.scenes[0].id);
     );
   };
 
-  // Leading icon for each row in the floor list - a rooftop glyph for the Terrace, a doorway glyph for every other floor
-  const floorIcon = (label, size = 15) => {
-    if (label === 'Terrace') {
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 21V10l8-6 8 6v11" />
-          <path d="M9 21v-6h6v6" />
-        </svg>
-      );
-    }
-    return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 21V7a5 5 0 0 1 10 0v14" />
-        <path d="M7 21h10" />
-        <path d="M12 21v-4" />
-      </svg>
-    );
-  };
-
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#0a0908', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#0a0908', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflow: 'hidden' }}>
       {/* The 360 Canvas */}
       <div
         ref={panoElementRef}
-        style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+        style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, transformOrigin: '50% 50%', willChange: 'transform, filter' }}
       />
 
-      {/* Top-Left: Back + Auto-Rotate combined pill */}
+      {/* Gold flash fired on every scene switch, for a deliberate cinematic cut */}
       <div
-        id="top-controls"
-        className="views-chrome absolute top-5 left-6 md:top-8 md:left-8 z-20 flex items-center rounded-full"
-        style={{
-          backgroundColor: 'rgba(10, 9, 8, 0.85)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.7)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        }}
-      >
-        <button
-          ref={backButtonRef}
-          onClick={handleBackButtonClick}
-          className="relative flex items-center gap-2.5 px-4 py-2.5 group"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg
-            className="h-4 w-4 text-white group-hover:text-gold-light transition-colors duration-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="relative text-white text-xs uppercase tracking-[0.15em] group-hover:text-gold-light transition-colors duration-300 hidden sm:block font-medium">
-            Back
-            <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-gold-light transition-transform duration-300 ease-out group-hover:scale-x-100" />
-          </span>
-        </button>
+        ref={flashRef}
+        className="pointer-events-none absolute inset-0 z-[6]"
+        style={{ opacity: 0, background: 'radial-gradient(circle at 50% 50%, rgba(227,196,99,0.55) 0%, rgba(227,196,99,0) 70%)' }}
+      />
 
-        <div id="autorotate" className="flex items-center">
-          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(201, 162, 39, 0.2)' }} />
+      {/* Top-Left: Home + Back, unobtrusive, fades with the rest of the chrome on idle */}
+      <div
+        ref={topLeftRef}
+        className="views-chrome absolute top-5 left-6 md:top-8 md:left-8 z-20 flex items-center gap-3"
+      >
+        <BackButton onClick={handleHomeButtonClick} label="Home" icon="home" />
+        <BackButton onClick={handleBackButtonClick} label="Back" icon="arrow" />
+      </div>
+
+      {/* "Now viewing" toast — appears only when the scene actually changes */}
+      <div
+        ref={toastRef}
+        className="pointer-events-none absolute z-20 whitespace-nowrap"
+        style={{
+          top: '28px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          opacity: 0,
+          padding: '9px 20px',
+          borderRadius: '999px',
+          backgroundColor: 'rgba(10, 9, 8, 0.8)',
+          border: '1px solid rgba(201, 162, 39, 0.3)',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(14px)',
+          color: '#f3ecd9',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.14em',
+        }}
+      />
+
+      {/* Right-Centre Dock — a single vertical control column: time of day,
+          the elevation scrubber (a physical reel of the tower's floors), and
+          auto-rotate, stacked top to bottom like a lift's own control panel. */}
+      <div
+        ref={dockRef}
+        className="views-chrome absolute z-20"
+        style={{ top: 'calc(50% - 320px)', right: '22px', transform: 'translateY(-50%)' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+            width: '76px',
+            padding: '14px 0',
+            borderRadius: '30px',
+            backgroundColor: 'rgba(10, 9, 8, 0.72)',
+            border: '1px solid rgba(201, 162, 39, 0.25)',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(20px)',
+            overflow: 'visible',
+          }}
+        >
+          {/* Segmented time-of-day, stacked */}
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '999px', padding: '3px' }}>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: '3px',
+                right: '3px',
+                top: `calc(${TIMES_OF_DAY.indexOf(currentTime) * 33.333}% + 3px)`,
+                height: 'calc(33.333% - 6px)',
+                borderRadius: '999px',
+                background: 'linear-gradient(135deg, #e9cf94, #b48a3e)',
+                boxShadow: '0 4px 14px rgba(205, 168, 102, 0.45)',
+                transition: 'top 0.4s cubic-bezier(0.65, 0, 0.35, 1)',
+              }}
+            />
+            {TIMES_OF_DAY.map((time) => {
+              const isActive = currentTime === time;
+              return (
+                <button
+                  key={time}
+                  onClick={() => switchSceneSynced(time, currentFloorIdx)}
+                  aria-label={time}
+                  className="relative flex items-center justify-center"
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '999px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: isActive ? '#1a1610' : 'rgba(227,196,99,0.65)',
+                    transition: 'color 0.35s ease',
+                  }}
+                >
+                  {timeIcon(time, 14)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ width: '32px', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
+
           <button
             onClick={toggleAutoRotate}
-            className="flex items-center gap-2.5 px-4 py-2.5"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: isAutoRotating ? '#e3c463' : 'rgba(255,255,255,0.6)',
-              transition: 'color 0.2s ease'
-            }}
+            onPointerMove={handleGlowMove}
+            onPointerLeave={handleGlowLeave}
+            aria-label={isAutoRotating ? 'Switch to manual view' : 'Auto-rotate'}
+            className={`group relative flex items-center justify-center rounded-full border transition-colors duration-300 luxury-btn flex-shrink-0 ${
+              isAutoRotating ? 'border-gold-light/70 bg-black/40' : 'border-white/15 bg-white/[0.03]'
+            }`}
+            style={{ width: '34px', height: '34px', color: isAutoRotating ? '#e3c463' : 'rgba(227,196,99,0.7)' }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isAutoRotating ? 'animate-spin-slow' : ''}>
               <polyline points="23 4 23 10 17 10"></polyline>
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
             </svg>
-            <span className="text-xs uppercase tracking-[0.15em] font-medium hidden sm:block">
-              {isAutoRotating ? 'Manual' : 'Auto-Rotate'}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Top-Center Dynamic Panel */}
-      <div id="dynamic-panel" className="views-chrome absolute z-10 flex items-center" style={{
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: 'rgba(10, 9, 8, 0.75)',
-        padding: '10px 24px',
-        borderRadius: '30px',
-        gap: '12px',
-        border: '1px solid rgba(201, 162, 39, 0.2)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        color: '#f3ecd9',
-        backdropFilter: 'blur(16px)'
-      }}>
-        <span style={{ color: '#e3c463', display: 'flex', alignItems: 'center' }}>{timeIcon(currentTime, 14)}</span>
-        <span style={{ fontSize: '12px', fontWeight: '500', letterSpacing: '0.15em', opacity: 0.9 }}>
-          {currentTime.toUpperCase()}
-          <span style={{ color: 'rgba(255,255,255,0.3)', margin: '0 12px' }}>|</span>
-          {FLOOR_DATA[currentFloorIdx].label.toUpperCase()}
-          <span style={{ color: 'rgba(255,255,255,0.3)', margin: '0 12px' }}>|</span>
-          {FLOOR_DATA[currentFloorIdx].height}
-        </span>
-      </div>
-
-      {/* Right Panel: View Settings */}
-      {isCollapsed ? (
-        /* --- COLLAPSED STATE (Vertical Stack) --- */
-        <div className="absolute z-10 flex flex-col items-center rounded-full" style={{
-          top: '30px',
-          right: '20px',
-          gap: '20px',
-          backgroundColor: 'rgba(10, 9, 8, 0.82)',
-          padding: '20px 15px',
-          border: '1px solid rgba(201, 162, 39, 0.2)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          backdropFilter: 'blur(16px)',
-        }}>
-          {/* Expand Button */}
-          <button onClick={() => setIsCollapsed(false)} style={{ background: 'none', border: 'none', color: '#c9a227', cursor: 'pointer' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
 
-          {/* Floor Indicator */}
-          <div style={{ color: '#e3c463', fontSize: '13px', fontWeight: 'bold', textAlign: 'center' }}>
-            {currentFloorIdx === 0 ? 'TER' : currentFloorIdx === FLOOR_DATA.length - 1 ? 'POD' : `${18 - currentFloorIdx}F`}
-          </div>
+          <div style={{ width: '32px', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
 
-          {/* Time Indicator */}
-          <div style={{ color: '#f3ecd9' }}>{timeIcon(currentTime, 16)}</div>
-
-          {/* Auto-Rotate Icon */}
-          <button onClick={toggleAutoRotate} style={{ background: 'none', border: 'none', color: isAutoRotating ? '#c9a227' : 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
-          </button>
-        </div>
-
-      ) : (
-
-  <div ref={panelRef} className="views-chrome absolute z-10" style={{ top: '24px', right: '24px', width: '330px' }}>
-        {/* Menu Panel */}
-        <div style={{
-          backgroundColor: 'rgba(10, 9, 8, 0.6)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
-          padding: '18px 18px 16px',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-          maxHeight: 'calc(100vh - 150px)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
-          {/* Header */}
-          <div className="panel-item" style={{ marginBottom: '16px' }}>
-            <div className="flex items-center justify-between">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: '19px', color: '#f3ecd9', margin: 0 }}>
-                View Settings
-              </h3>
-              {/* Collapse Toggle Button */}
-              <button
-                onClick={() => setIsCollapsed(true)}
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: '#c9a227',
-                  color: '#0a0908',
-                  border: 'none',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-            </div>
-            <div style={{ width: '32px', height: '2px', backgroundColor: '#c9a227', marginTop: '8px', borderRadius: '2px' }} />
-          </div>
-
-          {/* TIME OF DAY SECTION */}
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ color: 'rgba(243,236,217,0.5)', fontSize: '9px', fontWeight: '600', letterSpacing: '0.15em', margin: '0 0 9px 0' }}>TIME OF DAY</h4>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {TIMES_OF_DAY.map((time) => {
-                const isActive = currentTime === time;
-                return (
-                  <button
-                    key={time}
-                    onClick={() => switchSceneSynced(time, currentFloorIdx)}
-                    onPointerMove={handleGlowMove}
-                    onPointerLeave={handleGlowLeave}
-                    onMouseEnter={() => setHoveredTime(time)}
-                    onMouseLeave={() => setHoveredTime(null)}
-                    className={`panel-item${!isActive && hoveredTime === time ? ' luxury-btn' : ''}`}
-                    style={{
-                      flex: 1,
-                      padding: '7px 4px',
-                      borderRadius: '11px',
-                      backgroundColor: isActive ? '#cda866' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${isActive ? '#e9cf94' : 'rgba(255,255,255,0.08)'}`,
-                      color: isActive ? '#1a1610' : 'rgba(243,236,217,0.6)',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      letterSpacing: '0.03em',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                      transition: 'all 0.2s ease',
-                      boxShadow: isActive ? '0 4px 14px rgba(205, 168, 102, 0.4)' : 'none'
-                    }}
-                  >
-                    {timeIcon(time, 13)}
-                    {time === 'day' ? 'Day' : time === 'evening' ? 'Evening' : 'Night'}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <hr style={{ border: 'none', borderTop: '1px solid rgba(201, 162, 39, 0.15)', margin: '0 0 14px 0' }} />
-
-          {/* FLOORS SECTION */}
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <h4 style={{ color: 'rgba(243,236,217,0.5)', fontSize: '9px', fontWeight: '600', letterSpacing: '0.15em', margin: '0 0 9px 0' }}>SELECT FLOOR</h4>
-            {/* Scrollable list of floors */}
-            <div style={{ overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {/* The elevation slider — one continuous gold-fill track, dragged or
+              tapped directly, with every floor number marked beside it so the
+              guest can aim straight for the one they want. */}
+          <div className="flex items-center" style={{ gap: '6px' }}>
+            {/* Floor ruler — a static number beside every floor's true position */}
+            <div style={{ position: 'relative', width: '20px', height: SLIDER_HEIGHT, flexShrink: 0 }}>
               {FLOOR_DATA.map((floor, idx) => {
                 const isActive = currentFloorIdx === idx;
                 return (
                   <button
                     key={floor.label}
                     onClick={() => switchSceneSynced(currentTime, idx)}
-                    onPointerMove={handleGlowMove}
-                    onPointerLeave={handleGlowLeave}
-                    onMouseEnter={() => setHoveredFloorIdx(idx)}
-                    onMouseLeave={() => setHoveredFloorIdx(null)}
-                    className={`panel-item group${!isActive && hoveredFloorIdx === idx ? ' luxury-btn' : ''}`}
+                    aria-label={`${floor.label} — ${floor.height}`}
+                    className="absolute right-0"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      width: '100%',
-                      padding: '6px 9px',
-                      borderRadius: '11px',
-                      backgroundColor: isActive ? 'rgba(180, 138, 62, 0.45)' : 'transparent',
-                      border: `1px solid ${isActive ? 'rgba(227, 196, 99, 0.55)' : hoveredFloorIdx === idx ? 'rgba(227, 196, 99, 0.35)' : 'transparent'}`,
-                      color: isActive ? '#f3ecd9' : 'rgba(243,236,217,0.55)',
+                      bottom: `${(1 - railFractionFor(idx)) * 100}%`,
+                      transform: 'translateY(50%)',
+                      background: 'none',
+                      border: 'none',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      textAlign: 'left'
+                      padding: '2px 3px',
+                      fontSize: isActive ? '9.5px' : '7.5px',
+                      fontWeight: isActive ? 800 : 500,
+                      color: isActive ? '#f9e9c2' : 'rgba(227,196,99,0.4)',
+                      textShadow: isActive ? '0 0 8px rgba(227,196,99,0.8)' : 'none',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.25s ease',
                     }}
                   >
-                    {/* Icon */}
-                    <span style={{
-                      width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
-                      backgroundColor: isActive ? 'rgba(227, 196, 99, 0.22)' : 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${isActive ? 'rgba(227, 196, 99, 0.4)' : 'rgba(255,255,255,0.08)'}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: isActive ? '#f3ecd9' : 'rgba(243,236,217,0.5)'
-                    }}>
-                      {floorIcon(floor.label, 12)}
-                    </span>
-                    {/* Floor Label */}
-                    <span style={{ fontSize: '12px', fontWeight: isActive ? '600' : '400', flex: 1, marginLeft: '10px', letterSpacing: '0.01em' }}>
-                      {floor.label}
-                    </span>
-                    {/* Height */}
-                    <span style={{ fontSize: '10px', color: isActive ? '#e3c463' : 'rgba(243,236,217,0.4)', fontWeight: '400', letterSpacing: '0.03em' }}>
-                      {floor.height}
-                    </span>
-                    {/* Trailing chevron, brighter on hover via the same luxury-arrow treatment as the Menu list */}
-                    <span
-                      className="luxury-arrow ml-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-full transition-colors duration-300"
-                      style={{ color: isActive ? '#e3c463' : 'rgba(243,236,217,0.3)' }}
-                    >
-                      <svg width="9" height="7" viewBox="0 0 16 12" fill="none" aria-hidden="true">
-                        <path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
+                    {floor.short}
                   </button>
-                )
+                );
               })}
-              </div>
-             </div>
+            </div>
 
-      </div>
-      {/* Collapsible Menu end */}
-
-      </div>
-        )}
-
-      {/* Instructions Hint - Bottom Center */}
-      <div className="views-hint absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 opacity-70 hover:opacity-95 transition-opacity duration-300 hidden sm:block">
-        <div
-          className="flex items-center gap-5 px-5 py-2.5 rounded-full"
-          style={{
-            background: 'rgba(10, 9, 8, 0.75)',
-            border: '1px solid rgba(201, 162, 39, 0.2)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(16px)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-            </svg>
-            <span className="text-white/60 text-[10px] uppercase tracking-[0.15em] font-medium">
-              Drag to look around
-            </span>
+            <div
+              ref={sliderRef}
+              onPointerDown={handleSliderPointerDown}
+              onPointerMove={handleSliderPointerMove}
+              onPointerUp={handleSliderPointerUp}
+              onPointerLeave={handleSliderPointerUp}
+              onWheel={handleSliderWheel}
+              style={{
+                position: 'relative',
+                width: '14px',
+                flexShrink: 0,
+                height: SLIDER_HEIGHT,
+                borderRadius: '999px',
+                backgroundColor: 'rgba(255,255,255,0.06)',
+                cursor: 'grab',
+                touchAction: 'none',
+              }}
+            >
+              {/* Gold fill — height mirrors the active floor's real elevation */}
+              <div
+                className="pointer-events-none absolute bottom-0 left-0 right-0"
+                style={{
+                  height: `${(1 - railFractionFor(currentFloorIdx)) * 100}%`,
+                  borderRadius: '999px',
+                  background: 'linear-gradient(180deg, #f9e9c2 0%, #e3c463 45%, #b48a3e 100%)',
+                  boxShadow: '0 0 16px rgba(227,196,99,0.55)',
+                  transition: sliderDraggingRef.current ? 'none' : 'height 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
+                }}
+              />
+              {/* Thumb marking the exact floor position */}
+              <div
+                className="pointer-events-none absolute left-1/2"
+                style={{
+                  bottom: `${(1 - railFractionFor(currentFloorIdx)) * 100}%`,
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  transform: 'translate(-50%, 50%)',
+                  background: '#fdf6e3',
+                  border: '2px solid #e3c463',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.4), 0 0 12px rgba(227,196,99,0.7)',
+                  transition: sliderDraggingRef.current ? 'none' : 'bottom 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
+                }}
+              />
+            </div>
           </div>
-          <div className="w-px h-4 bg-white/20" />
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+
+          <button
+            onClick={() => stepFloor(1)}
+            disabled={currentFloorIdx === FLOOR_DATA.length - 1}
+            aria-label="Next floor down"
+            style={{
+              width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'none', border: 'none',
+              color: currentFloorIdx === FLOOR_DATA.length - 1 ? 'rgba(227,196,99,0.25)' : 'rgba(227,196,99,0.75)',
+              cursor: currentFloorIdx === FLOOR_DATA.length - 1 ? 'default' : 'pointer',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+          </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', paddingTop: '2px' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e3c463" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
+              <circle cx="12" cy="9.5" r="2.3" />
             </svg>
-            <span className="text-white/60 text-[10px] uppercase tracking-[0.15em] font-medium">
-              Scroll to zoom
+            <span style={{ fontSize: '10px', fontWeight: 600, color: '#e3c463', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+              {FLOOR_DATA[currentFloorIdx].height}
             </span>
           </div>
         </div>
-
       </div>
-
-
-
     </div>
   );
 }
