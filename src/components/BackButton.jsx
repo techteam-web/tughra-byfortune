@@ -62,12 +62,12 @@ function BackButton({ onClick, label = 'Back', icon = 'arrow', variant = 'menu' 
         isGold
           ? {
               background: 'linear-gradient(135deg, #e9cf94, #b48a3e)',
-              boxShadow: isHovered ? '0 10px 28px rgba(205, 168, 102, 0.6)' : '0 4px 14px rgba(205, 168, 102, 0.45)',
-              transform: isHovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0) scale(1)',
+              boxShadow: isHovered ? '0 0.625rem 1.75rem rgba(205, 168, 102, 0.6)' : '0 0.25rem 0.875rem rgba(205, 168, 102, 0.45)',
+              transform: isHovered ? 'translateY(-0.125rem) scale(1.03)' : 'translateY(0) scale(1)',
             }
           : {
-              boxShadow: isHovered && !isMenu ? '0 10px 28px rgba(0, 0, 0, 0.35)' : undefined,
-              transform: isHovered ? 'translateY(-2px) scale(1.03)' : 'translateY(0) scale(1)',
+              boxShadow: isHovered && !isMenu ? '0 0.625rem 1.75rem rgba(0, 0, 0, 0.35)' : undefined,
+              transform: isHovered ? 'translateY(-0.125rem) scale(1.03)' : 'translateY(0) scale(1)',
             }
       }
     >
@@ -101,7 +101,7 @@ function BackButton({ onClick, label = 'Back', icon = 'arrow', variant = 'menu' 
         </svg>
       )}
       <span
-        className={`relative text-[11px] font-semibold uppercase tracking-[2px] transition-colors duration-300 sm:text-xs md:text-sm ${
+        className={`relative text-[0.6875rem] font-semibold uppercase tracking-[0.125rem] transition-colors duration-300 sm:text-xs md:text-sm ${
           isMenu ? (isHovered ? 'text-gold-light' : 'text-cream') : ''
         }`}
       >

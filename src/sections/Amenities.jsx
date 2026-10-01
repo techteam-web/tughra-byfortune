@@ -1,7 +1,16 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
-import placeholderBg from '../assets/render/menu.png'
 import BackButton from '../components/BackButton.jsx'
+import poolImg from '../assets/amenities/swimming-pool.webp'
+import gym1Img from '../assets/amenities/gym-cam01.webp'
+import gym2Img from '../assets/amenities/gym-cam02.webp'
+import banquetImg from '../assets/amenities/banquet-hall-cam-03.webp'
+import hallImg from '../assets/amenities/banquet-hall-cam-08.webp'
+import theatreImg from '../assets/amenities/theater.webp'
+import games1Img from '../assets/amenities/img-20260922-wa0014.webp'
+import games2Img from '../assets/amenities/img-20260922-wa0016.webp'
+import gardenImg from '../assets/amenities/podium-cam-01.webp'
+import deckImg from '../assets/amenities/img-20260922-wa0019.webp'
 
 // Add more entries here as amenity photos/copy come in - the panel count,
 // the numbering and the progress line all size themselves to however many
@@ -9,39 +18,63 @@ import BackButton from '../components/BackButton.jsx'
 const AMENITIES = [
   {
     icon: 'pool',
-    title: 'Infinity Pool',
-    description: 'A serene escape with panoramic views of the sea and the city skyline.',
-    image: placeholderBg,
+    title: 'Swimming Pool',
+    description: 'Laps and lazy afternoons, suspended above the city.',
+    image: poolImg,
   },
   {
     icon: 'dumbbell',
     title: 'Fitness Centre',
     description: 'A fully equipped space to train, recover and stay at your best.',
-    image: placeholderBg,
+    image: gym1Img,
   },
   {
-    icon: 'lounge',
-    title: "Residents' Lounge",
-    description: 'A refined common room for quiet evenings or hosting guests.',
-    image: placeholderBg,
-  },
-  {
-    icon: 'leaf',
-    title: 'Sky Garden',
-    description: 'A landscaped retreat high above the city, framed by open sky.',
-    image: placeholderBg,
-  },
-  {
-    icon: 'play',
-    title: "Kids' Play Area",
-    description: 'A safe, imaginative space designed for the youngest residents.',
-    image: placeholderBg,
+    icon: 'dumbbell',
+    title: 'Fitness Studio',
+    description: 'Open, light-filled and built for every kind of workout.',
+    image: gym2Img,
   },
   {
     icon: 'group',
-    title: 'Multi-Purpose Hall',
-    description: 'A versatile venue for celebrations, events and gatherings.',
-    image: placeholderBg,
+    title: 'Banquet Hall',
+    description: 'An elegant venue for celebrations, events and gatherings.',
+    image: banquetImg,
+  },
+  {
+    icon: 'group',
+    title: 'Grand Hall',
+    description: 'Flexible space that adapts to every occasion.',
+    image: hallImg,
+  },
+  {
+    icon: 'lounge',
+    title: 'Private Theatre',
+    description: 'Cinema-grade viewing, reserved for residents.',
+    image: theatreImg,
+  },
+  {
+    icon: 'play',
+    title: 'Games Lounge',
+    description: 'Chess, billiards and conversation in a relaxed social setting.',
+    image: games1Img,
+  },
+  {
+    icon: 'play',
+    title: 'Recreation Room',
+    description: 'Table tennis, pool and more for friendly rivalry.',
+    image: games2Img,
+  },
+  {
+    icon: 'leaf',
+    title: 'Podium Garden',
+    description: 'A landscaped retreat framed by open sky and greenery.',
+    image: gardenImg,
+  },
+  {
+    icon: 'leaf',
+    title: 'Podium Deck',
+    description: 'Gardens, courts and pools, all within the podium.',
+    image: deckImg,
   },
 ]
 
@@ -90,6 +123,7 @@ const ICONS = {
 
 function Amenities({ onClose }) {
   const [index, setIndex] = useState(0)
+  const [full, setFull] = useState(false)
   const sectionRef = useRef(null)
   const total = AMENITIES.length
 
@@ -107,6 +141,43 @@ function Amenities({ onClose }) {
     return () => tl.kill()
   }, [])
 
+  const openFull = (i) => {
+    setIndex(i)
+    setFull(true)
+    document.documentElement.requestFullscreen?.().catch(() => {})
+  }
+  const closeFull = () => {
+    setFull(false)
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+  }
+  const goNext = () => setIndex((i) => (i + 1) % total)
+  const goPrev = () => setIndex((i) => (i - 1 + total) % total)
+
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setFull(false)
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange)
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!full) return
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') goNext()
+      if (e.key === 'ArrowLeft') goPrev()
+      if (e.key === 'Escape') setFull(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [full])
+
+  const ctrl =
+    'flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-full border border-white/60 bg-black/30 text-white backdrop-blur-md transition-colors duration-300 hover:border-gold/60 hover:text-gold-light'
+
   return (
     <section ref={sectionRef} className="relative flex h-svh w-full flex-col overflow-hidden bg-bg text-cream">
       {/* Top bar */}
@@ -117,12 +188,12 @@ function Amenities({ onClose }) {
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
           <span>
-            <strong className="block font-serif text-2xl tracking-[6px] text-cream">TUGHRA</strong>
-            <span className="mt-1.5 block text-[10px] tracking-[3px] text-muted">MUMBAI CENTRAL</span>
+            <strong className="block font-serif text-2xl tracking-[0.375rem] text-cream">TUGHRA</strong>
+            <span className="mt-1.5 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
           </span>
         </button>
 
-        <div className="hidden items-center gap-3 text-[11px] uppercase tracking-[3px] text-gold md:flex">
+        <div className="hidden items-center gap-3 text-[0.6875rem] uppercase tracking-[0.1875rem] text-gold md:flex">
           Amenities
           <span className="h-px w-8 bg-gold/50" />
           {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
@@ -177,7 +248,7 @@ function Amenities({ onClose }) {
 
               {/* Number, top */}
               <span
-                className="absolute left-0 right-0 top-5 text-center font-serif text-[13px] transition-colors duration-500 md:top-6"
+                className="absolute left-0 right-0 top-5 text-center font-serif text-[0.8125rem] transition-colors duration-500 md:top-6"
                 style={{ color: isActive ? '#e3c463' : 'rgba(243,236,217,0.55)' }}
               >
                 {String(i + 1).padStart(2, '0')}
@@ -192,29 +263,54 @@ function Amenities({ onClose }) {
                   {ICONS[item.icon]}
                 </span>
                 <span
-                  className="text-center text-[11px] font-semibold uppercase leading-tight tracking-[0.5px] text-white"
-                  style={{ textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
+                  className="text-center text-[0.6875rem] font-semibold uppercase leading-tight tracking-[0.5px] text-white"
+                  style={{ textShadow: '0 0.125rem 0.625rem rgba(0,0,0,0.9)' }}
                 >
                   {item.title}
                 </span>
               </div>
+
+              {/* Full-screen toggle: appears on the open panel */}
+              <span
+                role="button"
+                tabIndex={isActive ? 0 : -1}
+                aria-label={'View ' + item.title + ' full screen'}
+                title="Full screen"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  openFull(i)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    openFull(i)
+                  }
+                }}
+                className={ctrl + ' absolute right-4 top-4 z-10 cursor-pointer transition-opacity duration-500 md:right-6 md:top-5'}
+                style={{ opacity: isActive ? 1 : 0, pointerEvents: isActive ? 'auto' : 'none' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+                </svg>
+              </span>
 
               {/* Expanded state: full copy */}
               <div
                 className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-6 transition-all duration-500 md:p-9"
                 style={{
                   opacity: isActive ? 1 : 0,
-                  transform: isActive ? 'translateY(0)' : 'translateY(12px)',
+                  transform: isActive ? 'translateY(0)' : 'translateY(0.75rem)',
                   transitionDelay: isActive ? '0.25s' : '0s',
                 }}
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold/50 text-gold-light">
                   {ICONS[item.icon]}
                 </span>
-                <h2 className="max-w-md font-serif text-[clamp(24px,2.6vw,36px)] font-medium leading-[1.1] text-cream">
+                <h2 className="max-w-md font-serif text-[clamp(1.5rem,2.6vw,2.25rem)] font-medium leading-[1.1] text-cream">
                   {item.title}
                 </h2>
-                <p className="max-w-sm text-[13px] leading-relaxed text-muted">{item.description}</p>
+                <p className="max-w-sm text-[0.8125rem] leading-relaxed text-muted">{item.description}</p>
               </div>
             </button>
           )
@@ -227,12 +323,42 @@ function Amenities({ onClose }) {
           {AMENITIES.map((_, i) => (
             <span
               key={i}
-              className="h-[3px] flex-1 rounded-full transition-colors duration-500"
+              className="h-[0.1875rem] flex-1 rounded-full transition-colors duration-500"
               style={{ backgroundColor: i === index ? '#c9a227' : 'rgba(243,236,217,0.2)' }}
             />
           ))}
         </div>
       </div>
+
+      {/* Full-screen viewer */}
+      {full && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+          <img src={AMENITIES[index].image} alt={AMENITIES[index].title} className="h-full w-full object-contain" />
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/70 to-transparent px-6 py-5 md:px-12 md:py-8">
+            <div className="text-[0.6875rem] uppercase tracking-[0.1875rem] text-gold">
+              Amenities
+              <span className="mx-3 inline-block h-px w-8 bg-gold/50 align-middle" />
+              {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+              <span className="ml-4 text-cream">{AMENITIES[index].title}</span>
+            </div>
+            <button type="button" onClick={closeFull} aria-label="Exit full screen" className={ctrl}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <button type="button" onClick={goPrev} aria-label="Previous photo" className={ctrl + ' absolute left-4 top-1/2 -translate-y-1/2 md:left-8'}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button type="button" onClick={goNext} aria-label="Next photo" className={ctrl + ' absolute right-4 top-1/2 -translate-y-1/2 md:right-8'}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+      )}
     </section>
   )
 }

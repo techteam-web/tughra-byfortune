@@ -38,7 +38,7 @@ function Preloader({ onComplete }) {
         // The moment the line lands, everything happens at once: it flares,
         // it and the letters clear out, and the curtain opens - no gap
         .addLabel('open')
-        .to(lineRef.current, { attr: { 'stroke-width': 3 }, filter: 'drop-shadow(0 0 18px rgba(201,162,39,0.9))', duration: 0.15 }, 'open')
+        .to(lineRef.current, { attr: { 'stroke-width': 3 }, filter: 'drop-shadow(0 0 1.125rem rgba(201,162,39,0.9))', duration: 0.15 }, 'open')
         .to([letters, lineRef.current], { opacity: 0, duration: 0.4 }, 'open')
         .to(leftPanelRef.current, { xPercent: -100, duration: 1.1, ease: 'power4.inOut' }, 'open')
         .to(rightPanelRef.current, { xPercent: 100, duration: 1.1, ease: 'power4.inOut' }, 'open')
@@ -61,7 +61,7 @@ function Preloader({ onComplete }) {
       <div className="absolute inset-0 flex items-center justify-center px-6">
         <div className="flex">
           {WORDMARK.split('').map((letter, i) => (
-            <svg key={i} viewBox="0 0 70 100" style={{ width: 'clamp(28px, 6vw, 56px)', height: 'auto' }}>
+            <svg key={i} viewBox="0 0 70 100" style={{ width: 'clamp(1.75rem, 6vw, 3.5rem)', height: 'auto' }}>
               <text
                 ref={(el) => (letterRefs.current[i] = el)}
                 x="50%"

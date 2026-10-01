@@ -85,14 +85,14 @@ h1 {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 0.25rem;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(201, 162, 39, 0.35);
-  border-radius: 10px;
+  border-radius: 0.625rem;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(201, 162, 39, 0.65);
@@ -104,7 +104,14 @@ h1 {
 
   }
   #top-controls {
-    left: 14px !important;
-    top: 24px !important;
+    left: 0.875rem !important;
+    top: 1.5rem !important;
   }
 }
+/* Scale the whole rem-based UI up on large monitors so menus, buttons and
+   type don't shrink relative to the screen (1440p, 4K and beyond). */
+@media (min-width: 1536px) { :root { font-size: 17px; } }
+@media (min-width: 1920px) { :root { font-size: 20px; } }
+@media (min-width: 2560px) { :root { font-size: 26px; } }
+@media (min-width: 3200px) { :root { font-size: 32px; } }
+@media (min-width: 3840px) { :root { font-size: 38px; } }

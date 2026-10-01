@@ -191,12 +191,12 @@ function Location({ onClose }) {
     map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right')
 
     const marker = document.createElement('div')
-    marker.style.width = '18px'
-    marker.style.height = '18px'
+    marker.style.width = '1.125rem'
+    marker.style.height = '1.125rem'
     marker.style.borderRadius = '50%'
     marker.style.background = '#c17f45'
-    marker.style.boxShadow = '0 0 0 6px rgba(193,127,69,0.25), 0 0 20px rgba(193,127,69,0.6)'
-    marker.style.border = '2px solid #f3ecd9'
+    marker.style.boxShadow = '0 0 0 0.375rem rgba(193,127,69,0.25), 0 0 1.25rem rgba(193,127,69,0.6)'
+    marker.style.border = '0.125rem solid #f3ecd9'
 
     new Marker({ element: marker }).setLngLat(MUMBAI_CENTRAL).addTo(map)
 
@@ -238,24 +238,24 @@ function Location({ onClose }) {
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
           <span>
-            <strong className="block font-serif text-2xl tracking-[6px] text-cream">TUGHRA</strong>
-            <span className="mt-1.5 block text-[10px] tracking-[3px] text-muted">MUMBAI CENTRAL</span>
+            <strong className="block font-serif text-2xl tracking-[0.375rem] text-cream">TUGHRA</strong>
+            <span className="mt-1.5 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
           </span>
         </button>
         <BackButton onClick={onClose} />
       </div>
 
       {/* Left copy — on mobile the horizontal darkening gradient above doesn't
-          leave enough opaque width for a 320px text block, so it gets a solid
+          leave enough opaque width for a 20rem text block, so it gets a solid
           backdrop panel there instead; desktop relies on the gradient alone. */}
-      <div className="pointer-events-none absolute inset-x-6 bottom-24 z-10 max-w-[320px] rounded-2xl bg-black/55 p-5 backdrop-blur-md md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-w-[320px] md:-translate-y-1/2 md:rounded-none md:bg-transparent md:p-0 md:backdrop-blur-none">
+      <div className="pointer-events-none absolute inset-x-6 bottom-24 z-10 max-w-[20rem] rounded-2xl bg-black/55 p-5 backdrop-blur-md md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-w-[20rem] md:-translate-y-1/2 md:rounded-none md:bg-transparent md:p-0 md:backdrop-blur-none">
         <span className="mb-5 block h-px w-12 bg-gold/50" />
-        <h2 className="font-serif text-[clamp(32px,4.8vw,56px)] font-light leading-[1.15] text-cream">
+        <h2 className="font-serif text-[clamp(2rem,4.8vw,3.5rem)] font-light leading-[1.15] text-cream">
           At The Centre
           <br />
           Of It All
         </h2>
-        <p className="mt-5 max-w-[320px] font-serif text-[15px] leading-relaxed text-muted md:text-[17px]">
+        <p className="mt-5 max-w-[20rem] font-serif text-[0.9375rem] leading-relaxed text-muted md:text-[1.0625rem]">
           Mumbai Central — moments from the sea, the city, and everywhere you need to be.
         </p>
       </div>

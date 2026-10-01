@@ -126,8 +126,8 @@ function FloorPlans({ onClose }) {
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
           <span>
-            <strong className="block font-serif text-2xl tracking-[6px] text-cream">TUGHRA</strong>
-            <span className="mt-1.5 block text-[10px] tracking-[3px] text-muted">MUMBAI CENTRAL</span>
+            <strong className="block font-serif text-2xl tracking-[0.375rem] text-cream">TUGHRA</strong>
+            <span className="mt-1.5 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
           </span>
         </button>
         <BackButton onClick={onClose} />
@@ -135,14 +135,14 @@ function FloorPlans({ onClose }) {
 
       {/* Body */}
       <div className="absolute inset-0 flex items-start justify-center overflow-y-auto px-6 pt-24 pb-20 md:items-center md:pt-16 md:px-12">
-        <div className="flex w-full max-w-[1320px] flex-col items-center gap-12 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+        <div className="flex w-full max-w-[82.5rem] flex-col items-center gap-12 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           {/* Left: floor picker + interactive tower diagram */}
-          <div className="flex w-full shrink-0 items-end gap-5 lg:-mt-[62px] lg:ml-20 lg:w-auto">
+          <div className="flex w-full shrink-0 items-end gap-5 lg:-mt-[3.875rem] lg:ml-20 lg:w-auto">
             {/* Floor picker list - each row sits at the same proportional
                 height as its floor on the tower, not evenly spaced, since
                 the real floor-to-floor heights in the render aren't uniform */}
-            <div className="relative hidden shrink-0 sm:block" style={{ width: '64px', height: 'min(64vh, 620px)' }}>
-              <div className="absolute bottom-full left-0 mb-3 flex items-center gap-2 text-[9px] uppercase tracking-[2px] text-muted">
+            <div className="relative hidden shrink-0 sm:block" style={{ width: '4rem', height: 'min(64vh, 38.75rem)' }}>
+              <div className="absolute bottom-full left-0 mb-3 flex items-center gap-2 text-[0.5625rem] uppercase tracking-[0.125rem] text-muted">
                 <span className="h-px w-4 bg-gold/50" />
                 Floor Picker
               </div>
@@ -161,7 +161,7 @@ function FloorPlans({ onClose }) {
                       style={{ top: `${topPercent}%` }}
                     >
                       <span
-                        className="w-5 font-serif text-[12px] transition-colors duration-200"
+                        className="w-5 font-serif text-[0.75rem] transition-colors duration-200"
                         style={{ color: isActive ? '#e3c463' : 'rgba(243,236,217,0.45)', fontWeight: isActive ? 600 : 400 }}
                       >
                         {floor.num}
@@ -169,7 +169,7 @@ function FloorPlans({ onClose }) {
                       <span
                         className="h-px transition-all duration-200"
                         style={{
-                          width: isActive ? '18px' : '10px',
+                          width: isActive ? '1.125rem' : '0.625rem',
                           backgroundColor: isActive || hoveredFloor === floor.id ? '#e3c463' : 'rgba(243,236,217,0.3)',
                         }}
                       />
@@ -183,7 +183,7 @@ function FloorPlans({ onClose }) {
             <div className="relative">
               <div
                 className="relative select-none overflow-hidden"
-                style={{ height: 'min(64vh, 620px)', aspectRatio: `${CROP.width} / ${CROP.height}` }}
+                style={{ height: 'min(64vh, 38.75rem)', aspectRatio: `${CROP.width} / ${CROP.height}` }}
               >
                 <div style={innerStyle}>
                   <img
@@ -221,8 +221,8 @@ function FloorPlans({ onClose }) {
           </div>
 
           {/* Right: floor plan card */}
-          <div className="flex w-[720px] max-w-full flex-col items-center">
-            <div className="mb-4 flex min-h-[16px] items-center gap-3 text-[11px] uppercase tracking-[2px] text-gold">
+          <div className="flex w-[45rem] max-w-full flex-col items-center">
+            <div className="mb-4 flex min-h-[1rem] items-center gap-3 text-[0.6875rem] uppercase tracking-[0.125rem] text-gold">
               {activeFloor && (
                 <>
                   <span className="h-px w-6 bg-gold/50" />
@@ -237,9 +237,9 @@ function FloorPlans({ onClose }) {
                 <path d="M16 21v-8l4 2.2V21" />
               </svg>
               <h3 className="font-serif text-2xl font-medium text-[#241f1a]">Select a floor from the tower</h3>
-              <p className="text-[10px] uppercase tracking-[2px] text-[#8a7a5c]">To view the floor plan.</p>
+              <p className="text-[0.625rem] uppercase tracking-[0.125rem] text-[#8a7a5c]">To view the floor plan.</p>
             </div>
-            <div className="mt-8 flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[1.5px] text-gold">
+            <div className="mt-8 flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[0.6875rem] uppercase tracking-[0.09375rem] text-gold">
               <span>{UNIT.name}</span>
               <span className="h-3 w-px shrink-0 bg-gold/50" />
               <span>{UNIT.area}</span>

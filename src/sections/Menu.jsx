@@ -47,8 +47,8 @@ function Menu({ onClose, onSelect }) {
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
           <span>
-            <strong className="block font-serif text-lg tracking-[3px] text-cream sm:text-xl sm:tracking-[4px] md:text-2xl md:tracking-[6px]">TUGHRA</strong>
-            <span className="mt-1.5 block text-[8px] tracking-[2px] text-muted sm:text-[10px] sm:tracking-[3px]">MUMBAI CENTRAL</span>
+            <strong className="block font-serif text-lg tracking-[0.1875rem] text-cream sm:text-xl sm:tracking-[0.25rem] md:text-2xl md:tracking-[0.375rem]">TUGHRA</strong>
+            <span className="mt-1.5 block text-[0.5rem] tracking-[0.125rem] text-muted sm:text-[0.625rem] sm:tracking-[0.1875rem]">MUMBAI CENTRAL</span>
           </span>
         </button>
 
@@ -59,15 +59,15 @@ function Menu({ onClose, onSelect }) {
 
       {/* Menu list */}
       <nav
-        className="absolute left-4 right-4 top-1/2 z-10 max-w-[280px] -translate-y-1/2 rounded-2xl p-3.5 sm:left-6 sm:right-auto sm:w-full sm:max-w-[320px] md:left-24"
-        style={{ backdropFilter: 'blur(1px)', WebkitBackdropFilter: 'blur(2px)' }}
+        className="absolute left-4 right-4 top-1/2 z-10 max-w-[17.5rem] -translate-y-1/2 rounded-2xl p-3.5 sm:left-6 sm:right-auto sm:w-full sm:max-w-[20rem] md:left-24"
+        style={{ backdropFilter: 'blur(1px)', WebkitBackdropFilter: 'blur(0.125rem)' }}
       >
         <ul className="flex flex-col gap-2 sm:gap-2.5" onMouseLeave={() => setActiveIndex(-1)}>
           {MENU_ITEMS.map((item, i) => {
             const active = i === activeIndex
             return (
               <li key={item.num} className="menu-item flex items-start gap-3">
-                <span className="pt-1.5 text-[8.5px] tracking-[1px] text-muted/70 sm:text-[9px]">{item.num}</span>
+                <span className="pt-1.5 text-[0.53125rem] tracking-[1px] text-muted/70 sm:text-[0.5625rem]">{item.num}</span>
                 <button
                   type="button"
                   onClick={() => item.key && onSelect?.(item.key)}
@@ -88,14 +88,14 @@ function Menu({ onClose, onSelect }) {
                 >
                   <span>
                     <span
-                      className={`block font-serif text-sm font-semibold tracking-[1.2px] text-cream transition-colors sm:text-base ${
+                      className={`block font-serif text-sm font-semibold tracking-[0.075rem] text-cream transition-colors sm:text-base ${
                         active ? 'text-gold-light' : ''
                       }`}
                     >
                       {item.title}
                     </span>
                     <span
-                      className={`mt-0.5 block text-[7.5px] tracking-[1px] transition-colors sm:text-[9px] ${
+                      className={`mt-0.5 block text-[0.46875rem] tracking-[1px] transition-colors sm:text-[0.5625rem] ${
                         active ? 'text-muted' : 'text-muted/70'
                       }`}
                     >
@@ -126,12 +126,12 @@ function Menu({ onClose, onSelect }) {
 
       {/* Right side copy */}
       <div className="absolute right-6 top-[46%] z-10 hidden -translate-y-1/2 text-right lg:right-20 lg:block xl:right-44">
-        <h2 className="font-serif text-[clamp(23px,2.52vw,33.6px)] uppercase leading-[1.25] tracking-[1px] text-cream/90">
+        <h2 className="font-serif text-[clamp(1.4375rem,2.52vw,2.1rem)] uppercase leading-[1.25] tracking-[1px] text-cream/90">
           More than
           <br />
           a residence
         </h2>
-        <p className="mt-3 flex items-center justify-end gap-3 text-[10px] uppercase tracking-[2px] text-muted">
+        <p className="mt-3 flex items-center justify-end gap-3 text-[0.625rem] uppercase tracking-[0.125rem] text-muted">
           A brighter tomorrow
           <span className="h-px w-6 bg-muted/60" />
         </p>

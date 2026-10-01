@@ -34,7 +34,7 @@ const ViewsPage = ({ onClose, onHome }) => {
 
   const TIMES_OF_DAY = ['day', 'evening', 'night'];
   const TILE_BASE_PATH = '/Fortune-panos/app-files/tiles';
-  const SLIDER_HEIGHT = 'min(40vh, 300px)'; // shared by the slider track and its floor-number ruler
+  const SLIDER_HEIGHT = 'min(40vh, 18.75rem)'; // shared by the slider track and its floor-number ruler
 
   const panoElementRef = useRef(null); // Connects to the HTML div
   const viewerRef = useRef(null);      // Stores the Marzipano Viewer instance
@@ -158,7 +158,7 @@ const ViewsPage = ({ onClose, onHome }) => {
     gsap.killTweensOf(toastRef.current);
     gsap.fromTo(
       toastRef.current,
-      { opacity: 0, y: -10, scale: 0.96, filter: 'blur(4px)' },
+      { opacity: 0, y: -10, scale: 0.96, filter: 'blur(0.25rem)' },
       { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power3.out' }
     );
     clearTimeout(toastTimeoutRef.current);
@@ -282,7 +282,7 @@ const ViewsPage = ({ onClose, onHome }) => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.fromTo(
       '.views-chrome',
-      { opacity: 0, y: 16, scale: 0.94, filter: 'blur(6px)' },
+      { opacity: 0, y: 16, scale: 0.94, filter: 'blur(0.375rem)' },
       { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.85, stagger: 0.1, clearProps: 'filter,scale' },
       0.2
     );
@@ -349,18 +349,18 @@ const ViewsPage = ({ onClose, onHome }) => {
         ref={toastRef}
         className="pointer-events-none absolute z-20 whitespace-nowrap"
         style={{
-          top: '28px',
+          top: '1.75rem',
           left: '50%',
           transform: 'translateX(-50%)',
           opacity: 0,
-          padding: '9px 20px',
-          borderRadius: '999px',
+          padding: '0.5625rem 1.25rem',
+          borderRadius: '62.4375rem',
           backgroundColor: 'rgba(10, 9, 8, 0.8)',
           border: '1px solid rgba(201, 162, 39, 0.3)',
-          boxShadow: '0 8px 28px rgba(0,0,0,0.4)',
-          backdropFilter: 'blur(14px)',
+          boxShadow: '0 0.5rem 1.75rem rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(0.875rem)',
           color: '#f3ecd9',
-          fontSize: '11px',
+          fontSize: '0.6875rem',
           fontWeight: 600,
           letterSpacing: '0.14em',
         }}
@@ -372,37 +372,37 @@ const ViewsPage = ({ onClose, onHome }) => {
       <div
         ref={dockRef}
         className="views-chrome absolute z-20"
-        style={{ top: 'calc(50% - 320px)', right: '22px', transform: 'translateY(-50%)' }}
+        style={{ top: 'calc(50% - 20rem)', right: '1.375rem', transform: 'translateY(-50%)' }}
       >
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
-            width: '76px',
-            padding: '14px 0',
-            borderRadius: '30px',
+            gap: '0.75rem',
+            width: '4.75rem',
+            padding: '0.875rem 0',
+            borderRadius: '1.875rem',
             backgroundColor: 'rgba(10, 9, 8, 0.72)',
             border: '1px solid rgba(201, 162, 39, 0.25)',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(20px)',
+            boxShadow: '0 1rem 3rem rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(1.25rem)',
             overflow: 'visible',
           }}
         >
           {/* Segmented time-of-day, stacked */}
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '999px', padding: '3px' }}>
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '62.4375rem', padding: '0.1875rem' }}>
             <div
               aria-hidden="true"
               style={{
                 position: 'absolute',
-                left: '3px',
-                right: '3px',
-                top: `calc(${TIMES_OF_DAY.indexOf(currentTime) * 33.333}% + 3px)`,
-                height: 'calc(33.333% - 6px)',
-                borderRadius: '999px',
+                left: '0.1875rem',
+                right: '0.1875rem',
+                top: `calc(${TIMES_OF_DAY.indexOf(currentTime) * 33.333}% + 0.1875rem)`,
+                height: 'calc(33.333% - 0.375rem)',
+                borderRadius: '62.4375rem',
                 background: 'linear-gradient(135deg, #e9cf94, #b48a3e)',
-                boxShadow: '0 4px 14px rgba(205, 168, 102, 0.45)',
+                boxShadow: '0 0.25rem 0.875rem rgba(205, 168, 102, 0.45)',
                 transition: 'top 0.4s cubic-bezier(0.65, 0, 0.35, 1)',
               }}
             />
@@ -415,9 +415,9 @@ const ViewsPage = ({ onClose, onHome }) => {
                   aria-label={time}
                   className="relative flex items-center justify-center"
                   style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '999px',
+                    width: '2.125rem',
+                    height: '2.125rem',
+                    borderRadius: '62.4375rem',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -431,7 +431,7 @@ const ViewsPage = ({ onClose, onHome }) => {
             })}
           </div>
 
-          <div style={{ width: '32px', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
+          <div style={{ width: '2rem', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
 
           <button
             onClick={toggleAutoRotate}
@@ -441,7 +441,7 @@ const ViewsPage = ({ onClose, onHome }) => {
             className={`group relative flex items-center justify-center rounded-full border transition-colors duration-300 luxury-btn flex-shrink-0 ${
               isAutoRotating ? 'border-gold-light/70 bg-black/40' : 'border-white/15 bg-white/[0.03]'
             }`}
-            style={{ width: '34px', height: '34px', color: isAutoRotating ? '#e3c463' : 'rgba(227,196,99,0.7)' }}
+            style={{ width: '2.125rem', height: '2.125rem', color: isAutoRotating ? '#e3c463' : 'rgba(227,196,99,0.7)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isAutoRotating ? 'animate-spin-slow' : ''}>
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -449,14 +449,14 @@ const ViewsPage = ({ onClose, onHome }) => {
             </svg>
           </button>
 
-          <div style={{ width: '32px', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
+          <div style={{ width: '2rem', height: '1px', background: 'rgba(201, 162, 39, 0.2)' }} />
 
           {/* The elevation slider — one continuous gold-fill track, dragged or
               tapped directly, with every floor number marked beside it so the
               guest can aim straight for the one they want. */}
-          <div className="flex items-center" style={{ gap: '6px' }}>
+          <div className="flex items-center" style={{ gap: '0.375rem' }}>
             {/* Floor ruler — a static number beside every floor's true position */}
-            <div style={{ position: 'relative', width: '20px', height: SLIDER_HEIGHT, flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: '1.25rem', height: SLIDER_HEIGHT, flexShrink: 0 }}>
               {FLOOR_DATA.map((floor, idx) => {
                 const isActive = currentFloorIdx === idx;
                 return (
@@ -471,11 +471,11 @@ const ViewsPage = ({ onClose, onHome }) => {
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      padding: '2px 3px',
-                      fontSize: isActive ? '9.5px' : '7.5px',
+                      padding: '0.125rem 0.1875rem',
+                      fontSize: isActive ? '0.59375rem' : '0.46875rem',
                       fontWeight: isActive ? 800 : 500,
                       color: isActive ? '#f9e9c2' : 'rgba(227,196,99,0.4)',
-                      textShadow: isActive ? '0 0 8px rgba(227,196,99,0.8)' : 'none',
+                      textShadow: isActive ? '0 0 0.5rem rgba(227,196,99,0.8)' : 'none',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.25s ease',
                     }}
@@ -495,10 +495,10 @@ const ViewsPage = ({ onClose, onHome }) => {
               onWheel={handleSliderWheel}
               style={{
                 position: 'relative',
-                width: '14px',
+                width: '0.875rem',
                 flexShrink: 0,
                 height: SLIDER_HEIGHT,
-                borderRadius: '999px',
+                borderRadius: '62.4375rem',
                 backgroundColor: 'rgba(255,255,255,0.06)',
                 cursor: 'grab',
                 touchAction: 'none',
@@ -509,9 +509,9 @@ const ViewsPage = ({ onClose, onHome }) => {
                 className="pointer-events-none absolute bottom-0 left-0 right-0"
                 style={{
                   height: `${(1 - railFractionFor(currentFloorIdx)) * 100}%`,
-                  borderRadius: '999px',
+                  borderRadius: '62.4375rem',
                   background: 'linear-gradient(180deg, #f9e9c2 0%, #e3c463 45%, #b48a3e 100%)',
-                  boxShadow: '0 0 16px rgba(227,196,99,0.55)',
+                  boxShadow: '0 0 1rem rgba(227,196,99,0.55)',
                   transition: sliderDraggingRef.current ? 'none' : 'height 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
                 }}
               />
@@ -520,13 +520,13 @@ const ViewsPage = ({ onClose, onHome }) => {
                 className="pointer-events-none absolute left-1/2"
                 style={{
                   bottom: `${(1 - railFractionFor(currentFloorIdx)) * 100}%`,
-                  width: '20px',
-                  height: '20px',
+                  width: '1.25rem',
+                  height: '1.25rem',
                   borderRadius: '50%',
                   transform: 'translate(-50%, 50%)',
                   background: '#fdf6e3',
-                  border: '2px solid #e3c463',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.4), 0 0 12px rgba(227,196,99,0.7)',
+                  border: '0.125rem solid #e3c463',
+                  boxShadow: '0 0.125rem 0.625rem rgba(0,0,0,0.4), 0 0 0.75rem rgba(227,196,99,0.7)',
                   transition: sliderDraggingRef.current ? 'none' : 'bottom 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
                 }}
               />
@@ -538,7 +538,7 @@ const ViewsPage = ({ onClose, onHome }) => {
             disabled={currentFloorIdx === FLOOR_DATA.length - 1}
             aria-label="Next floor down"
             style={{
-              width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+              width: '1.375rem', height: '1.375rem', borderRadius: '50%', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'none', border: 'none',
               color: currentFloorIdx === FLOOR_DATA.length - 1 ? 'rgba(227,196,99,0.25)' : 'rgba(227,196,99,0.75)',
@@ -548,12 +548,12 @@ const ViewsPage = ({ onClose, onHome }) => {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
           </button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', paddingTop: '2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.125rem', paddingTop: '0.125rem' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e3c463" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
               <circle cx="12" cy="9.5" r="2.3" />
             </svg>
-            <span style={{ fontSize: '10px', fontWeight: 600, color: '#e3c463', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#e3c463', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
               {FLOOR_DATA[currentFloorIdx].height}
             </span>
           </div>

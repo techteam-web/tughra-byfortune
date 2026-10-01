@@ -32,31 +32,31 @@ function Hero({ onExplore }) {
           <i className="block h-6.5 w-0.5 bg-gold" />
         </span>
         <div>
-          <strong className="block font-serif text-xl tracking-[4px] text-cream">TUGHRA</strong>
-          <span className="mt-1 block text-[10px] tracking-[3px] text-muted">MUMBAI CENTRAL</span>
+          <strong className="block font-serif text-xl tracking-[0.25rem] text-cream">TUGHRA</strong>
+          <span className="mt-1 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
         </div>
       </div>
 
    
 
       {/* Main copy */}
-      <div className="absolute left-6 top-1/2 z-10 max-w-[380px] -translate-y-1/2 md:left-[14%]">
-        <span className="mb-3 block text-xs uppercase tracking-[2.5px] text-cream/85">
+      <div className="absolute left-6 top-1/2 z-10 max-w-[23.75rem] -translate-y-1/2 md:left-[14%]">
+        <span className="mb-3 block text-xs uppercase tracking-[0.15625rem] text-cream/85">
           City. Sea. Opportunity.
         </span>
-        <h1 className="font-serif text-[clamp(38px,4.4vw,58px)] font-normal uppercase leading-[1.12] tracking-[0.5px] text-cream">
+        <h1 className="font-serif text-[clamp(2.375rem,4.4vw,3.625rem)] font-normal uppercase leading-[1.12] tracking-[0.5px] text-cream">
           A HIGHER
           <br />
           <span className="text-gold-light">PERSPECTIVE</span>
         </h1>
-        <p className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[1.5px] text-muted">
+        <p className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[0.09375rem] text-muted">
           <span className="h-px w-6 bg-muted/60" />
           All within reach.
         </p>
         <button
           type="button"
           onClick={onExplore}
-          className="group mt-8 inline-flex items-center gap-3.5 border-none bg-transparent p-0 text-sm uppercase tracking-[2px] text-cream"
+          className="group mt-8 inline-flex items-center gap-3.5 border-none bg-transparent p-0 text-sm uppercase tracking-[0.125rem] text-cream"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-gold transition-colors group-hover:bg-gold/15">
             <i className="block h-px w-3 bg-gold" />
