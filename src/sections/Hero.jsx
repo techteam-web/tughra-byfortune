@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark.jsx'
 import PanoBackground from '../components/PanoBackground.jsx'
 
 function Hero({ onExplore }) {
@@ -25,16 +26,8 @@ function Hero({ onExplore }) {
       </div>
 
       {/* Brand */}
-      <div className="absolute left-6 top-6 z-10 flex items-center gap-3.5 md:left-12 md:top-10">
-        <span className="flex gap-1">
-          <i className="block h-6.5 w-0.5 bg-gold" />
-          <i className="block h-6.5 w-0.5 bg-gold" />
-          <i className="block h-6.5 w-0.5 bg-gold" />
-        </span>
-        <div>
-          <strong className="block font-serif text-xl tracking-[0.25rem] text-cream">TUGHRA</strong>
-          <span className="mt-1 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
-        </div>
+      <div className="absolute left-6 top-6 z-10 md:left-12 md:top-10">
+        <BrandMark />
       </div>
 
    
@@ -58,10 +51,11 @@ function Hero({ onExplore }) {
           onClick={onExplore}
           className="group mt-8 inline-flex items-center gap-3.5 border-none bg-transparent p-0 text-sm uppercase tracking-[0.125rem] text-cream"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-gold transition-colors group-hover:bg-gold/15">
-            <i className="block h-px w-3 bg-gold" />
+          <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gold transition-colors group-hover:bg-gold/15">
+            <span className="absolute inset-0 animate-ping rounded-full border border-gold/60" />
+            <i className="block h-px w-4 bg-gold" />
           </span>
-          Explore
+          Click here to explore
         </button>
       </div>
 

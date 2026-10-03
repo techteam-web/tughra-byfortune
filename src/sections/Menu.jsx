@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark.jsx'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import menuBg from '../assets/render/menu.png'
@@ -12,6 +13,8 @@ const MENU_ITEMS = [
   { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views' },
   { num: '05', title: 'AMENITIES', subtitle: 'REFINED LEISURE', key: 'amenities' },
 
+   { num: '06', title: 'ENQUIRY', subtitle: 'CONTACT FORM', key: 'enquiry' },
+
 
 ]
 
@@ -22,6 +25,14 @@ function Menu({ onClose, onSelect }) {
   useLayoutEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
     tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5 })
+    tl.fromTo('.about-line', { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 0.5)
+    tl.fromTo('.about-fade', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 }, 0.9)
+    tl.fromTo('.about-rule', { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, 0.7)
+    gsap.utils.toArray('.about-count').forEach((el) => {
+      const target = Number(el.dataset.count)
+      const o = { v: 0 }
+      tl.to(o, { v: target, duration: 1.8, ease: 'power2.out', onUpdate: () => { el.textContent = Math.round(o.v) } }, 1.1)
+    })
     tl.fromTo(
       '.menu-item',
       { opacity: 0, x: -24 },
@@ -46,10 +57,7 @@ function Menu({ onClose, onSelect }) {
           onClick={onClose}
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
-          <span>
-            <strong className="block font-serif text-lg tracking-[0.1875rem] text-cream sm:text-xl sm:tracking-[0.25rem] md:text-2xl md:tracking-[0.375rem]">TUGHRA</strong>
-            <span className="mt-1.5 block text-[0.5rem] tracking-[0.125rem] text-muted sm:text-[0.625rem] sm:tracking-[0.1875rem]">MUMBAI CENTRAL</span>
-          </span>
+          <BrandMark />
         </button>
 
         <div className="flex items-center gap-6">
@@ -124,20 +132,22 @@ function Menu({ onClose, onSelect }) {
         </ul>
       </nav>
 
-      {/* Right side copy */}
-      <div className="absolute right-6 top-[46%] z-10 hidden -translate-y-1/2 text-right lg:right-20 lg:block xl:right-44">
-        <h2 className="font-serif text-[clamp(1.4375rem,2.52vw,2.1rem)] uppercase leading-[1.25] tracking-[1px] text-cream/90">
-          More than
-          <br />
-          a residence
+      {/* Right side: about the building - a quiet line of type on the render */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-[45%] bg-gradient-to-l from-[rgba(10,9,8,0.6)] to-transparent lg:block" />
+      <aside
+        className="absolute right-10 top-[56%] z-10 hidden w-[22rem] -translate-y-1/2 text-right lg:block xl:right-24 xl:w-[26rem]"
+        style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.6)' }}
+      >
+        <span className="about-fade block text-[0.625rem] uppercase tracking-[0.3rem] text-gold">Tughra Royale</span>
+        <h2 className="mt-5 font-serif text-[clamp(2rem,3.2vw,3.25rem)] font-medium leading-[1.08] text-cream">
+          <span className="block overflow-hidden pb-1"><span className="about-line block">The Emperor&rsquo;s Seal,</span></span>
+          <span className="block overflow-hidden pb-1"><span className="about-line block italic text-gold-light">above Mumbai Central.</span></span>
         </h2>
-        <p className="mt-3 flex items-center justify-end gap-3 text-[0.625rem] uppercase tracking-[0.125rem] text-muted">
-          A brighter tomorrow
-          <span className="h-px w-6 bg-muted/60" />
+        <span className="about-rule mt-6 ml-auto block h-px w-24 origin-right bg-gold/70" />
+        <p className="about-fade mt-5 ml-auto max-w-[19rem] text-[0.875rem] leading-[1.8] text-cream/75">
+          24 floors of 4, 5 and 6 BHK residences, crowned in copper and lifted above the city and sea.
         </p>
-      </div>
-
-  
+      </aside>
     </section>
   )
 }

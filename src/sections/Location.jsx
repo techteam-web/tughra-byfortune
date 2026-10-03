@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark.jsx'
 import { useEffect, useRef } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -237,10 +238,7 @@ function Location({ onClose }) {
           onClick={onClose}
           className="flex items-center border-none bg-transparent p-0 text-left"
         >
-          <span>
-            <strong className="block font-serif text-2xl tracking-[0.375rem] text-cream">TUGHRA</strong>
-            <span className="mt-1.5 block text-[0.625rem] tracking-[0.1875rem] text-muted">MUMBAI CENTRAL</span>
-          </span>
+          <BrandMark />
         </button>
         <BackButton onClick={onClose} />
       </div>
