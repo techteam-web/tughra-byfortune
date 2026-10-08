@@ -2,22 +2,22 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0a0908;
-  --color-gold: #c9a227;
-  --color-gold-light: #e3c463;
-  --color-cream: #f3ecd9;
-  --color-muted: #a99f8b;
+  --color-bg: #470d21;
+  --color-gold: #f0b866;
+  --color-gold-light: #ffd58a;
+  --color-cream: #f9e4d4;
+  --color-muted: #d9b39c;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
-  --bg: #0a0908;
-  --gold: #c9a227;
-  --gold-light: #e3c463;
-  --cream: #f3ecd9;
-  --muted: #a99f8b;
+  --bg: #470d21;
+  --gold: #f0b866;
+  --gold-light: #ffd58a;
+  --cream: #f9e4d4;
+  --muted: #d9b39c;
 
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -91,11 +91,11 @@ h1 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(201, 162, 39, 0.35);
+  background: rgba(240,184,102, 0.35);
   border-radius: 0.625rem;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 162, 39, 0.65);
+  background: rgba(240,184,102, 0.65);
 }
 
 @media (max-width: 768px) {

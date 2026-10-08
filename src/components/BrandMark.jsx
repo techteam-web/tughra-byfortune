@@ -5,11 +5,15 @@ import { useEffect, useState } from 'react'
 // white, and the empty margin is cropped away.
 const TUGHRA = '/assets/logo/tughra.png'
 
+// tone 'light' = white logo for dark pages, 'dark' = deep brown logo for light pages
+const TINT = { light: [255, 255, 255], dark: [92, 62, 40] }
+
 const cache = {}
 
-function whiteLogo(src) {
-  if (cache[src]) return cache[src]
-  cache[src] = new Promise((resolve, reject) => {
+function whiteLogo(src, tone = 'light') {
+  const key = src + tone
+  if (cache[key]) return cache[key]
+  cache[key] = new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
       const scale = 900 / img.naturalWidth
@@ -28,7 +32,9 @@ function whiteLogo(src) {
           const i = (y * w + x) * 4
           const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
           const a = Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
-          px[i] = px[i + 1] = px[i + 2] = 255
+          px[i] = TINT[tone][0]
+          px[i + 1] = TINT[tone][1]
+          px[i + 2] = TINT[tone][2]
           px[i + 3] = a
           if (a > 24) {
             if (x < minX) minX = x
@@ -50,28 +56,28 @@ function whiteLogo(src) {
     img.onerror = reject
     img.src = src
   })
-  return cache[src]
+  return cache[key]
 }
 
-function BrandMark() {
+function BrandMark({ tone = 'light' }) {
   const [logo, setLogo] = useState(null)
 
   useEffect(() => {
     let live = true
-    whiteLogo(TUGHRA).then((l) => live && setLogo(l), () => {})
+    whiteLogo(TUGHRA, tone).then((l) => live && setLogo(l), () => {})
     return () => {
       live = false
     }
-  }, [])
+  }, [tone])
 
   return (
     <span className="flex flex-col items-center gap-1">
       <span className="flex items-end">
-        <span className="block h-[2.25rem] md:h-[3rem]" style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
+        <span className="block h-[3.25rem] md:h-[4.25rem]" style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
           {logo && <img src={logo.url} alt="Tughra Royale" className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
-      <span className="block text-center text-[0.375rem] uppercase tracking-[0.1rem] text-cream/80 md:text-[0.4375rem]">
+      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#470d21]' : 'text-cream/80'} md:text-[0.5625rem]`}>
         An Initiative by Fortune Square
       </span>
     </span>

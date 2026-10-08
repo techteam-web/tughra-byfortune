@@ -1,0 +1,366 @@
+/* Canvas for the Gallery page: the site's wine, gold and cream, nothing else. */
+.sc-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  color: #f9e4d4;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(240, 184, 102, 0.1) 0%, rgba(240, 184, 102, 0) 70%),
+    radial-gradient(ellipse 90% 80% at 50% 110%, rgba(20, 3, 10, 0.75) 0%, rgba(20, 3, 10, 0) 70%),
+    #470d21;
+}
+.sc-hair {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(240, 184, 102, 0) 0%, rgba(240, 184, 102, 0.5) 50%, rgba(240, 184, 102, 0) 100%);
+}
+.sc-noscroll {
+  scrollbar-width: none;
+}
+.sc-noscroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Gallery: a wall of framed renders ---------- */
+.gw-wall {
+  column-count: 1;
+  column-gap: 0.85rem;
+}
+@media (min-width: 640px) {
+  .gw-wall { column-count: 2; column-gap: 1rem; }
+}
+@media (min-width: 1024px) {
+  .gw-wall { column-count: 3; column-gap: 1.1rem; }
+}
+@media (min-width: 1600px) {
+  .gw-wall { column-count: 4; }
+}
+.gw-wall.is-plan { column-count: 1; max-width: 56rem; margin: 0 auto; }
+@media (min-width: 1024px) {
+  .gw-wall.is-plan { column-count: 2; max-width: none; }
+}
+
+.gw-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0 0 0.85rem;
+  padding: 0;
+  border: 1px solid rgba(240, 184, 102, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(20, 3, 10, 0.4);
+  overflow: hidden;
+  cursor: pointer;
+  break-inside: avoid;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 1024px) {
+  .gw-frame { margin-bottom: 1.1rem; }
+}
+.gw-frame:hover,
+.gw-frame:focus-visible {
+  transform: translateY(-0.3rem);
+  border-color: rgba(240, 184, 102, 0.9);
+  box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.5), 0 0 2rem rgba(240, 184, 102, 0.16);
+  outline: none;
+}
+.gw-shot {
+  display: block;
+  overflow: hidden;
+  border-radius: 0.65rem;
+  background: #1a0a0c;
+}
+.gw-wall.is-plan .gw-shot { background: #fffaf4; }
+.gw-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+  filter: saturate(0.92) brightness(0.92);
+}
+.gw-frame:hover .gw-shot img,
+.gw-frame:focus-visible .gw-shot img {
+  transform: scale(1.045);
+  filter: saturate(1) brightness(1);
+}
+
+/* the caption rides up from the foot of the frame */
+.gw-cap {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.6rem 0.9rem 0.8rem;
+  text-align: left;
+  background: linear-gradient(0deg, rgba(20, 3, 10, 0.92) 0%, rgba(20, 3, 10, 0.55) 55%, rgba(20, 3, 10, 0) 100%);
+  transform: translateY(18%);
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gw-frame:hover .gw-cap,
+.gw-frame:focus-visible .gw-cap {
+  opacity: 1;
+  transform: translateY(0);
+}
+.gw-no {
+  font-family: var(--font-serif, serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: #f0b866;
+}
+.gw-text { min-width: 0; flex: 1 1 auto; }
+.gw-title {
+  display: block;
+  font-family: var(--font-serif, serif);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  color: #f9e4d4;
+}
+.gw-sub {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249, 228, 212, 0.7);
+}
+.gw-eye {
+  display: flex;
+  height: 1.9rem;
+  width: 1.9rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(240, 184, 102, 0.7);
+  border-radius: 999px;
+  color: #ffd58a;
+}
+
+/* sliding tab switcher */
+.gl-tabs {
+  position: relative;
+  display: inline-flex;
+  padding: 0.3rem;
+  border: 1px solid rgba(249, 228, 212, 0.25);
+  border-radius: 999px;
+  background: rgba(20, 3, 10, 0.4);
+  backdrop-filter: blur(6px);
+}
+.gl-pill {
+  position: absolute;
+  top: 0.3rem;
+  bottom: 0.3rem;
+  left: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 184, 102, 0.6);
+  background: rgba(240, 184, 102, 0.12);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gl-tab {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.22rem;
+  text-transform: uppercase;
+  color: rgba(249, 228, 212, 0.7);
+  cursor: pointer;
+  transition: color 0.4s ease;
+}
+.gl-tab:hover,
+.gl-tab[aria-pressed='true'] {
+  color: #ffd58a;
+}
+@media (min-width: 768px) {
+  .gl-tab {
+    padding: 0.65rem 1.6rem;
+  }
+}
+
+/* ---------- Gallery: a warm light trails the cursor ---------- */
+.gl-light {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  height: 36rem;
+  width: 36rem;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(closest-side, rgba(255, 200, 130, 0.16), rgba(255, 200, 130, 0.05) 55%, transparent 100%);
+}
+
+/* the cursor light on the full-bleed gallery */
+.gl-light {
+  height: 38rem;
+  width: 38rem;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+  background: radial-gradient(closest-side, rgba(255, 200, 130, 0.16), rgba(255, 200, 130, 0.05) 55%, transparent 100%);
+}
+
+/* ---------- Gallery: one render hung on the wall, every render on the rail ---------- */
+.gx-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  color: #f9e4d4;
+  background: #2a0713;
+}
+/* the room takes its colour from whatever is hanging */
+.gx-wash {
+  position: absolute;
+  inset: -8%;
+  z-index: 0;
+  pointer-events: none;
+}
+.gx-wash img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  filter: blur(54px) saturate(1.2) brightness(0.5);
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.4s ease;
+}
+.gx-wash img.is-on { opacity: 0.5; }
+.gx-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 60% at 50% 46%, rgba(20, 3, 10, 0) 45%, rgba(20, 3, 10, 0.72) 100%),
+    linear-gradient(180deg, rgba(20, 3, 10, 0.72) 0%, rgba(20, 3, 10, 0) 22%),
+    linear-gradient(0deg, rgba(20, 3, 10, 0.8) 0%, rgba(20, 3, 10, 0) 26%);
+}
+
+/* the hung render */
+@keyframes gxHang {
+  from { opacity: 0; transform: translateY(1.1rem) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.gx-frame {
+  position: relative;
+  display: block;
+  max-height: 100%;
+  max-width: 100%;
+  padding: 0.45rem;
+  border: 1px solid rgba(240, 184, 102, 0.55);
+  border-radius: 0.9rem;
+  background: rgba(20, 3, 10, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 2rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 2.5rem rgba(240, 184, 102, 0.12);
+  animation: gxHang 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.gx-frame:hover,
+.gx-frame:focus-visible {
+  border-color: rgba(240, 184, 102, 0.95);
+  box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.6), 0 0 3rem rgba(240, 184, 102, 0.22);
+  outline: none;
+}
+.gx-frame img {
+  display: block;
+  max-height: calc(100svh - 21rem);
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  border-radius: 0.55rem;
+  object-fit: contain;
+}
+@media (max-width: 767px) {
+  .gx-frame img { max-height: calc(100svh - 24rem); }
+}
+/* the expand mark, tucked in the corner of the frame */
+.gx-mark {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  height: 2.4rem;
+  width: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(240, 184, 102, 0.7);
+  border-radius: 999px;
+  background: rgba(20, 3, 10, 0.55);
+  color: #ffd58a;
+  opacity: 0;
+  transform: translateY(0.4rem);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  backdrop-filter: blur(6px);
+}
+.gx-frame:hover .gx-mark,
+.gx-frame:focus-visible .gx-mark {
+  opacity: 1;
+  transform: none;
+}
+
+/* the rail: every render in the collection */
+.gx-rail {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+}
+@media (min-width: 768px) {
+  .gx-rail { gap: 0.7rem; margin-top: 1.1rem; }
+}
+.gx-chip {
+  position: relative;
+  flex: 0 0 auto;
+  height: 3.4rem;
+  width: 4.6rem;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(249, 228, 212, 0.22);
+  border-radius: 0.45rem;
+  background: #1a0a0c;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.5s ease, border-color 0.5s ease, width 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s ease;
+}
+@media (min-width: 768px) {
+  .gx-chip { height: 4rem; width: 5.6rem; }
+}
+.gx-chip img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.gx-chip:hover { opacity: 0.85; transform: translateY(-0.15rem); }
+.gx-chip.is-on {
+  opacity: 1;
+  width: 7.2rem;
+  border-color: rgba(240, 184, 102, 0.95);
+  box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 768px) {
+  .gx-chip.is-on { width: 9rem; }
+}
+.gx-chip-no {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0.25rem;
+  font-family: var(--font-serif, serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: rgba(249, 228, 212, 0.9);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+.gx-chip.is-on .gx-chip-no { color: #ffd58a; }

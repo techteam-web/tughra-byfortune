@@ -1,10 +1,11 @@
-import BrandMark from '../components/BrandMark.jsx'
 import { useEffect, useState } from 'react'
-import BackButton from '../components/BackButton.jsx'
-import UnitPanel from '../components/UnitPanel.jsx'
+import BrandMark from '../components/BrandMark.jsx'
+import FloorStage from '../components/FloorStage.jsx'
+import { UNITS } from '../components/floorUnits.js'
 
 // Floors that are shown on the tower but cannot be opened.
 const LOCKED_FLOORS = new Set(['_8th', '_9th'])
+const DEFAULT_FLOOR = '_17th'
 
 const TOWER_IMG = '/assets/menu.png'
 const BUILDING_SVG_URL = '/assets/svg/Building.svg'
@@ -33,12 +34,12 @@ const idToLabel = (id) => {
   return `${id.replace(/^_/, '')} Floor`
 }
 
-const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Terrace' : `Floor ${parseInt(f.num, 10)}`)
 
 function FloorPlans({ onClose }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
+  const [unitId, setUnitId] = useState(UNITS[0].id)
 
   // Load Building.svg itself and measure each floor shape's real bounding
   // box, rather than keeping a hand-copied duplicate of its path data - any
@@ -71,8 +72,6 @@ function FloorPlans({ onClose }) {
             points: el.getAttribute('points'),
             num: idToNum(id),
             label: idToLabel(id),
-            x0: b.x,
-            x1: b.x + b.width,
             y0: b.y,
             y1: b.y + b.height,
           }
@@ -82,6 +81,7 @@ function FloorPlans({ onClose }) {
         if (cancelled) return
 
         setFloors(parsed)
+        setSelectedFloor((cur) => cur || (parsed.some((f) => f.id === DEFAULT_FLOOR) ? DEFAULT_FLOOR : parsed.find((f) => !LOCKED_FLOORS.has(f.id))?.id))
       })
       .catch(() => {})
 
@@ -90,7 +90,9 @@ function FloorPlans({ onClose }) {
     }
   }, [])
 
+  const selectable = floors.filter((f) => !LOCKED_FLOORS.has(f.id))
   const activeFloor = floors.find((f) => f.id === selectedFloor)
+  const tagFloor = floors.find((f) => f.id === (hoveredFloor || selectedFloor))
 
   // The inner box is oversized relative to the cropped wrapper so that, once
   // clipped by overflow:hidden, only the CROP window is visible - and since
@@ -106,90 +108,96 @@ function FloorPlans({ onClose }) {
 
   return (
     <section
-      className="relative flex min-h-svh w-full flex-col text-cream lg:h-svh lg:overflow-hidden"
-      style={{ background: 'radial-gradient(circle at 100% 0%, rgba(201,162,39,0.14) 0%, transparent 40%), radial-gradient(circle at 0% 0%, #4a3a32 0%, #2d2420 35%, #1d1816 65%, #14110f 100%)' }}
+      className="relative flex min-h-svh w-full flex-col text-[#470d21] lg:h-svh lg:overflow-hidden"
+      style={{ background: 'radial-gradient(60rem 40rem at 20% 0%, #fdf0e6 0%, transparent 70%), radial-gradient(50rem 36rem at 100% 100%, #f1d3c0 0%, transparent 70%), #f7e3d6' }}
     >
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g fill="none" stroke="#c9954a" strokeOpacity="0.4" strokeWidth="1.2">
+          <path d="M-40 760C260 700 420 560 640 520C900 470 1060 560 1240 420C1380 310 1480 180 1660 130" />
+          <path d="M-40 800C300 760 460 640 700 600C960 556 1100 640 1280 510C1420 410 1520 290 1660 250" strokeOpacity="0.25" />
+          <path d="M260 -40C360 120 330 260 470 380C560 456 560 560 700 620" strokeOpacity="0.28" />
+          <path d="M1660 520C1500 560 1420 700 1260 760C1120 810 1000 800 880 940" strokeOpacity="0.3" />
+        </g>
+        <g fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="2">
+          <path d="M-40 780C280 730 440 600 670 560C930 512 1080 600 1260 465C1400 360 1500 235 1660 190" />
+        </g>
+      </svg>
       {/* Top bar */}
-      <div className="relative z-20 flex shrink-0 items-start justify-between px-6 py-5 md:px-12 md:py-6">
-        <button type="button" onClick={onClose} className="flex items-center border-none bg-transparent p-0 text-left">
-          <BrandMark />
+      <div className="relative z-20 flex shrink-0 items-start justify-between px-6 py-5 md:px-10 md:py-6">
+        <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
+          <BrandMark tone="dark" />
         </button>
-        <BackButton onClick={onClose} />
+        <button
+          type="button"
+          onClick={onClose}
+          className="lux-btn lux-light group flex items-center gap-2.5 rounded-full px-5 py-2.5 text-[0.625rem] uppercase tracking-[0.25rem]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          Back
+        </button>
       </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-8 px-6 pb-6 md:px-12 lg:flex-row lg:gap-10">
-        {/* Left: floor picker + interactive tower */}
-        <div className="flex shrink-0 flex-col items-center gap-3 self-center [--tower-h:min(52svh,28rem)] lg:mb-16 lg:min-w-0 lg:flex-1 lg:[--tower-h:min(calc(100svh-17rem),30rem)]">
-          <div className="flex items-center gap-2 text-[0.5625rem] uppercase tracking-[0.2rem] text-muted">
-            <span className="h-px w-4 bg-gold/50" />
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-6 px-6 pb-6 md:px-10 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-6 lg:grid-cols-[17rem_minmax(0,1fr)_13rem] lg:grid-rows-[minmax(0,1fr)] lg:gap-8 lg:pb-[4.5rem]">
+        {/* ---------- Left: tower, the floor selector ---------- */}
+        <div
+          className="relative flex flex-col overflow-hidden rounded-[1.75rem] p-4 [--tower-h:min(54svh,24rem)] md:row-span-2 md:self-start md:[--tower-h:min(70svh,19rem)] lg:row-span-1 lg:self-stretch lg:[--tower-h:min(calc(100svh-18rem),23rem)]"
+          style={{ background: '#470d21', boxShadow: '0 1.5rem 3rem rgba(71,13,33,0.28)' }}
+        >
+          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 270 700" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M-10 640C70 600 150 640 290 560" fill="none" stroke="#e0a24e" strokeOpacity="0.35" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+            <path d="M-10 670C80 630 160 670 290 590" fill="none" stroke="#e0a24e" strokeOpacity="0.2" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+          </svg>
+
+          <div className="relative flex items-center justify-center gap-2 text-[0.5625rem] uppercase tracking-[0.25rem] text-[#e3c9a0]/85">
+            <span className="h-px w-5 bg-[#d9a066]/70" />
             Select a floor
           </div>
-          <div className="relative flex gap-4">
-            <div className="relative shrink-0 select-none overflow-hidden" style={{ height: 'var(--tower-h)', aspectRatio: `${CROP.width} / ${CROP.height}` }}>
-              <div style={innerStyle}>
-                <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
-                <svg viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} className="absolute inset-0 h-full w-full">
-                  {floors.map((floor) => {
-                    const isHovered = hoveredFloor === floor.id
-                    const isSelected = selectedFloor === floor.id
-                    const shapeProps = LOCKED_FLOORS.has(floor.id)
-                      ? { style: { pointerEvents: 'none', fill: 'transparent' } }
-                      : {
-                          onClick: () => setSelectedFloor(floor.id),
-                          onMouseEnter: () => setHoveredFloor(floor.id),
-                          onMouseLeave: () => setHoveredFloor(null),
-                          style: {
-                            cursor: 'pointer',
-                            pointerEvents: 'all',
-                            transition: 'fill 0.2s ease',
-                            fill: isSelected ? 'rgba(227,196,99,0.35)' : isHovered ? 'rgba(227,196,99,0.22)' : 'rgba(227,196,99,0.01)',
-                          },
-                        }
-                    return floor.type === 'path' ? (
-                      <path key={floor.id} d={floor.d} {...shapeProps} />
-                    ) : (
-                      <polygon key={floor.id} points={floor.points} {...shapeProps} />
-                    )
-                  })}
-                </svg>
-              </div>
-            </div>
-            {/* Floor number tag - only the number, riding alongside the highlighted floor */}
-            {(() => {
-              const f = floors.find((x) => x.id === (hoveredFloor || selectedFloor))
-              if (!f || LOCKED_FLOORS.has(f.id)) return null
-              const top = (((f.y0 + f.y1) / 2 - CROP.y) / CROP.height) * 100
-              return (
-                <div className="pointer-events-none absolute left-0 z-10 flex -translate-x-full -translate-y-1/2 items-center transition-[top] duration-500 ease-out" style={{ top: `${top}%` }}>
-                  <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 font-serif text-lg font-semibold text-[#1d1816]" style={{ background: 'linear-gradient(135deg,#e3c463,#c9a227)' }}>
-                    {f.num}
-                  </span>
-                  <span className="h-px w-5 bg-gold" />
+
+          <div className="relative mt-5 flex min-h-0 flex-1 items-center justify-center">
+            {/* Tower */}
+            <div className="relative shrink-0" style={{ height: 'var(--tower-h)', aspectRatio: `${CROP.width} / ${CROP.height}` }}>
+              <div className="relative h-full w-full select-none overflow-hidden">
+                <div style={innerStyle}>
+                  <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
+                  <svg viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} className="absolute inset-0 h-full w-full">
+                    {floors.map((floor) => {
+                      const isHovered = hoveredFloor === floor.id
+                      const isSelected = selectedFloor === floor.id
+                      const shapeProps = LOCKED_FLOORS.has(floor.id)
+                        ? { style: { pointerEvents: 'none', fill: 'transparent' } }
+                        : {
+                            onClick: () => setSelectedFloor(floor.id),
+                            onMouseEnter: () => setHoveredFloor(floor.id),
+                            onMouseLeave: () => setHoveredFloor(null),
+                            style: {
+                              cursor: 'pointer',
+                              pointerEvents: 'all',
+                              transition: 'fill 0.2s ease',
+                              fill: isSelected ? 'rgba(240,184,102,0.42)' : isHovered ? 'rgba(240,184,102,0.26)' : 'rgba(240,184,102,0.01)',
+                            },
+                          }
+                      return floor.type === 'path' ? <path key={floor.id} d={floor.d} {...shapeProps} /> : <polygon key={floor.id} points={floor.points} {...shapeProps} />
+                    })}
+                  </svg>
                 </div>
-              )
-            })()}
+              </div>
+
+              {tagFloor && !LOCKED_FLOORS.has(tagFloor.id) && (
+                <div
+                  className="pointer-events-none absolute left-0 z-10 -translate-x-[45%] -translate-y-1/2 transition-[top] duration-500 ease-out"
+                  style={{ top: `${(((tagFloor.y0 + tagFloor.y1) / 2 - CROP.y) / CROP.height) * 100}%` }}
+                >
+                  <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 font-serif text-[1rem] font-semibold text-[#470d21]" style={{ background: 'linear-gradient(145deg,#f0c27a,#d99a4a)', boxShadow: '0 0 0.9rem rgba(240,184,102,0.55)' }}>
+                    {tagFloor.num === 'G' || tagFloor.num === 'T' ? tagFloor.num : parseInt(tagFloor.num, 10)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right: floor plan card */}
-        <div className="min-h-0 w-full min-w-0 lg:h-[min(100%,38rem)] lg:w-[50rem] lg:max-w-[50rem] lg:shrink-0 lg:self-center xl:mr-[4%]">
-          {activeFloor ? (
-            <UnitPanel key={activeFloor.id} floorTitle={floorTitle(activeFloor)} floorLabel={activeFloor.label} />
-          ) : (
-            <div
-              className="flex min-h-[18rem] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] px-8 text-center text-[#241f1a] lg:h-[calc(100%-4.5rem)]"
-              style={{ background: 'linear-gradient(160deg,#f8f1e3 0%,#efe3cc 100%)', border: '1px solid rgba(201,162,39,0.6)', boxShadow: 'inset 0 0 0 4px rgba(255,255,255,0.35), 0 2rem 5rem rgba(0,0,0,0.5)' }}
-            >
-              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#b58a3a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 21V9l6-4v16" />
-                <path d="M10 21V5l6 4v12" />
-                <path d="M16 21v-8l4 2.2V21" />
-              </svg>
-              <h3 className="font-serif text-3xl font-medium text-[#1d1816]">Select a floor from the tower</h3>
-              <p className="text-[0.6875rem] uppercase tracking-[0.2rem] text-[#6b5a3a]">To view the floor plan</p>
-            </div>
-          )}
-        </div>
+        {/* ---------- Centre + right: the selected floor ---------- */}
+        {activeFloor && <FloorStage key={activeFloor.id} floor={activeFloor} floors={selectable} onSelect={setSelectedFloor} unitId={unitId} setUnitId={setUnitId} />}
       </div>
     </section>
   )

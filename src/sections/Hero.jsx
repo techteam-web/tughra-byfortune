@@ -10,7 +10,7 @@ function Hero({ onExplore }) {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.55) 100%), linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 22%, rgba(0,0,0,0) 52%)',
+              'rgba(71,13,33,0.35)',
           }}
         />
         {/* Decorative frame — line_1.png you provided, converted to real per-pixel alpha
@@ -38,9 +38,9 @@ function Hero({ onExplore }) {
           City. Sea. Opportunity.
         </span>
         <h1 className="font-serif text-[clamp(2.375rem,4.4vw,3.625rem)] font-normal uppercase leading-[1.12] tracking-[0.5px] text-cream">
-          A HIGHER
+          A WORLD
           <br />
-          <span className="text-gold-light">PERSPECTIVE</span>
+          <span className="text-gold-light">WITHOUT ORDINARY</span>
         </h1>
         <p className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[0.09375rem] text-muted">
           <span className="h-px w-6 bg-muted/60" />
@@ -49,7 +49,7 @@ function Hero({ onExplore }) {
         <button
           type="button"
           onClick={onExplore}
-          className="group mt-8 inline-flex items-center gap-3.5 border-none bg-transparent p-0 text-sm uppercase tracking-[0.125rem] text-cream"
+          className="lux-btn group mt-8 inline-flex items-center gap-3.5 rounded-full py-2 pl-2 pr-7 text-sm uppercase tracking-[0.125rem]"
         >
           <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gold transition-colors group-hover:bg-gold/15">
             <span className="absolute inset-0 animate-ping rounded-full border border-gold/60" />

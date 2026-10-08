@@ -12,14 +12,7 @@
   border-radius: inherit;
   padding: 0.15625rem;
 
-  background: radial-gradient(
-    circle at var(--mx) 50%,
-    rgba(255, 215, 180, 1) 0%,
-    rgba(230, 150, 100, 0.95) 14%,
-    rgba(164, 91, 59, 0.7) 30%,
-    rgba(120, 70, 50, 0.25) 48%,
-    rgba(255, 255, 255, 0.06) 68%
-  );
+  background: rgba(240,184,102, 0.14);
 
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -32,8 +25,8 @@
 }
 
 .luxury-arrow {
-  border: 1px solid rgba(225, 160, 115, 0.45);
-  color: #efc4a5;
+  border: 1px solid rgba(240,184,102, 0.45);
+  color: #ffd58a;
   transition:
     transform 0.35s ease,
     background 0.35s ease;
@@ -41,7 +34,7 @@
 
 .luxury-btn:hover .luxury-arrow {
   transform: translateX(0.1875rem);
-  background: rgba(220, 140, 90, 0.08);
+  background: rgba(240,184,102, 0.08);
 }
 
 @keyframes spin-slow {
@@ -62,4 +55,103 @@
 
 .scrubber-track::-webkit-scrollbar {
   display: none;
+}
+
+/* Menu entries: a box whose border and fill light up only around the cursor */
+.mn-glow {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+}
+.mn-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #ffb070 0%, rgba(240, 184, 102, 0.55) 40%, rgba(240, 184, 102, 0) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.mn-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(255, 176, 112, 0.22), rgba(240, 184, 102, 0.06) 60%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.mn-glow.is-on::before,
+.mn-glow.is-on::after {
+  opacity: 1;
+}
+
+/* ---- Shared button language (Home, Back, CTAs): the menu's cursor-local gold glow ---- */
+.lux-btn {
+  --mx: 50%;
+  --my: 50%;
+  isolation: isolate;
+  border: 1px solid rgba(249, 228, 212, 0.32);
+  background: rgba(14, 6, 10, 0.55);
+  color: #f9e4d4;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: color 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+.lux-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #ffb070 0%, rgba(240, 184, 102, 0.55) 40%, rgba(240, 184, 102, 0) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.lux-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(255, 176, 112, 0.24), rgba(240, 184, 102, 0.06) 60%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+.lux-btn:hover,
+.lux-btn:focus-visible {
+  color: #ffd58a;
+  border-color: rgba(240, 184, 102, 0.35);
+}
+.lux-btn:hover::before,
+.lux-btn:hover::after,
+.lux-btn:focus-visible::before,
+.lux-btn:focus-visible::after {
+  opacity: 1;
+}
+/* light pages (Floor Plans, Enquiry form) */
+.lux-btn.lux-light {
+  background: rgba(255, 250, 244, 0.75);
+  border-color: rgba(71, 13, 33, 0.28);
+  color: #470d21;
+}
+.lux-btn.lux-light:hover {
+  color: #470d21;
+  border-color: rgba(184, 135, 58, 0.5);
+}
+
+/* positioned so the glow layers anchor to it, unless a page already places it absolutely */
+.lux-btn:where(:not(.absolute, .fixed, .sticky)) {
+  position: relative;
 }

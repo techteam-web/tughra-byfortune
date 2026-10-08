@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, MotionConfig } from 'framer-motion'
 import Inner from './components/Inner.jsx'
 import Hero from './sections/Hero.jsx'
@@ -12,10 +12,24 @@ import Enquiry from './sections/Enquiry.jsx'
 import Preloader from './components/Preloader.jsx'
 
 function App() {
+  // lets every .lux-btn light up around the cursor
+  useEffect(() => {
+    const onMove = (e) => {
+      const b = e.target.closest?.('.lux-btn')
+      if (!b) return
+      const r = b.getBoundingClientRect()
+      b.style.setProperty('--mx', `${e.clientX - r.left}px`)
+      b.style.setProperty('--my', `${e.clientY - r.top}px`)
+    }
+    document.addEventListener('pointermove', onMove)
+    return () => document.removeEventListener('pointermove', onMove)
+  }, [])
+
   const [view, setView] = useState('hero')
   const [isLoading, setIsLoading] = useState(true)
 
   return (
+    
     <MotionConfig reducedMotion="never">
       {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
       <AnimatePresence mode="wait">
@@ -51,7 +65,7 @@ function App() {
         )}
         {view === 'amenities' && (
           <Inner key="amenities">
-            <Amenities onClose={() => setView('menu')} />
+            <Amenities onClose={() => setView("menu")} onNavigate={(k) => setView(k)} />
           </Inner>
         )}
         {view === 'enquiry' && (
@@ -60,6 +74,8 @@ function App() {
           </Inner>
         )}
       </AnimatePresence>
+
+
     </MotionConfig>
   )
 }

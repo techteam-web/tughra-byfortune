@@ -5,12 +5,12 @@
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto; /* tall pages (phones) scroll inside the fixed shell */
-  background-color: #0a0908;
+  background-color: #470d21;
 }
 
 .inner .page {
   position: relative;
-  background-color: #0a0908;
+  background-color: #470d21;
 }
 
 .inner .slide {

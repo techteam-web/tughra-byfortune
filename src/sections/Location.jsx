@@ -54,7 +54,7 @@ function applyBrandTheme(map) {
   set('poi_r20', 'icon-opacity', 0)
   set('airport', 'icon-opacity', 0)
 
-  set('background', 'background-color', '#14100f')
+  set('background', 'background-color', '#0b0507')
 
   // Ground cover
   for (const id of [
@@ -71,27 +71,27 @@ function applyBrandTheme(map) {
     'landuse_school',
     'aeroway_fill',
   ]) {
-    set(id, 'fill-color', '#1c1815')
+    set(id, 'fill-color', '#130e0d')
   }
-  set('park', 'fill-color', '#1c1f16')
-  set('park_outline', 'line-color', '#2a2e1f')
+  set('park', 'fill-color', '#121410')
+  set('park_outline', 'line-color', '#1d2017')
 
   // Water
-  set('water', 'fill-color', '#0c1416')
+  set('water', 'fill-color', '#0a1012')
   for (const id of ['waterway_tunnel', 'waterway_river', 'waterway_other']) {
     set(id, 'line-color', '#16232a')
   }
 
   // Buildings
-  set('building', 'fill-color', '#241f1a')
-  set('building-3d', 'fill-extrusion-color', '#241f1a')
+  set('building', 'fill-color', '#1a1512')
+  set('building-3d', 'fill-extrusion-color', '#1a1512')
 
   // Roads — copper-gold for major routes, warm bronze for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
-    set(id, 'line-color', '#c17f45')
+    set(id, 'line-color', '#a9814a')
   }
   for (const id of ['road_secondary_tertiary', 'bridge_secondary_tertiary', 'tunnel_secondary_tertiary']) {
-    set(id, 'line-color', '#8c5a34')
+    set(id, 'line-color', '#6b5232')
   }
   for (const id of [
     'road_minor',
@@ -107,7 +107,7 @@ function applyBrandTheme(map) {
     'tunnel_minor',
     'tunnel_path_pedestrian',
   ]) {
-    set(id, 'line-color', '#463527')
+    set(id, 'line-color', '#3a2d22')
   }
   for (const id of [
     'road_motorway_casing',
@@ -126,7 +126,7 @@ function applyBrandTheme(map) {
     'tunnel_trunk_primary_casing',
     'tunnel_secondary_tertiary_casing',
   ]) {
-    set(id, 'line-color', '#0f0d0c')
+    set(id, 'line-color', '#150a0c')
   }
   for (const id of [
     'road_major_rail',
@@ -167,8 +167,8 @@ function applyBrandTheme(map) {
     'label_country_2',
     'label_country_1',
   ]) {
-    set(id, 'text-color', '#f3ecd9')
-    set(id, 'text-halo-color', '#0f0d0c')
+    set(id, 'text-color', '#f9e4d4')
+    set(id, 'text-halo-color', '#0b0507')
   }
 }
 
@@ -189,15 +189,15 @@ function Location({ onClose }) {
     mapRef.current = map
 
     map.on('load', () => applyBrandTheme(map))
-    map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right')
+    map.addControl(new NavigationControl({ showCompass: false }), 'bottom-left')
 
     const marker = document.createElement('div')
     marker.style.width = '1.125rem'
     marker.style.height = '1.125rem'
     marker.style.borderRadius = '50%'
-    marker.style.background = '#c17f45'
-    marker.style.boxShadow = '0 0 0 0.375rem rgba(193,127,69,0.25), 0 0 1.25rem rgba(193,127,69,0.6)'
-    marker.style.border = '0.125rem solid #f3ecd9'
+    marker.style.background = '#f0b866'
+    marker.style.boxShadow = '0 0 0 0.375rem rgba(240,184,102,0.25), 0 0 1.25rem rgba(240,184,102,0.6)'
+    marker.style.border = '0.125rem solid #f9e4d4'
 
     new Marker({ element: marker }).setLngLat(MUMBAI_CENTRAL).addTo(map)
 
@@ -226,8 +226,7 @@ function Location({ onClose }) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, rgba(10,9,8,0.75) 0%, rgba(10,9,8,0.1) 20%, rgba(10,9,8,0.15) 80%, rgba(10,9,8,0.65) 100%), ' +
-            'linear-gradient(90deg, rgba(10,9,8,0.9) 0%, rgba(10,9,8,0.65) 32%, rgba(10,9,8,0.15) 55%, rgba(10,9,8,0) 75%)',
+            'radial-gradient(ellipse 55% 75% at 0% 50%, rgba(10,4,6,0.88) 0%, rgba(10,4,6,0.5) 55%, rgba(10,4,6,0) 100%), rgba(10,4,6,0.25)',
         }}
       />
 
