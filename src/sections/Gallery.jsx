@@ -58,11 +58,10 @@ const CATEGORIES = [
 
 const pad = (n) => String(n).padStart(2, '0')
 const GOLD = '#f0b866'
-const GOLD_LIGHT = '#ffd58a'
 
-const ExpandIcon = () => (
+const ExpandIcon = ({ on }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+    <path d={on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
   </svg>
 )
 const Chevron = ({ dir, size = 20 }) => (
@@ -76,13 +75,15 @@ const ctrlClass = 'lux-btn flex h-10 w-10 items-center justify-center rounded-fu
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  const [full, setFull] = useState(false)
+  const [fs, setFs] = useState(false)
+  const [idle, setIdle] = useState(false)
   const sectionRef = useRef(null)
   const tabRefs = useRef([])
   const [pill, setPill] = useState({ x: 0, w: 0 })
   const tabSmRefs = useRef([])
   const [pillSm, setPillSm] = useState({ x: 0, w: 0 })
   const touchX = useRef(0)
+  const wheelAt = useRef(0)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
@@ -93,8 +94,8 @@ function Gallery({ onClose }) {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo(sectionRef.current, { opacity: 0 }, { opacity: 1, duration: 0.7 })
-      tl.fromTo('.g-chrome', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.3)
+      tl.fromTo(sectionRef.current, { opacity: 0 }, { opacity: 1, duration: 0.8 })
+      tl.fromTo('.g-chrome', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.4)
     }, sectionRef)
     return () => ctx.revert()
   }, [])
@@ -108,20 +109,36 @@ function Gallery({ onClose }) {
     return () => ctx.revert()
   }, [cat, idx])
 
-  // The render drifts against the pointer, and the light follows it
+  // The picture drifts against the pointer, as if the room goes on past the edges
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const gx = gsap.quickTo('.gl-light', 'x', { duration: 1.1, ease: 'power3.out' })
-      const gy = gsap.quickTo('.gl-light', 'y', { duration: 1.1, ease: 'power3.out' })
+      const gx = gsap.quickTo('.gv-stage', 'x', { duration: 1.6, ease: 'power3.out' })
+      const gy = gsap.quickTo('.gv-stage', 'y', { duration: 1.6, ease: 'power3.out' })
       const onMove = (e) => {
-        gx(e.clientX)
-        gy(e.clientY)
-        gsap.to('.gl-light', { opacity: 1, duration: 0.8, overwrite: 'auto' })
+        gx((0.5 - e.clientX / window.innerWidth) * 36)
+        gy((0.5 - e.clientY / window.innerHeight) * 24)
       }
       window.addEventListener('mousemove', onMove)
       return () => window.removeEventListener('mousemove', onMove)
     }, sectionRef)
     return () => ctx.revert()
+  }, [])
+
+  // The interface steps back when nothing has moved for a few seconds
+  useEffect(() => {
+    let t
+    const wake = () => {
+      setIdle(false)
+      clearTimeout(t)
+      t = setTimeout(() => setIdle(true), 3800)
+    }
+    wake()
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart']
+    events.forEach((e) => window.addEventListener(e, wake, { passive: true }))
+    return () => {
+      clearTimeout(t)
+      events.forEach((e) => window.removeEventListener(e, wake))
+    }
   }, [])
 
   // The tab pill slides to the active tab
@@ -144,19 +161,13 @@ function Gallery({ onClose }) {
   }
   const step = (d) => total > 1 && setIdx((i) => (i + d + total) % total)
 
-  const openFull = () => {
-    setFull(true)
-    document.documentElement.requestFullscreen?.().catch(() => {})
-  }
-  const closeFull = () => {
-    setFull(false)
+  const toggleFs = () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+    else document.documentElement.requestFullscreen?.().catch(() => {})
   }
 
   useEffect(() => {
-    const onChange = () => {
-      if (!document.fullscreenElement) setFull(false)
-    }
+    const onChange = () => setFs(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', onChange)
     return () => {
       document.removeEventListener('fullscreenchange', onChange)
@@ -174,8 +185,7 @@ function Gallery({ onClose }) {
     const onKey = (e) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
-      if (e.key === 'Escape' && full) closeFull()
-      if ((e.key === 'f' || e.key === 'F') && !full) openFull()
+      if (e.key === 'f' || e.key === 'F') toggleFs()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -189,118 +199,103 @@ function Gallery({ onClose }) {
         const dx = e.changedTouches[0].clientX - touchX.current
         if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1)
       }}
-      className="gx-page"
+      onWheel={(e) => {
+        const now = Date.now()
+        if (Math.abs(e.deltaY) < 20 || now - wheelAt.current < 900) return
+        wheelAt.current = now
+        step(e.deltaY > 0 ? 1 : -1)
+      }}
+      className={`gx-page ${idle ? 'is-idle' : ''}`}
     >
-      {/* The room takes its colour from whatever render is hanging */}
-      <div className="gx-wash">
+      {/* The render fills the whole window; every render is stacked, only one is lit */}
+      <div className="gv-stage" aria-live="polite">
         {CATEGORIES.flatMap((c, ci) =>
-          c.slides.map((s, i) => <img key={c.id + i} src={s.src} alt="" aria-hidden="true" className={ci === cat && i === idx ? 'is-on' : ''} />)
+          c.slides.map((s, i) => (
+            <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''}`}>
+              <img src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} />
+            </div>
+          ))
         )}
       </div>
-      <div className="gx-veil" />
-      <div className="gl-light pointer-events-none absolute left-0 top-0 z-[2] opacity-0" />
+      <div className="gv-scrim" />
 
-      {/* Logo, tabs, Back */}
-      <header className="g-chrome relative z-20 flex shrink-0 items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9">
-        <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
-          <BrandMark />
-        </button>
-        <div className="mt-1 hidden lg:block">
-        <div className="gl-tabs" role="tablist" aria-label="Collections">
-          <span className="gl-pill" style={{ width: pill.w, transform: `translateX(${pill.x}px)` }} />
-          {CATEGORIES.map((c, ci) => (
-            <button key={c.id} ref={(el) => (tabRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
-              {c.label}
+      {/* Logo, tabs, full screen, Back */}
+      <div className="gv-ui gv-ui--top">
+        <header className="g-chrome relative flex items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9">
+          <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
+            <BrandMark />
+          </button>
+          <div className="mt-1 hidden lg:block">
+            <div className="gl-tabs" role="tablist" aria-label="Collections">
+              <span className="gl-pill" style={{ width: pill.w, transform: `translateX(${pill.x}px)` }} />
+              {CATEGORIES.map((c, ci) => (
+                <button key={c.id} ref={(el) => (tabRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 md:gap-3">
+            <button type="button" onClick={toggleFs} aria-label={fs ? 'Exit full screen' : 'Enter full screen'} className={ctrlClass}>
+              <ExpandIcon on={fs} />
             </button>
-          ))}
-        </div>
-        </div>
-        <BackButton onClick={onClose} />
-      </header>
+            <BackButton onClick={onClose} />
+          </div>
+        </header>
 
-      {/* Tabs for small screens */}
-      <div className="g-chrome relative z-20 flex shrink-0 justify-center px-5 pt-4 lg:hidden">
-        <div className="gl-tabs" role="tablist" aria-label="Collections">
-          <span className="gl-pill" style={{ width: pillSm.w, transform: `translateX(${pillSm.x}px)` }} />
-          {CATEGORIES.map((c, ci) => (
-            <button key={c.id} ref={(el) => (tabSmRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
-              {c.label}
-            </button>
-          ))}
+        {/* Tabs for small screens */}
+        <div className="g-chrome relative flex justify-center px-5 pt-4 lg:hidden">
+          <div className="gl-tabs" role="tablist" aria-label="Collections">
+            <span className="gl-pill" style={{ width: pillSm.w, transform: `translateX(${pillSm.x}px)` }} />
+            {CATEGORIES.map((c, ci) => (
+              <button key={c.id} ref={(el) => (tabSmRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* The hung render */}
-      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-5 py-4 sm:px-8 md:px-12 md:py-5">
-        <button
-          type="button"
-          onClick={openFull}
-          aria-label={`View ${slide.title} full screen`}
-          className="gx-frame"
-          key={category.id + idx}
-        >
-          <img src={slide.src} alt={slide.title} />
-          <span className="gx-mark"><ExpandIcon /></span>
-        </button>
-      </div>
+      {/* Side arrows */}
+      {total > 1 && (
+        <div className="gv-ui pointer-events-none flex items-center justify-between px-4 md:px-8" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+          <button type="button" onClick={() => step(-1)} aria-label="Previous render" className={ctrlClass + ' pointer-events-auto'}><Chevron dir="left" /></button>
+          <button type="button" onClick={() => step(1)} aria-label="Next render" className={ctrlClass + ' pointer-events-auto'}><Chevron dir="right" /></button>
+        </div>
+      )}
 
-      {/* Caption, then every render in the collection on one rail */}
-      <footer className="g-chrome relative z-20 shrink-0 px-5 pb-5 sm:px-8 md:px-12 md:pb-7">
-        <div className="flex items-end justify-between gap-5">
+      {/* Caption on the left, every render in the collection on the right */}
+      <div className="gv-ui gv-ui--bottom">
+        <footer className="g-chrome relative flex flex-col gap-5 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9">
           <div className="min-w-0">
             <span className="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD }}>
               {pad(idx + 1)} <span className="h-px w-7" style={{ background: GOLD }} /> {pad(total)}
             </span>
-            <h2 className="mt-2 overflow-hidden font-serif text-[clamp(1.35rem,2.4vw,2.2rem)] font-normal leading-tight text-cream">
+            <h2 className="mt-2 overflow-hidden font-serif text-[clamp(1.8rem,3.4vw,3.2rem)] font-normal leading-tight text-cream">
               <span className="g-line block truncate">{slide.title}</span>
             </h2>
-            <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/65">{slide.subtitle}</p>
+            <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/70">{slide.subtitle}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2.5 md:gap-3">
-            <button type="button" onClick={() => step(-1)} aria-label="Previous render" className={ctrlClass}><Chevron dir="left" /></button>
-            <button type="button" onClick={() => step(1)} aria-label="Next render" className={ctrlClass}><Chevron dir="right" /></button>
-          </div>
-        </div>
 
-        <div className="sc-noscroll gx-rail" role="tablist" aria-label={`${category.label} renders`}>
-          {slides.map((s, i) => (
-            <button
-              key={s.src}
-              type="button"
-              role="tab"
-              aria-selected={i === idx}
-              aria-label={s.title}
-              onClick={() => setIdx(i)}
-              className={`gx-chip ${i === idx ? 'is-on' : ''}`}
-            >
-              <img src={s.src} alt="" loading="lazy" />
-              <span className="gx-chip-no">{pad(i + 1)}</span>
-            </button>
-          ))}
-        </div>
-      </footer>
-
-      {/* Full-screen viewer */}
-      {full && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2a0713]">
-          <img src={slide.src} alt={slide.title} className="h-full w-full object-contain" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-6 py-5 md:px-12 md:py-8 [&_button]:pointer-events-auto">
-            <div className="text-[0.6875rem] uppercase tracking-[0.1875rem]" style={{ color: GOLD, textShadow: '0 0.125rem 1rem rgba(0,0,0,0.65)' }}>
-              {category.label} {category.caption}
-              <span className="mx-3 inline-block h-px w-8 align-middle" style={{ background: GOLD }} />
-              {pad(idx + 1)} / {pad(total)}
-              <span className="ml-4 text-cream">{slide.title}</span>
-            </div>
-            <button type="button" onClick={closeFull} aria-label="Exit full screen" className={ctrlClass}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
+          <div className="sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[52%]" role="tablist" aria-label={`${category.label} renders`}>
+            {slides.map((s, i) => (
+              <button
+                key={s.src}
+                type="button"
+                role="tab"
+                aria-selected={i === idx}
+                aria-label={s.title}
+                onClick={() => setIdx(i)}
+                className={`gx-chip ${i === idx ? 'is-on' : ''}`}
+              >
+                <img src={s.src} alt="" loading="lazy" />
+                <span className="gx-chip-no">{pad(i + 1)}</span>
+              </button>
+            ))}
           </div>
-          <button type="button" onClick={() => step(-1)} aria-label="Previous render" className={ctrlClass + ' absolute left-4 top-1/2 -translate-y-1/2 md:left-8'}><Chevron dir="left" /></button>
-          <button type="button" onClick={() => step(1)} aria-label="Next render" className={ctrlClass + ' absolute right-4 top-1/2 -translate-y-1/2 md:right-8'}><Chevron dir="right" /></button>
-        </div>
-      )}
+        </footer>
+        <div className="gv-progress"><i key={category.id + idx} /></div>
+      </div>
     </section>
   )
 }

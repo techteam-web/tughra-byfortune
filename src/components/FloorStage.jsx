@@ -148,7 +148,7 @@ function FloorStage({ floor, floors, onSelect, unitId, setUnitId }) {
       <div className="flex min-h-0 min-w-0 flex-col gap-3 md:col-start-2 lg:col-start-auto lg:overflow-hidden">
         <div className="fs-rise flex items-baseline justify-between text-[0.625rem] uppercase tracking-[0.25rem] text-[#6b5a3a]">
           <span>{floorTitle(floor)}</span>
-          <span className="font-serif text-sm tracking-[0.15rem] text-[#470d21]/60">{pad(idx + 1)} / {pad(floors.length)}</span>
+          <span className="text-sm tracking-[0.15rem] text-[#470d21]/60">{pad(idx + 1)} / {pad(floors.length)}</span>
         </div>
         <div className="grid min-h-0 grid-cols-4 gap-3 lg:flex-1 lg:grid-cols-1 lg:grid-rows-[repeat(4,minmax(0,1fr))]">
           {thumbs.map((f, i) => (

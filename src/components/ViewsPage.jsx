@@ -321,7 +321,7 @@ const ViewsPage = ({ onClose, onHome }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#0b0507', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#0b0507', fontFamily: 'var(--sans)', overflow: 'hidden' }}>
       {/* The 360 Canvas */}
       <div
         ref={panoElementRef}

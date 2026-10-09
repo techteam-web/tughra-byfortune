@@ -47,8 +47,23 @@ body {
   flex-direction: column;
 }
 
-h1 {
+/* Two faces, one rule: Cormorant Garamond is for headings only; Inter is everything
+   else - buttons, labels, forms, body copy - so controls read the same site-wide. */
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--serif);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--sans);
+}
+
+h1 {
   font-weight: 500;
   color: var(--cream);
   margin: 0;
@@ -108,10 +123,10 @@ h1 {
     top: 1.5rem !important;
   }
 }
-/* Scale the whole rem-based UI up on large monitors so menus, buttons and
-   type don't shrink relative to the screen (1440p, 4K and beyond). */
-@media (min-width: 1536px) { :root { font-size: 17px; } }
-@media (min-width: 1920px) { :root { font-size: 20px; } }
-@media (min-width: 2560px) { :root { font-size: 26px; } }
-@media (min-width: 3200px) { :root { font-size: 32px; } }
-@media (min-width: 3840px) { :root { font-size: 38px; } }
+/* Fluid scale for every desktop. The UI is rem-based and was composed at
+   1440 x 810 (16px), so on desktop the root size follows whichever of width or
+   height is tighter: laptops shrink a little, short windows don't overflow, and
+   1440p, 4K and ultrawide grow in proportion instead of stepping. */
+@media (min-width: 1024px) {
+  :root { font-size: clamp(12px, min(calc(100vw / 90), calc(100vh / 50.6)), 44px); }
+}

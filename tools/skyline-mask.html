@@ -1,0 +1,56 @@
+<!doctype html><meta charset="utf-8"><body style="background:#222">
+<script>
+const BASE='/assets/mainpano/tiles/0-dji_0086_terrace---1089m_new/3'
+const N=2048, T=512
+const P=new URLSearchParams(location.search)
+const THR=+(P.get('thr')||6), DARK=+(P.get('dark')||38), DIL=+(P.get('dil')||3)
+const load=u=>new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=u})
+const post=(n,b)=>fetch('http://localhost:5300/'+n,{method:'POST',body:b})
+const blob=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q))
+async function face(f){
+  const c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d',{willReadFrequently:true})
+  for(let y=0;y<4;y++)for(let xx=0;xx<4;xx++){x.drawImage(await load(`${BASE}/${f}/${y}/${xx}.jpg`),xx*T,y*T,T,T)}
+  const src=x.getImageData(0,0,N,N)
+  // smoothed copy
+  const b=document.createElement('canvas');b.width=b.height=N;const bx=b.getContext('2d',{willReadFrequently:true});bx.filter='blur(2px)';bx.drawImage(c,0,0)
+  const d=bx.getImageData(0,0,N,N).data
+  const lum=new Float32Array(N*N), bar=new Uint8Array(N*N)
+  for(let i=0;i<N*N;i++)lum[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2]
+  for(let y=1;y<N-1;y++)for(let xx=1;xx<N-1;xx++){const i=y*N+xx,k=i*4
+    let g=0;for(let ch=0;ch<3;ch++){g=Math.max(g,Math.abs(d[k+ch+4]-d[k+ch-4])+Math.abs(d[k+ch+4*N]-d[k+ch-4*N]))}
+    if(g>THR||lum[i]<DARK)bar[i]=1}
+  for(let k=0;k<N;k++){bar[k*N]=1;bar[k*N+N-1]=1;bar[(N-1)*N+k]=1}
+  // flood from the top rows
+  const sky=new Uint8Array(N*N), q=new Int32Array(N*N);let h=0,t=0
+  for(let xx=0;xx<N;xx++){const i=2*N+xx;if(!bar[i]&&!sky[i]){sky[i]=1;q[t++]=i}}
+  while(h<t){const i=q[h++];const xx=i%N,y=(i/N)|0
+    const nb=[xx>0?i-1:-1,xx<N-1?i+1:-1,y>0?i-N:-1,y<N-1?i+N:-1]
+    for(const n of nb)if(n>=0&&!sky[n]&&!bar[n]){sky[n]=1;q[t++]=n}}
+  // foreground = not sky, grown a little so the silhouette swallows its own fringe
+  let fg=new Uint8Array(N*N);for(let i=0;i<N*N;i++)fg[i]=sky[i]?0:1
+  // keep only what stands on the ground: clouds and noise specks are dropped
+  {const keep=new Uint8Array(N*N);let h2=0,t2=0
+   for(let xx=0;xx<N;xx++){const i=(N-1)*N+xx;if(fg[i]){keep[i]=1;q[t2++]=i}}
+   while(h2<t2){const i=q[h2++];const xx=i%N,y=(i/N)|0
+    for(const n of [xx>0?i-1:-1,xx<N-1?i+1:-1,y>0?i-N:-1,y<N-1?i+N:-1])if(n>=0&&fg[n]&&!keep[n]){keep[n]=1;q[t2++]=n}}
+   fg=keep}
+  for(let r=0;r<DIL;r++){const nx=fg.slice();for(let y=1;y<N-1;y++)for(let xx=1;xx<N-1;xx++){const i=y*N+xx;if(!fg[i]&&(fg[i-1]||fg[i+1]||fg[i-N]||fg[i+N]))nx[i]=1}fg=nx}
+  const m=document.createElement('canvas');m.width=m.height=N;const mx=m.getContext('2d');const md=mx.createImageData(N,N)
+  for(let i=0;i<N*N;i++){md.data[i*4+3]=fg[i]?255:0;md.data[i*4]=md.data[i*4+1]=md.data[i*4+2]=0}
+  mx.putImageData(md,0,0)
+  // feather the edge by a pixel, then apply as alpha to the colour
+  const f2=document.createElement('canvas');f2.width=f2.height=N;const fx=f2.getContext('2d');fx.filter='blur(0.8px)';fx.drawImage(m,0,0)
+  const out=document.createElement('canvas');out.width=out.height=N;const ox=out.getContext('2d')
+  ox.drawImage(c,0,0);ox.globalCompositeOperation='destination-in';ox.drawImage(f2,0,0)
+  // debug: pano with the foreground tinted red
+  const dbg=document.createElement('canvas');dbg.width=dbg.height=1024;const dx=dbg.getContext('2d');dx.drawImage(c,0,0,1024,1024)
+  dx.fillStyle='rgba(255,0,0,.45)';dx.globalCompositeOperation='source-atop'
+  const mm=document.createElement('canvas');mm.width=mm.height=1024;const mmx=mm.getContext('2d');mmx.drawImage(m,0,0,1024,1024);mmx.globalCompositeOperation='source-in';mmx.fillStyle='rgba(255,0,0,.55)';mmx.fillRect(0,0,1024,1024)
+  dx.globalCompositeOperation='source-over';dx.drawImage(mm,0,0)
+  if(!P.get('dry'))await post(f+'.webp',await blob(out,'image/webp',0.9))
+  await post('dbg-'+f+'.png',await blob(dbg,'image/png'))
+}
+(async()=>{for(const f of (P.get('faces')||'f,r,b,l').split(','))await face(f);
+ if(!P.get('dry')){for(const f of ['u','d']){const c=document.createElement('canvas');c.width=c.height=4;await post(f+'.webp',await blob(c,'image/webp',0.9))}}
+ document.title='done'})()
+</script>

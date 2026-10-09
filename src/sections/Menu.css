@@ -155,3 +155,56 @@
 .lux-btn:where(:not(.absolute, .fixed, .sticky)) {
   position: relative;
 }
+
+/* ---- The room behind the menu: every picture stacked, the pointed-at one brought forward ---- */
+.mn-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.3s ease;
+}
+.mn-layer.is-on {
+  opacity: 1;
+  z-index: 1;
+}
+.mn-layer img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.mn-layer img.object-top { object-position: top; }
+.mn-layer.is-on img { animation: mnDrift 22s ease-out both; }
+@keyframes mnDrift {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.09); }
+}
+
+/* ---- The panel on the right: it sets itself afresh for whatever is being pointed at ---- */
+.mn-panel > *:not(.mn-ghost) { position: relative; }
+.mn-rise {
+  animation: mnRise 0.95s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both;
+}
+@keyframes mnRise {
+  from { opacity: 0; transform: translateY(1.1rem); }
+  to { opacity: 1; transform: none; }
+}
+.mn-ghost {
+  position: absolute;
+  right: -0.4rem;
+  top: 50%;
+  z-index: 0;
+  font-family: var(--serif);
+  font-size: clamp(10rem, 19vw, 19rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(240, 184, 102, 0.3);
+  transform: translateY(-56%);
+  pointer-events: none;
+  animation: mnGhost 1.2s ease both;
+}
+@keyframes mnGhost {
+  from { opacity: 0; transform: translate(1.5rem, -56%); }
+  to { opacity: 1; transform: translate(0, -56%); }
+}

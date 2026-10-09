@@ -106,7 +106,7 @@
   transform: translateY(0);
 }
 .gw-no {
-  font-family: var(--font-serif, serif);
+  font-family: var(--font-sans, sans-serif);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   color: #f0b866;
@@ -114,7 +114,7 @@
 .gw-text { min-width: 0; flex: 1 1 auto; }
 .gw-title {
   display: block;
-  font-family: var(--font-serif, serif);
+  font-family: var(--font-sans, sans-serif);
   font-size: 0.95rem;
   line-height: 1.2;
   color: #f9e4d4;
@@ -206,120 +206,103 @@
   background: radial-gradient(closest-side, rgba(255, 200, 130, 0.16), rgba(255, 200, 130, 0.05) 55%, transparent 100%);
 }
 
-/* ---------- Gallery: one render hung on the wall, every render on the rail ---------- */
+/* ---------- Gallery: the render IS the page ---------- */
 .gx-page {
   position: relative;
-  display: flex;
-  flex-direction: column;
   height: 100svh;
   width: 100%;
   overflow: hidden;
   color: #f9e4d4;
-  background: #2a0713;
+  background: #14030a;
 }
-/* the room takes its colour from whatever is hanging */
-.gx-wash {
+.gx-page.is-idle { cursor: none; }
+
+/* every render stacked edge to edge; only the current one is lit */
+.gv-stage {
   position: absolute;
-  inset: -8%;
+  inset: -2.5%;
   z-index: 0;
-  pointer-events: none;
+  will-change: transform;
 }
-.gx-wash img {
+.gv-slide {
   position: absolute;
   inset: 0;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 1.3s ease, transform 2s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.gv-slide.is-on {
+  opacity: 1;
+  transform: none;
+  z-index: 1;
+}
+.gv-slide img {
+  display: block;
   height: 100%;
   width: 100%;
   object-fit: cover;
-  filter: blur(54px) saturate(1.2) brightness(0.5);
-  opacity: 0;
-  transform: scale(1.06);
-  transition: opacity 1.4s ease;
+  object-position: center;
 }
-.gx-wash img.is-on { opacity: 0.5; }
-.gx-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 62% 60% at 50% 46%, rgba(20, 3, 10, 0) 45%, rgba(20, 3, 10, 0.72) 100%),
-    linear-gradient(180deg, rgba(20, 3, 10, 0.72) 0%, rgba(20, 3, 10, 0) 22%),
-    linear-gradient(0deg, rgba(20, 3, 10, 0.8) 0%, rgba(20, 3, 10, 0) 26%);
+.gv-slide.is-on img { animation: gvDrift 18s ease-out both; }
+@keyframes gvDrift {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
 }
 
-/* the hung render */
-@keyframes gxHang {
-  from { opacity: 0; transform: translateY(1.1rem) scale(0.985); }
-  to { opacity: 1; transform: none; }
-}
-.gx-frame {
-  position: relative;
-  display: block;
-  max-height: 100%;
-  max-width: 100%;
-  padding: 0.45rem;
-  border: 1px solid rgba(240, 184, 102, 0.55);
-  border-radius: 0.9rem;
-  background: rgba(20, 3, 10, 0.35);
-  cursor: pointer;
-  overflow: hidden;
-  box-shadow: 0 2rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 2.5rem rgba(240, 184, 102, 0.12);
-  animation: gxHang 1s cubic-bezier(0.22, 1, 0.36, 1) both;
-  transition: border-color 0.5s ease, box-shadow 0.5s ease;
-}
-.gx-frame:hover,
-.gx-frame:focus-visible {
-  border-color: rgba(240, 184, 102, 0.95);
-  box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.6), 0 0 3rem rgba(240, 184, 102, 0.22);
-  outline: none;
-}
-.gx-frame img {
-  display: block;
-  max-height: calc(100svh - 21rem);
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  border-radius: 0.55rem;
-  object-fit: contain;
-}
-@media (max-width: 767px) {
-  .gx-frame img { max-height: calc(100svh - 24rem); }
-}
-/* the expand mark, tucked in the corner of the frame */
-.gx-mark {
+/* just enough shade for the type to sit on the picture */
+.gv-scrim {
   position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  display: flex;
-  height: 2.4rem;
-  width: 2.4rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(240, 184, 102, 0.7);
-  border-radius: 999px;
-  background: rgba(20, 3, 10, 0.55);
-  color: #ffd58a;
-  opacity: 0;
-  transform: translateY(0.4rem);
-  transition: opacity 0.45s ease, transform 0.45s ease;
-  backdrop-filter: blur(6px);
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(20, 3, 10, 0.66) 0%, rgba(20, 3, 10, 0) 24%),
+    linear-gradient(0deg, rgba(20, 3, 10, 0.92) 0%, rgba(20, 3, 10, 0.55) 24%, rgba(20, 3, 10, 0) 50%);
 }
-.gx-frame:hover .gx-mark,
-.gx-frame:focus-visible .gx-mark {
-  opacity: 1;
-  transform: none;
+
+/* the interface fades away when nothing is moving */
+.gv-ui {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gv-ui--top { top: 0; }
+.gv-ui--bottom { bottom: 0; text-shadow: 0 0.1rem 1rem rgba(10, 2, 6, 0.7); }
+.is-idle .gv-ui { opacity: 0; pointer-events: none; }
+.is-idle .gv-ui--top { transform: translateY(-0.75rem); }
+.is-idle .gv-ui--bottom { transform: translateY(0.75rem); }
+
+/* a hairline that fills while the render is on show */
+.gv-progress {
+  height: 1px;
+  background: rgba(249, 228, 212, 0.18);
+}
+.gv-progress i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  background: #f0b866;
+  animation: gvFill 18s linear both;
+}
+@keyframes gvFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 /* the rail: every render in the collection */
 .gx-rail {
   display: flex;
   gap: 0.55rem;
-  margin-top: 1rem;
+  margin-top: 0;
   overflow-x: auto;
   padding-bottom: 0.15rem;
 }
 @media (min-width: 768px) {
-  .gx-rail { gap: 0.7rem; margin-top: 1.1rem; }
+  .gx-rail { gap: 0.7rem; }
 }
 .gx-chip {
   position: relative;
@@ -357,7 +340,7 @@
   position: absolute;
   left: 0.35rem;
   bottom: 0.25rem;
-  font-family: var(--font-serif, serif);
+  font-family: var(--font-sans, sans-serif);
   font-size: 0.625rem;
   letter-spacing: 0.1em;
   color: rgba(249, 228, 212, 0.9);

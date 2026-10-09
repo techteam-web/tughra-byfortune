@@ -3,15 +3,23 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import menuBg from '../assets/render/menu.png'
 import menuLeaves from '../assets/decor/menu-leaves.png'
+import extGolden from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
+import extEvening from '../assets/gallery/exterior/fortune-evenin01-1.webp'
+import extEveningCrop from '../assets/gallery/exterior/fortune-evening-crop-1.webp'
+import extMetro from '../assets/gallery/exterior/fortunemetro-01.webp'
+import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
+import amPool from '../assets/amenities/swimming-pool.webp'
 import './Menu.css'
 
+// Each entry also owns a picture and a line about itself: pointing at it brings the
+// room around to that subject, and the panel on the right tells you what is behind it.
 const MENU_ITEMS = [
-  { num: '01', title: 'GALLERY', subtitle: 'EXPLORE THE VISION', key: 'gallery' },
-  { num: '02', title: 'FLOOR PLANS', subtitle: 'FIND YOUR PERFECT SPACE', key: 'floors' },
-  { num: '03', title: 'LOCATION', subtitle: 'AT THE HEART OF IT ALL', key: 'location' },
-  { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views' },
-  { num: '05', title: 'AMENITIES', subtitle: 'REFINED LUXURY', key: 'amenities' },
-  { num: '06', title: 'ENQUIRY', subtitle: 'CONNECT WITH US', key: 'enquiry' },
+  { num: '01', title: 'GALLERY', subtitle: 'EXPLORE THE VISION', key: 'gallery', name: 'Gallery', tag: 'Explore the vision', line: 'Every render of the tower and its amenities, shown full screen.', bg: extGolden },
+  { num: '02', title: 'FLOOR PLANS', subtitle: 'FIND YOUR PERFECT SPACE', key: 'floors', name: 'Floor Plans', tag: 'Find your perfect space', line: 'The 4, 5 and 6 BHK residences, laid out floor by floor.', bg: extEveningCrop },
+  { num: '03', title: 'NEIGHBORHOOD', subtitle: 'AT THE HEART OF IT ALL', key: 'location', name: 'Neighborhood', tag: 'At the heart of it all', line: 'Steps from Mumbai Central, with the city and the sea around you.', bg: extMetro },
+  { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views', name: '360° View', tag: 'Step inside', line: 'Look all the way round from the terrace, in a full panorama.', bg: extDay },
+  { num: '05', title: 'AMENITIES', subtitle: 'REFINED LUXURY', key: 'amenities', name: 'Amenities', tag: 'Refined luxury', line: 'A pool, fitness studio, private theatre, banquet hall and more.', bg: amPool },
+  { num: '06', title: 'ENQUIRE', subtitle: 'CONNECT WITH US', key: 'enquiry', name: 'Enquire', tag: 'Connect with us', line: 'Tell us what you are looking for, and begin the conversation.', bg: extEvening },
 ]
 
 const GOLD = '#f0b866'
@@ -23,9 +31,16 @@ const HomeIcon = () => (
   </svg>
 )
 
+const FACTS = [
+  ['Floors', '24'],
+  ['Residences', '4 · 5 · 6 BHK'],
+  ['Address', 'Mumbai Central'],
+]
+
 function Menu({ onClose, onSelect }) {
   const [active, setActive] = useState(-1)
   const rootRef = useRef(null)
+  const item = MENU_ITEMS[active]
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -36,13 +51,14 @@ function Menu({ onClose, onSelect }) {
       tl.fromTo('.mn-brand', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.9 }, 0.3)
       tl.fromTo('.mn-item', { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.7, stagger: 0.08 }, 0.6)
       tl.fromTo('.mn-home', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.8 }, 0.6)
-      tl.fromTo('.about-line', { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 0.9)
-      tl.fromTo('.about-fade', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.12 }, 1.2)
-      tl.fromTo('.about-bar', { scaleY: 0 }, { scaleY: 1, duration: 1.2, ease: 'power3.inOut', transformOrigin: 'top' }, 1.3)
 
-      // the photograph drifts a touch with the pointer
-      const px = gsap.quickTo('.mn-bg', 'x', { duration: 1.4, ease: 'power3.out' })
-      const onMove = (e) => px(-(e.clientX / window.innerWidth - 0.5) * 14)
+      // the room drifts a touch against the pointer
+      const px = gsap.quickTo('.mn-drift', 'x', { duration: 1.6, ease: 'power3.out' })
+      const py = gsap.quickTo('.mn-drift', 'y', { duration: 1.6, ease: 'power3.out' })
+      const onMove = (e) => {
+        px(-(e.clientX / window.innerWidth - 0.5) * 34)
+        py(-(e.clientY / window.innerHeight - 0.5) * 20)
+      }
       window.addEventListener('mousemove', onMove)
       return () => window.removeEventListener('mousemove', onMove)
     }, rootRef)
@@ -51,12 +67,21 @@ function Menu({ onClose, onSelect }) {
 
   return (
     <section ref={rootRef} className="relative h-svh w-full overflow-hidden bg-[#1a0a0c] text-cream">
-      {/* Photograph, dimmed at the left edge where the menu sits and at the right where the text sits */}
-      <div className="absolute inset-0 overflow-hidden">
-        <img src={menuBg} alt="" className="mn-bg h-full w-full object-cover object-top" />
+      {/* The room: every picture stacked, the one being pointed at is brought forward */}
+      <div className="mn-bg absolute inset-0 overflow-hidden">
+        <div className="mn-drift absolute -inset-[2.5%]">
+          <div className={`mn-layer ${active < 0 ? 'is-on' : ''}`}>
+            <img src={menuBg} alt="" className="object-top" />
+          </div>
+          {MENU_ITEMS.map((m, i) => (
+            <div key={m.key} className={`mn-layer ${i === active ? 'is-on' : ''}`}>
+              <img src={m.bg} alt="" />
+            </div>
+          ))}
+        </div>
         <div className="absolute inset-0 bg-[rgba(14,6,10,0.3)]" />
         <div className="absolute inset-0 bg-[rgba(10,4,6,0.4)] lg:hidden" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,4,6,0.6) 0%, rgba(10,4,6,0.25) 55%, rgba(10,4,6,0) 100%), radial-gradient(ellipse 45% 70% at 100% 50%, rgba(10,4,6,0.4) 0%, rgba(10,4,6,0) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,4,6,0.6) 0%, rgba(10,4,6,0.25) 55%, rgba(10,4,6,0) 100%), radial-gradient(ellipse 55% 80% at 100% 50%, rgba(10,4,6,0.62) 0%, rgba(10,4,6,0) 100%)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,4,6,0.45) 0%, rgba(10,4,6,0) 22%, rgba(10,4,6,0) 70%, rgba(10,4,6,0.5) 100%)' }} />
       </div>
 
@@ -109,7 +134,7 @@ function Menu({ onClose, onSelect }) {
                   className={`mn-glow flex flex-1 items-center justify-between gap-2 rounded-lg border-none bg-transparent px-3.5 py-[clamp(0.4rem,1.3svh,0.6rem)] text-left ${on ? 'is-on' : ''}`}
                 >
                   <span className="relative">
-                    <span className="block font-serif text-[0.9375rem] font-semibold tracking-[0.1rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#f9e4d4' }}>{m.title}</span>
+                    <span className="block text-[0.8125rem] font-medium tracking-[0.18rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#f9e4d4' }}>{m.title}</span>
                     <span className="mt-1 block text-[0.5rem] tracking-[0.12rem] text-cream/65">{m.subtitle}</span>
                   </span>
                   <span
@@ -127,19 +152,57 @@ function Menu({ onClose, onSelect }) {
         </ul>
       </nav>
 
-      {/* Right: about the building */}
-      <aside className="absolute right-14 top-[24%] z-10 hidden w-[32rem] text-right lg:block xl:right-24" style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.5)' }}>
-        <span className="about-bar absolute -right-8 top-[3.2rem] block h-[17.5rem] w-px xl:-right-10" style={{ background: 'rgba(240,184,102,0.7)' }} />
-        <span className="about-fade block text-[0.625rem] uppercase tracking-[0.4rem] text-cream/90">Tughra Royale</span>
-        <span className="about-fade ml-auto mt-3 block h-px w-24" style={{ background: GOLD }} />
-        <h2 className="mt-9 font-serif text-[clamp(2.4rem,3.7vw,3.8rem)] font-normal leading-[1.12] text-cream">
-          <span className="block overflow-hidden pb-1"><span className="about-line block">The Emperor&rsquo;s Seal,</span></span>
-          <span className="block overflow-hidden pb-1"><span className="about-line block" style={{ color: GOLD_LIGHT }}>above Mumbai</span></span>
-          <span className="block overflow-hidden pb-1"><span className="about-line block" style={{ color: GOLD_LIGHT }}>Central.</span></span>
-        </h2>
-        <p className="about-fade ml-auto mt-8 max-w-[21rem] text-[0.9375rem] leading-[1.75] text-cream/90">
-          24 floors of 4, 5 and 6 BHK residences, crowned in copper and lifted above the city and sea.
-        </p>
+      {/* Right: a panel that always says what you are looking at. Re-keyed on every change so it re-sets itself. */}
+      <aside className="pointer-events-none absolute inset-y-0 right-14 z-10 hidden w-[34rem] items-center lg:flex xl:right-24" aria-live="polite">
+        <div key={item ? item.key : 'home'} className="mn-panel relative w-full text-right">
+          {/* the section's number, drawn as a ghost behind the words */}
+          {item && <span className="mn-ghost" aria-hidden="true">{item.num}</span>}
+
+          <span className="mn-rise block" style={{ '--d': '0s' }}>
+            <span className="inline-flex items-center gap-4 text-[0.625rem] uppercase tracking-[0.4rem] text-cream/85">
+              {item ? `${item.num} — Tughra Royale` : 'Tughra Royale'}
+              <i className="block h-px w-14" style={{ background: GOLD }} />
+            </span>
+          </span>
+
+          <h2 className="relative mt-8 font-serif font-normal leading-[1.04] text-cream" style={{ fontSize: 'clamp(2.8rem, 4.4vw, 4.8rem)' }}>
+            {item ? (
+              <>
+                <span className="mn-rise block pb-1" style={{ '--d': '0.08s' }}>{item.name}</span>
+                <span className="mn-rise block pb-1" style={{ '--d': '0.18s', color: GOLD_LIGHT, fontSize: '0.5em', letterSpacing: '0.02em' }}>{item.tag}</span>
+              </>
+            ) : (
+              <>
+                <span className="mn-rise block pb-1" style={{ '--d': '0.08s' }}>The Emperor&rsquo;s Seal,</span>
+                <span className="mn-rise block pb-1" style={{ '--d': '0.18s', color: GOLD_LIGHT }}>above Mumbai</span>
+                <span className="mn-rise block pb-1" style={{ '--d': '0.28s', color: GOLD_LIGHT }}>Central.</span>
+              </>
+            )}
+          </h2>
+
+          <p className="mn-rise ml-auto mt-7 block max-w-[22rem] text-[0.9375rem] leading-[1.8] text-cream/85" style={{ '--d': '0.34s' }}>
+            {item ? item.line : '24 floors of 4, 5 and 6 BHK residences, crowned in copper and lifted above the city and sea.'}
+          </p>
+
+          {/* default: the building in three facts. Pointing at an entry: a cue to step through. */}
+          <div className="mn-rise mt-10 block" style={{ '--d': '0.44s' }}>
+            {item ? (
+              <span className="inline-flex items-center gap-4 text-[0.625rem] font-medium uppercase tracking-[0.35rem]" style={{ color: GOLD_LIGHT }}>
+                Enter
+                <svg width="38" height="12" viewBox="0 0 38 12" fill="none" aria-hidden="true"><path d="M0 6h36M31 1l5 5-5 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+            ) : (
+              <dl className="inline-flex items-stretch">
+                {FACTS.map(([k, v], i) => (
+                  <div key={k} className="whitespace-nowrap text-right" style={{ borderLeft: i ? '1px solid rgba(240,184,102,0.35)' : 'none', paddingLeft: i ? '1.4rem' : 0, paddingRight: i < FACTS.length - 1 ? '1.4rem' : 0 }}>
+                    <dt className="text-[0.5625rem] uppercase tracking-[0.25rem] text-cream/55">{k}</dt>
+                    <dd className="mt-2 text-[0.9375rem] font-medium tracking-[0.05rem] text-cream">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </div>
       </aside>
     </section>
   )

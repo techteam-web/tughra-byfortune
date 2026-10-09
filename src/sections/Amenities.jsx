@@ -172,7 +172,7 @@ function Amenities({ onClose }) {
 
       {/* Centre foot: counter, title, copy, then the controls */}
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-5 pb-8 text-center md:pb-12" style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.5)' }}>
-        <span className="am-fade font-serif text-[0.9375rem] tracking-[0.3rem]" style={{ color: GOLD_LIGHT }}>
+        <span className="am-fade text-[0.8125rem] tracking-[0.3rem]" style={{ color: GOLD_LIGHT }}>
           {pad(index + 1)} <span className="mx-1 opacity-60">/</span> {pad(total)}
         </span>
         <h2 className="mt-3 block overflow-hidden pb-2 font-serif text-[clamp(2.4rem,5vw,4.6rem)] font-normal leading-[1.1] text-cream">

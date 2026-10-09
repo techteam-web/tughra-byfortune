@@ -35,7 +35,7 @@ function App() {
       <AnimatePresence mode="wait">
         {view === 'hero' && (
           <Inner key="hero">
-            <Hero onExplore={() => setView('menu')} />
+            <Hero ready={!isLoading} onExplore={() => setView('menu')} />
           </Inner>
         )}
         {view === 'menu' && (

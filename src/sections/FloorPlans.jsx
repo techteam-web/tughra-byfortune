@@ -187,7 +187,7 @@ function FloorPlans({ onClose }) {
                   className="pointer-events-none absolute left-0 z-10 -translate-x-[45%] -translate-y-1/2 transition-[top] duration-500 ease-out"
                   style={{ top: `${(((tagFloor.y0 + tagFloor.y1) / 2 - CROP.y) / CROP.height) * 100}%` }}
                 >
-                  <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 font-serif text-[1rem] font-semibold text-[#470d21]" style={{ background: 'linear-gradient(145deg,#f0c27a,#d99a4a)', boxShadow: '0 0 0.9rem rgba(240,184,102,0.55)' }}>
+                  <span className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-[0.875rem] font-semibold text-[#470d21]" style={{ background: 'linear-gradient(145deg,#f0c27a,#d99a4a)', boxShadow: '0 0 0.9rem rgba(240,184,102,0.55)' }}>
                     {tagFloor.num === 'G' || tagFloor.num === 'T' ? tagFloor.num : parseInt(tagFloor.num, 10)}
                   </span>
                 </div>

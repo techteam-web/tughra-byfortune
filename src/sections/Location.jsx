@@ -252,7 +252,7 @@ function Location({ onClose }) {
           <br />
           Of It All
         </h2>
-        <p className="mt-5 max-w-[20rem] font-serif text-[0.9375rem] leading-relaxed text-muted md:text-[1.0625rem]">
+        <p className="mt-5 max-w-[20rem] text-[0.875rem] leading-[1.8] text-muted md:text-[0.9375rem]">
           Mumbai Central — moments from the sea, the city, and everywhere you need to be.
         </p>
       </div>
