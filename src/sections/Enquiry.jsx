@@ -103,7 +103,7 @@ function Enquiry({ onClose }) {
     <section
       ref={rootRef}
       className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream lg:h-svh lg:flex-row"
-      style={{ background: 'radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.1) 0%, transparent 62%), radial-gradient(52rem 40rem at 75% 45%, rgba(128,30,66,0.5) 0%, transparent 72%), #470d21' }}
+      style={{ background: 'linear-gradient(160deg, rgba(18,3,9,0) 30%, rgba(18,3,9,0.5) 70%, rgba(14,2,7,0.78) 100%), linear-gradient(180deg, rgba(18,3,9,0.42) 0%, rgba(18,3,9,0) 26%), radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.08) 0%, transparent 62%), radial-gradient(52rem 40rem at 75% 45%, rgba(128,30,66,0.5) 0%, transparent 72%), #470d21' }}
     >
       {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
       <img
