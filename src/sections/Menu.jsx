@@ -49,6 +49,7 @@ function Menu({ onClose, onSelect }) {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.6 })
       tl.fromTo('.mn-bg', { scale: 1.05 }, { scale: 1, duration: 2.4 }, 0)
+      tl.fromTo('.mn-shade', { opacity: 0 }, { opacity: 1, duration: 1.6, ease: 'power2.out' }, 0.15)
       tl.fromTo('.mn-side', { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 1.2 }, 0.1)
       tl.fromTo('.mn-brand', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.9 }, 0.3)
       tl.fromTo('.mn-item', { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.7, stagger: 0.08 }, 0.6)
@@ -71,7 +72,8 @@ function Menu({ onClose, onSelect }) {
     <section ref={rootRef} className="relative h-svh w-full overflow-hidden bg-[#1a0a0c] text-cream">
       {/* The room: every picture stacked, the one being pointed at is brought forward */}
       <div className="mn-bg absolute inset-0 overflow-hidden">
-        <div className="mn-drift absolute -inset-[2.5%]">
+        {/* isolate: the active picture has z-index 1 and must stay inside this box, so the shade below always paints over it (before, it only did so after the parallax first set a transform) */}
+        <div className="mn-drift absolute -inset-[2.5%] isolate">
           <div className={`mn-layer ${active < 0 ? 'is-on' : ''}`}>
             <img src={menuBg} alt="" className="object-top" />
           </div>
@@ -81,10 +83,13 @@ function Menu({ onClose, onSelect }) {
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 bg-[rgba(14,6,10,0.3)]" />
-        <div className="absolute inset-0 bg-[rgba(10,4,6,0.4)] lg:hidden" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,4,6,0.6) 0%, rgba(10,4,6,0.25) 55%, rgba(10,4,6,0) 100%), radial-gradient(ellipse 55% 80% at 100% 50%, rgba(10,4,6,0.62) 0%, rgba(10,4,6,0) 100%)' }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,4,6,0.45) 0%, rgba(10,4,6,0) 22%, rgba(10,4,6,0) 70%, rgba(10,4,6,0.5) 100%)' }} />
+        {/* the dark shading over the picture: fades in by itself on arrival */}
+        <div className="mn-shade pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[rgba(14,6,10,0.3)]" />
+          <div className="absolute inset-0 bg-[rgba(10,4,6,0.4)] lg:hidden" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,4,6,0.6) 0%, rgba(10,4,6,0.25) 55%, rgba(10,4,6,0) 100%), radial-gradient(ellipse 55% 80% at 100% 50%, rgba(10,4,6,0.62) 0%, rgba(10,4,6,0) 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,4,6,0.45) 0%, rgba(10,4,6,0) 22%, rgba(10,4,6,0) 70%, rgba(10,4,6,0.5) 100%)' }} />
+        </div>
       </div>
 
       {/* Left side: the dark leaf artwork, easing into the photograph */}
