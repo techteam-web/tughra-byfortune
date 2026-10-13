@@ -12,6 +12,7 @@ const COPPER_RULE_R = 'linear-gradient(90deg, #e8a066, rgba(232,160,102,0))'
 // pass is just the button, kept above everything so it can always be clicked.
 function Copy({ mode, onExplore }) {
   const hideText = mode === 'ui' ? { visibility: 'hidden' } : undefined
+  
   return (
     <div className="flex flex-col items-center px-6 text-center">
       <h1 style={{ marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', ...hideText }} className="hr-depth font-serif text-[clamp(2.6rem,5.2vw,5.6rem)] font-medium uppercase leading-[1.04] tracking-[0.03em]">
@@ -35,16 +36,16 @@ function Copy({ mode, onExplore }) {
         type="button"
         onClick={onExplore}
         tabIndex={mode === 'ui' ? 0 : -1}
-        className={`${mode === 'ui' ? 'hr-btn pointer-events-auto' : ''} lux-btn group mt-10 inline-flex items-center gap-3.5 rounded-full py-2 pl-2 pr-7 text-sm uppercase tracking-[0.125rem] md:mt-12`}
+        className={`${mode === 'ui' ? 'hr-btn pointer-events-auto' : ''} lux-btn group mt-10 inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-[0.6875rem] uppercase tracking-[0.25rem] md:mt-12`}
         style={mode === 'text' ? { visibility: 'hidden' } : undefined}
       >
-        <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gold transition-colors group-hover:bg-gold/15">
-          <span className="absolute inset-0 animate-ping rounded-full border border-gold/60" />
-          <i className="block h-px w-4 bg-gold" />
-        </span>
         Click here to explore
+        <svg className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
       </button>
     </div>
+  
   )
 }
 
@@ -119,7 +120,8 @@ function Hero({ onExplore, ready = true }) {
         <BrandMark />
       </div>
 
-      {/* The title itself sits inside the pano, between the sky and the skyline */}
+      {/* The title itself sits inside the 
+       ano, between the sky and the skyline */}
       {createPortal(<Copy mode="text" onExplore={onExplore} />, copy)}
 
       {/* The button, in the same place, above everything */}

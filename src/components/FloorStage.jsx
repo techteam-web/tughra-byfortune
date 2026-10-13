@@ -26,19 +26,14 @@ function Plan2D({ src, label }) {
 }
 
 const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Terrace' : `Floor ${parseInt(f.num, 10)}`)
-const pad = (n) => String(n).padStart(2, '0')
 
-// Centre column (title, unit tabs, plan, specs) and right column (floor thumbnails).
+// Centre column: title, unit tabs, plan, specs.
 // Keyed by floor in the parent, so the entrance plays on every floor change.
-function FloorStage({ floor, floors, onSelect, unitId, setUnitId }) {
+function FloorStage({ floor, unitId, setUnitId }) {
   const [iso, setIso] = useState(false)
   const [zoom, setZoom] = useState(false)
   const rootRef = useRef(null)
   const unit = UNITS.find((u) => u.id === unitId)
-  const idx = floors.findIndex((f) => f.id === floor.id)
-
-  // four floors starting at the selected one, wrapping round
-  const thumbs = Array.from({ length: Math.min(4, floors.length) }, (_, i) => floors[(idx + i) % floors.length])
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -47,7 +42,6 @@ function FloorStage({ floor, floors, onSelect, unitId, setUnitId }) {
       tl.fromTo('.fs-plan > *', { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 1 }, 0.35)
       tl.fromTo('.fs-line', { yPercent: 110 }, { yPercent: 0, duration: 0.9, stagger: 0.08, ease: 'power4.out' }, 0.2)
       tl.fromTo('.fs-rise', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.07 }, 0.45)
-      tl.fromTo('.fs-thumb', { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.7, stagger: 0.09 }, 0.5)
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -141,32 +135,6 @@ function FloorStage({ floor, floors, onSelect, unitId, setUnitId }) {
               <Ico size={16}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></Ico>
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* ---------- Right: floor thumbnails ---------- */}
-      <div className="flex min-h-0 min-w-0 flex-col gap-3 md:col-start-2 lg:col-start-auto lg:overflow-hidden">
-        <div className="fs-rise flex items-baseline justify-between text-[0.625rem] uppercase tracking-[0.25rem] text-[#6b5a3a]">
-          <span>{floorTitle(floor)}</span>
-          <span className="text-sm tracking-[0.15rem] text-[#470d21]/60">{pad(idx + 1)} / {pad(floors.length)}</span>
-        </div>
-        <div className="grid min-h-0 grid-cols-4 gap-3 lg:flex-1 lg:grid-cols-1 lg:grid-rows-[repeat(4,minmax(0,1fr))]">
-          {thumbs.map((f, i) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => onSelect(f.id)}
-              aria-label={floorTitle(f)}
-              aria-pressed={i === 0}
-              className="fs-thumb group relative aspect-square min-h-0 overflow-hidden lg:aspect-auto rounded-xl border-none bg-white/60 p-0 ring-1 transition-all duration-500 hover:-translate-y-0.5"
-              style={{ ['--tw-ring-color']: i === 0 ? '#b58a3a' : 'rgba(181,138,58,0.25)', boxShadow: i === 0 ? '0 0.5rem 1.25rem rgba(120,90,40,0.2)' : undefined }}
-            >
-              <img src={unit.iso} alt="" loading="lazy" className="h-full w-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" draggable={false} />
-              <span className="absolute inset-x-0 bottom-0 bg-[#470d21]/80 px-2.5 py-1.5 text-left text-[0.5625rem] uppercase tracking-[0.18rem] text-[#f3ecd9]">
-                {f.num === 'G' || f.num === 'T' ? floorTitle(f) : `Floor ${parseInt(f.num, 10)}`}
-              </span>
-            </button>
-          ))}
         </div>
       </div>
 
