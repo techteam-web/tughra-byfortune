@@ -2,49 +2,56 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import BrandMark from '../components/BrandMark.jsx'
 import BackButton from '../components/BackButton.jsx'
-import bg from '../assets/gallery/exterior/fortune-evenin01-1.webp'
+import { Specks } from '../components/Ornaments.jsx'
+import tower from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
+import waves from '../assets/decor/enquiry-waves.png'
 
-// Set to a URL that accepts a JSON POST ({ name, phone, email, interest, message })
-// to deliver enquiries. While empty, the form validates and confirms on screen
-// but the details are NOT sent anywhere.
+// Set to a URL that accepts a JSON POST ({ name, phone }) to deliver enquiries.
+// While empty, the form validates and confirms on screen but the details are
+// NOT sent anywhere.
 const ENQUIRY_ENDPOINT = ''
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const INTERESTS = ['4 BHK', '5 BHK', '6 BHK', 'Not sure yet']
+// The dark pages' palette: black with a warm cast, gold for every fine detail.
 const GOLD = '#f0b866'
 const GOLD_LIGHT = '#ffd58a'
-const HAIR = 'rgba(240,184,102,0.3)'
-
-// The form is set on a sheet of cream paper: wine ink, brass rules
-const PAPER = '#f6e8d8'
-const INK = '#3a0a1b'
-const BRASS = '#a9762f'
-const FAINT = 'rgba(58,10,27,0.22)'
-const ERR = '#a3232f'
-
-const field =
-  'w-full border-0 border-b border-[rgba(58,10,27,0.22)] bg-transparent px-0 pb-2.5 pt-1.5 text-[0.9375rem] text-[#3a0a1b] outline-none transition-colors duration-300 placeholder:text-[rgba(58,10,27,0.32)] focus:border-[#a9762f]'
+const INK = '#14090b'
+const ERR = '#ff9a8a'
+const GOLD_BTN = 'linear-gradient(135deg,#ffd58a,#e0a24e)'
 
 const isName = (v) => v.trim().length >= 2
 const isPhone = (v) => v.replace(/\D/g, '').length >= 7
-const isEmail = (v) => EMAIL_RE.test(v.trim())
 
-function Err({ message }) {
-  return message ? <span className="mt-1.5 block text-[0.6875rem]" style={{ color: ERR }}>{message}</span> : null
-}
+const input =
+  'mt-1.5 w-full border-0 border-b border-[rgba(249,228,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#f9e4d4] outline-none transition-colors duration-300 placeholder:text-[rgba(249,228,212,0.3)] focus:border-[#f0b866] [&:-webkit-autofill]:[-webkit-text-fill-color:#f9e4d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#561430]'
 
-function Label({ n, children }) {
+const caption = 'flex items-center gap-1.5 text-[0.5625rem] font-medium uppercase tracking-[0.28rem] text-[rgba(249,228,212,0.6)]'
+
+function Field({ label, error, children }) {
   return (
-    <span className="flex items-baseline gap-3 text-[0.5625rem] font-medium uppercase tracking-[0.3rem] text-[rgba(58,10,27,0.55)] transition-colors duration-300 group-focus-within:text-[#a9762f]">
-      <span className="text-[0.6875rem] font-medium tracking-[0.1rem]" style={{ color: BRASS }}>{n}</span>
+    <label className="eq-row group block">
+      <span className={`${caption} transition-colors duration-300 group-focus-within:text-[#f0b866]`}>
+        {label}
+        <span style={{ color: GOLD }}>*</span>
+      </span>
       {children}
-    </span>
+      <span className="mt-1.5 block min-h-[0.875rem] text-[0.6875rem] leading-[0.875rem]" style={{ color: ERR }}>{error}</span>
+    </label>
   )
 }
 
+const Arrow = () => (
+  <svg className="transition-transform duration-300 group-hover:translate-x-1" width="14" height="10" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+    <path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+// The slanted cut. The photo owns the left 62% of the page on desktop and its right edge runs from
+// the top corner down and in to 82% of its width; on phones the photo sits on top and its bottom
+// edge slants instead. The gold double rule follows the same cut.
+
 function Enquiry({ onClose }) {
   const rootRef = useRef(null)
-  const [values, setValues] = useState({ name: '', phone: '', email: '', interest: '', message: '' })
+  const [values, setValues] = useState({ name: '', phone: '' })
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | sending | done | failed
 
@@ -52,12 +59,14 @@ function Enquiry({ onClose }) {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.6 })
-      tl.fromTo('.eq-photo', { scale: 1.08 }, { scale: 1, duration: 2.6 }, 0)
-      tl.fromTo('.eq-top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.9 }, 0.4)
-      tl.fromTo('.eq-line', { yPercent: 115 }, { yPercent: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 0.6)
-      tl.fromTo('.eq-fade', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.1 }, 0.9)
-      tl.fromTo('.eq-card', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.1 }, 0.5)
-      tl.fromTo('.eq-row', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.07 }, 0.9)
+      tl.fromTo('.eq-media', { xPercent: -6, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 1.4, ease: 'power3.inOut' }, 0)
+      tl.fromTo('.eq-photo', { scale: 1.16 }, { scale: 1, duration: 2.6, ease: 'power2.out' }, 0)
+      tl.fromTo('.eq-waves', { opacity: 0 }, { opacity: 1, duration: 2 }, 0.3)
+      tl.fromTo('.eq-rule', { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0.8)
+      tl.fromTo('.eq-cap', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.9)
+      tl.fromTo('.eq-line', { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'power4.out' }, 0.5)
+      tl.fromTo('.eq-fade', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.6)
+      tl.fromTo('.eq-row', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08 }, 0.85)
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -71,7 +80,6 @@ function Enquiry({ onClose }) {
     const e = {}
     if (!isName(values.name)) e.name = 'Please tell us your name'
     if (!isPhone(values.phone)) e.phone = 'Please enter a valid phone number'
-    if (!isEmail(values.email)) e.email = 'Please enter a valid email address'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -91,151 +99,112 @@ function Enquiry({ onClose }) {
     }
   }
 
-  const done = [isName(values.name), isPhone(values.phone), isEmail(values.email)]
-  const doneCount = done.filter(Boolean).length
-
   return (
-    <section ref={rootRef} className="relative w-full overflow-x-hidden bg-[#1c040d] text-cream md:h-svh md:overflow-y-auto">
-      {/* The tower stays visible: a wine veil that deepens only at the edges */}
-      <img src={bg} alt="" className="eq-photo pointer-events-none fixed inset-0 h-full w-full object-cover object-center md:absolute" />
-      <div
-        className="pointer-events-none fixed inset-0 md:absolute"
-        style={{ background: 'linear-gradient(90deg, rgba(28,4,13,0.9) 0%, rgba(28,4,13,0.5) 42%, rgba(28,4,13,0.62) 100%)' }}
+    <section
+      ref={rootRef}
+      className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream lg:h-svh lg:flex-row"
+      style={{ background: 'radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.1) 0%, transparent 62%), radial-gradient(52rem 40rem at 75% 45%, rgba(128,30,66,0.5) 0%, transparent 72%), #470d21' }}
+    >
+      {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
+      <img
+        src={waves}
+        alt=""
+        draggable={false}
+        className="eq-waves pointer-events-none absolute -right-[6%] bottom-0 h-[26%] w-auto max-w-none -scale-x-100 select-none opacity-60 mix-blend-screen lg:h-[78%] lg:opacity-70"
+        style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)', maskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)' }}
       />
+      <Specks className="z-[1]" />
 
-      <button type="button" onClick={onClose} className="eq-top absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
+      {/* ---------- The photograph, cut on a slant ---------- */}
+      <div className="eq-media relative z-[2] h-[22rem] w-full shrink-0 sm:h-[26rem] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[62%]">
+        <div className="absolute inset-0 overflow-hidden bg-[#0a0607] [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] lg:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
+          <img src={tower} alt="Tughra Royale at golden hour" className="eq-photo absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 30%' }} draggable={false} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,4,5,0.9) 0%, rgba(8,4,5,0.45) 28%, rgba(8,4,5,0) 56%), linear-gradient(180deg, rgba(8,4,5,0.55) 0%, rgba(8,4,5,0) 24%)' }} />
+        </div>
+
+        {/* gold double rule along the cut */}
+        <svg className="eq-rule pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="100" y1="0" x2="82" y2="100" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          <line x1="101.6" y1="0" x2="83.6" y2="100" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <svg className="eq-rule pointer-events-none absolute inset-0 h-full w-full lg:hidden" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="0" y1="100" x2="100" y2="88" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          <line x1="0" y1="103.5" x2="100" y2="91.5" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        </svg>
+
+        {/* caption, bottom-left of the photograph */}
+        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:pb-12 lg:pl-14 xl:pl-[4.5rem]">
+          <span className="eq-cap flex items-center gap-3 text-[0.5625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD_LIGHT }}>
+            <i className="block h-px w-8" style={{ background: GOLD }} />
+            Tughra Royale
+          </span>
+          <p className="eq-cap mt-3 hidden font-serif text-[clamp(1.5rem,2.2vw,2.1rem)] font-normal leading-[1.14] text-cream sm:block">
+            The Emperor&rsquo;s Seal,
+            <br />
+            <span style={{ color: GOLD_LIGHT }}>above Mumbai Central.</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Top bar */}
+      <button type="button" onClick={onClose} className="absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
         <BrandMark />
       </button>
-      <div className="eq-top absolute right-5 top-5 z-20 sm:right-8 md:right-12 md:top-9">
+      <div className="absolute right-5 top-5 z-20 sm:right-8 md:right-12 md:top-9">
         <BackButton onClick={onClose} />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-svh w-full max-w-[80rem] items-center gap-12 px-5 pb-14 pt-32 sm:px-8 md:px-12 md:pb-16 md:pt-28 lg:grid-cols-[1fr_minmax(0,36rem)] lg:gap-20">
-        {/* Left: the invitation */}
-        <div>
-          <span className="eq-fade flex items-center gap-4 text-[0.625rem] uppercase tracking-[0.4rem] text-cream/80">
-            Enquire <span className="h-px w-12" style={{ background: GOLD }} />
-          </span>
-          <h2 className="mt-6 font-serif text-[clamp(2.8rem,5.4vw,5rem)] font-normal leading-[1.02] text-cream">
-            <span className="block overflow-hidden pb-1"><span className="eq-line block">Let&rsquo;s begin</span></span>
-            <span className="block overflow-hidden pb-1"><span className="eq-line block italic" style={{ color: GOLD_LIGHT }}>a conversation.</span></span>
-          </h2>
-          <p className="eq-fade mt-6 max-w-[24rem] text-[0.9375rem] leading-[1.8] text-cream/80">
-            Discover a higher standard of living, above Mumbai Central.
-          </p>
-
-          <dl className="eq-fade mt-12 flex max-w-[32rem] items-stretch">
-            {[
-              ['Floors', '24'],
-              ['Residences', '4 · 5 · 6 BHK'],
-              ['Address', 'Mumbai Central'],
-            ].map(([k, v], i) => (
-              <div key={k} className="flex-1 whitespace-nowrap py-1 pr-5" style={{ borderLeft: i ? `1px solid ${HAIR}` : 'none', paddingLeft: i ? '1.25rem' : 0 }}>
-                <dt className="text-[0.5625rem] uppercase tracking-[0.25rem] text-cream/50">{k}</dt>
-                <dd className="mt-2 text-[1.0625rem] font-medium leading-none text-cream">{v}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        {/* Right: the form, on a sheet of paper */}
-        <div
-          className="eq-card relative w-full px-6 py-8 sm:px-10 sm:py-9"
-          style={{ background: PAPER, color: INK, boxShadow: '0 2.5rem 6rem -1.5rem rgba(10,2,6,0.7)' }}
-        >
-          <span className="pointer-events-none absolute inset-2 sm:inset-2.5" style={{ border: `1px solid ${BRASS}`, opacity: 0.4 }} />
-
+      {/* ---------- The form: just name, phone and send ---------- */}
+      <div className="relative z-10 flex flex-1 items-center px-6 pb-12 pt-10 sm:px-10 lg:ml-[62%] lg:px-0 lg:pb-0 lg:pt-0">
+        <div className="mx-auto w-full max-w-[26rem] lg:max-w-[24rem] xl:max-w-[26rem]">
           {status === 'done' ? (
-            <div className="relative py-10 text-center">
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto" aria-hidden="true">
-                <circle cx="32" cy="32" r="29" stroke={BRASS} strokeWidth="1.2" />
-                <path d="M20 33l8 8 16-17" stroke={BRASS} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <div className="text-center">
+              <svg width="66" height="66" viewBox="0 0 64 64" fill="none" className="mx-auto" aria-hidden="true">
+                <circle cx="32" cy="32" r="29" stroke={GOLD} strokeWidth="1.2" />
+                <path d="M20 33l8 8 16-17" stroke={GOLD_LIGHT} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <h3 className="mt-6 font-serif text-[2.2rem] font-normal">Thank you</h3>
-              <p className="mx-auto mt-3 max-w-[20rem] text-[0.875rem] leading-relaxed" style={{ color: 'rgba(58,10,27,0.7)' }}>
+              <h3 className="mt-6 font-serif text-[2.4rem] font-normal text-cream">Thank you</h3>
+              <p className="mx-auto mt-3 max-w-[20rem] text-[0.8125rem] leading-relaxed text-cream/70">
                 {ENQUIRY_ENDPOINT ? 'We have your details and will be in touch shortly.' : 'Your details are noted on this screen only. Contact delivery is not connected yet.'}
               </p>
-              <button type="button" onClick={onClose} className="mt-8 px-8 py-3.5 text-[0.625rem] font-medium uppercase tracking-[0.25rem] transition-colors duration-300 hover:bg-[#a9762f]" style={{ background: INK, color: GOLD_LIGHT }}>Back to menu</button>
+              <button type="button" onClick={onClose} className="lux-btn group mx-auto mt-8 flex items-center gap-3 rounded-full px-8 py-3.5 text-[0.625rem] font-medium uppercase tracking-[0.22rem]">
+                Back to menu
+                <Arrow />
+              </button>
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className="relative">
-              <div className="eq-row flex items-center justify-between gap-6">
-                <span className="text-[0.5625rem] font-medium uppercase tracking-[0.35rem]" style={{ color: BRASS }}>Private enquiry</span>
-                <span className="flex items-center gap-3 text-[0.5625rem] uppercase tracking-[0.2rem] text-[rgba(58,10,27,0.5)]">
-                  <span className="flex gap-1" aria-hidden="true">
-                    {done.map((ok, i) => (
-                      <i key={i} className="block h-[3px] w-6 transition-colors duration-500" style={{ background: ok ? BRASS : FAINT }} />
-                    ))}
-                  </span>
-                  {doneCount} of 3
-                </span>
+            <form onSubmit={submit} noValidate>
+              <span className="eq-fade flex items-center gap-4 text-[0.625rem] uppercase tracking-[0.4rem] text-cream/80">
+                <i className="block h-px w-10" style={{ background: `linear-gradient(90deg, transparent, ${GOLD})` }} />
+                Enquire
+              </span>
+              <div className="mt-4 overflow-hidden pb-1.5">
+                <h1 className="eq-line font-serif text-[clamp(2.1rem,3.3vw,3.3rem)] font-normal leading-[1.08] text-cream">
+                  Begin the
+                  <br />
+                  <span className="italic" style={{ color: GOLD_LIGHT }}>conversation.</span>
+                </h1>
               </div>
 
-              <h3 className="eq-row mt-5 font-serif text-[clamp(1.6rem,2.2vw,2rem)] font-normal leading-[1.1]">
-                Take the next step towards <span className="italic" style={{ color: BRASS }}>your new address.</span>
-              </h3>
-
-              <div className="mt-7 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-                <label className="eq-row group block sm:col-span-2">
-                  <Label n="i.">Full name</Label>
-                  <input className={field} placeholder="Your name" value={values.name} onChange={set('name')} autoComplete="name" />
-                  <Err message={errors.name} />
-                </label>
-                <label className="eq-row group block">
-                  <Label n="ii.">Phone</Label>
-                  <input className={field} placeholder="+91" type="tel" value={values.phone} onChange={set('phone')} autoComplete="tel" />
-                  <Err message={errors.phone} />
-                </label>
-                <label className="eq-row group block">
-                  <Label n="iii.">Email</Label>
-                  <input className={field} placeholder="you@email.com" type="email" value={values.email} onChange={set('email')} autoComplete="email" />
-                  <Err message={errors.email} />
-                </label>
-
-                <div className="eq-row sm:col-span-2">
-                  <span className="flex items-baseline gap-3 text-[0.5625rem] font-medium uppercase tracking-[0.3rem] text-[rgba(58,10,27,0.55)]">
-                    <span className="text-[0.6875rem] font-medium tracking-[0.1rem]" style={{ color: BRASS }}>iv.</span>
-                    Interested in
-                  </span>
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {INTERESTS.map((o) => {
-                      const on = values.interest === o
-                      return (
-                        <button
-                          key={o}
-                          type="button"
-                          onClick={() => setValues((v) => ({ ...v, interest: on ? '' : o }))}
-                          aria-pressed={on}
-                          className="px-2 py-3 text-[0.6875rem] font-medium uppercase tracking-[0.12rem] transition-colors duration-300 hover:border-[#a9762f]"
-                          style={{
-                            border: `1px solid ${on ? INK : 'rgba(58,10,27,0.25)'}`,
-                            background: on ? INK : 'transparent',
-                            color: on ? GOLD_LIGHT : INK,
-                          }}
-                        >
-                          {o}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <label className="eq-row group block sm:col-span-2">
-                  <Label n="v.">Message <span className="normal-case tracking-normal opacity-60">(optional)</span></Label>
-                  <textarea className={field + ' min-h-[2.75rem] resize-none'} placeholder="Anything you would like us to know" value={values.message} onChange={set('message')} />
-                </label>
+              <div className="mt-8 space-y-4">
+                <Field label="Full name" error={errors.name}>
+                  <input className={input} placeholder="Your name" value={values.name} onChange={set('name')} autoComplete="name" />
+                </Field>
+                <Field label="Phone number" error={errors.phone}>
+                  <input className={input} placeholder="+91" type="tel" value={values.phone} onChange={set('phone')} autoComplete="tel" />
+                </Field>
               </div>
 
-              {status === 'failed' && <p className="mt-4 text-[0.75rem]" style={{ color: ERR }}>Something went wrong. Please try again.</p>}
+              {status === 'failed' && <p className="mt-2 text-[0.75rem]" style={{ color: ERR }}>Something went wrong. Please try again.</p>}
 
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="eq-row group mt-7 flex w-full items-center justify-between px-7 py-4 text-[0.6875rem] font-medium uppercase tracking-[0.3rem] transition-colors duration-300 hover:bg-[#a9762f] disabled:opacity-60"
-                style={{ background: INK, color: GOLD_LIGHT }}
+                className="eq-row group mt-5 flex w-full items-center justify-between rounded-full px-8 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.25rem] transition-all duration-300 hover:brightness-110 disabled:opacity-60"
+                style={{ background: GOLD_BTN, color: INK, boxShadow: '0 0.75rem 2rem rgba(240,184,102,0.25)' }}
               >
                 {status === 'sending' ? 'Sending…' : 'Send enquiry'}
-                <svg className="transition-transform duration-300 group-hover:translate-x-1" width="18" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <Arrow />
               </button>
             </form>
           )}

@@ -9,6 +9,7 @@ import extEveningCrop from '../assets/gallery/exterior/fortune-evening-crop-1.we
 import extMetro from '../assets/gallery/exterior/fortunemetro-01.webp'
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
 import amPool from '../assets/amenities/swimming-pool.webp'
+import amTheater from '../assets/amenities/theater.webp'
 import './Menu.css'
 
 // Each entry also owns a picture and a line about itself: pointing at it brings the
@@ -19,7 +20,8 @@ const MENU_ITEMS = [
   { num: '03', title: 'NEIGHBORHOOD', subtitle: 'AT THE HEART OF IT ALL', key: 'location', name: 'Neighborhood', tag: 'At the heart of it all', line: 'Steps from Mumbai Central, with the city and the sea around you.', bg: extMetro },
   { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views', name: '360° View', tag: 'Step inside', line: 'Look all the way round from the terrace, in a full panorama.', bg: extDay },
   { num: '05', title: 'AMENITIES', subtitle: 'REFINED LUXURY', key: 'amenities', name: 'Amenities', tag: 'Refined luxury', line: 'A pool, fitness studio, private theatre, banquet hall and more.', bg: amPool },
-  { num: '06', title: 'ENQUIRE', subtitle: 'CONNECT WITH US', key: 'enquiry', name: 'Enquire', tag: 'Connect with us', line: 'Tell us what you are looking for, and begin the conversation.', bg: extEvening },
+  { num: '06', title: 'FEATURES', subtitle: 'COMING SOON', key: 'features', name: 'Features', tag: 'Coming soon', line: 'The details will be added here.', bg: amTheater },
+  { num: '07', title: 'ENQUIRE', subtitle: 'CONNECT WITH US', key: 'enquiry', name: 'Enquire', tag: 'Connect with us', line: 'Tell us what you are looking for, and begin the conversation.', bg: extEvening },
 ]
 
 const GOLD = '#f0b866'

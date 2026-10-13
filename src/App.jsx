@@ -9,6 +9,7 @@ import Location from './sections/Location.jsx'
 import Amenities from './sections/Amenities.jsx'
 import ViewsPage from './components/ViewsPage.jsx'
 import Enquiry from './sections/Enquiry.jsx'
+import Features from './sections/Features.jsx'
 import Preloader from './components/Preloader.jsx'
 
 function App() {
@@ -66,6 +67,11 @@ function App() {
         {view === 'amenities' && (
           <Inner key="amenities">
             <Amenities onClose={() => setView("menu")} onNavigate={(k) => setView(k)} />
+          </Inner>
+        )}
+        {view === 'features' && (
+          <Inner key="features">
+            <Features onClose={() => setView('menu')} />
           </Inner>
         )}
         {view === 'enquiry' && (
