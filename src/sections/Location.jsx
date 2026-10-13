@@ -1,11 +1,15 @@
 import BrandMark from '../components/BrandMark.jsx'
 import { useEffect, useRef, useState } from 'react'
-import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl'
+import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import BackButton from '../components/BackButton.jsx'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
 import SkyFx from './SkyFx.jsx'
 import './Location.css'
+
+// In production the worker is shipped by the maplibreWorker plugin in vite.config.js
+// (dev serves it straight from node_modules, so no override is needed there).
+if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
 // Recolors the OpenFreeMap "liberty" style to the site's dark gold theme —
 // near-black ground, warm gold roads, cream labels — instead of its default
