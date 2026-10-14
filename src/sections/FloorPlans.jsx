@@ -140,7 +140,7 @@ function FloorPlans({ onClose }) {
         {/* ---------- Left: tower, the floor selector ---------- */}
         <div
           className="relative flex flex-col overflow-hidden rounded-[1.75rem] p-4 [--tower-h:min(54svh,24rem)] md:row-span-2 md:self-start md:[--tower-h:min(70svh,19rem)] lg:row-span-1 lg:self-stretch lg:[--tower-h:min(calc(100svh-18rem),23rem)]"
-          style={{ background: '#470d21', boxShadow: '0 1.5rem 3rem rgba(71,13,33,0.28)' }}
+          style={{ background: 'radial-gradient(18rem 24rem at 30% 42%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 55%, transparent 80%), var(--royal-base)', boxShadow: '0 1.5rem 3rem rgba(71,13,33,0.28)' }}
         >
           <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 270 700" preserveAspectRatio="none" aria-hidden="true">
             <path d="M-10 640C70 600 150 640 290 560" fill="none" stroke="#e0a24e" strokeOpacity="0.35" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />

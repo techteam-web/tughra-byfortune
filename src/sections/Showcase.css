@@ -237,21 +237,87 @@
   transform: none;
   z-index: 1;
 }
-.gv-slide img {
+/* Fill (default): the render covers the whole page, edge to edge */
+.gv-bg {
+  position: absolute;
+  inset: 0;
   display: block;
   height: 100%;
   width: 100%;
   object-fit: cover;
   object-position: center;
+  transition: filter 0.7s ease, transform 0.7s ease;
 }
-.gv-slide.is-on img { animation: gvDrift 18s ease-out both; }
+.gv-slide.is-on .gv-bg { animation: gvDrift 18s ease-out both; }
 @keyframes gvDrift {
   from { transform: scale(1); }
   to { transform: scale(1.07); }
 }
+.gv-fg {
+  position: absolute;
+  inset: calc(2.381% + 1.25rem);
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.gv-fg img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 1.25rem 2.5rem rgba(10, 2, 6, 0.5));
+}
+
+/* Wide: the whole render, uncropped. The stage is 5% larger than the window (room for the pointer
+   drift), so .gv-fg is inset to the window's own edges plus a margin for the drift. The same render,
+   blurred and darkened, fills the rest of the window; the shade and the interface step aside. */
+.is-wide .gv-bg,
+.gv-slide.is-framed .gv-bg {
+  filter: blur(2.2rem) brightness(0.55) saturate(1.1);
+  transform: scale(1.12);
+}
+.is-wide .gv-slide.is-on .gv-bg,
+.gv-slide.is-framed.is-on .gv-bg { animation: gvDriftWide 18s ease-out both; }
+@keyframes gvDriftWide {
+  from { transform: scale(1.12); }
+  to { transform: scale(1.2); }
+}
+.is-wide .gv-fg { opacity: 1; }
+.is-wide .gv-scrim,
+.is-wide .gv-ui--bottom { opacity: 0; pointer-events: none; }
+/* Framed: the whole render inside a gold double frame, on the blurred backdrop */
+.gv-frame {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + var(--fy, 0px));
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  padding: 8px;
+  background: rgba(20, 8, 12, 0.7);
+  border: 1px solid rgba(255, 213, 138, 0.9);
+  outline: 1px solid rgba(240, 184, 102, 0.38);
+  outline-offset: 0.7rem;
+  box-shadow: 0 2rem 4rem rgba(8, 2, 5, 0.6), inset 0 0 0 1px rgba(240, 184, 102, 0.18);
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.gv-frame img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+.gv-slide.is-framed .gv-frame { opacity: 1; }
+.is-wide .gv-slide.is-framed .gv-frame { opacity: 0; }
+.is-wide .g-nowide { display: none; }
+
+.g-hide-wide { transition: opacity 0.5s ease; }
+.is-wide .g-hide-wide { opacity: 0; pointer-events: none; }
+.lux-btn.is-active { color: #ffd58a; border-color: rgba(240, 184, 102, 0.7); }
 
 /* just enough shade for the type to sit on the picture */
 .gv-scrim {
+  transition: opacity 0.6s ease;
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -295,6 +361,7 @@
 
 /* the rail: every render in the collection */
 .gx-rail {
+  position: relative;
   display: flex;
   gap: 0.55rem;
   margin-top: 0;
@@ -304,11 +371,16 @@
 @media (min-width: 768px) {
   .gx-rail { gap: 0.7rem; }
 }
+.gx-rail.has-more {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.4rem, #000 calc(100% - 1.4rem), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 1.4rem, #000 calc(100% - 1.4rem), transparent 100%);
+}
 .gx-chip {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 1 auto; /* shrink, down to min-width, so a long collection still fits the strip */
   height: 3.4rem;
   width: 4.6rem;
+  min-width: 2.7rem;
   overflow: hidden;
   padding: 0;
   border: 1px solid rgba(249, 228, 212, 0.22);
@@ -319,7 +391,7 @@
   transition: opacity 0.5s ease, border-color 0.5s ease, width 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s ease;
 }
 @media (min-width: 768px) {
-  .gx-chip { height: 4rem; width: 5.6rem; }
+  .gx-chip { height: 4rem; width: 5.6rem; min-width: 3.1rem; }
 }
 .gx-chip img {
   height: 100%;
@@ -328,13 +400,15 @@
 }
 .gx-chip:hover { opacity: 0.85; transform: translateY(-0.15rem); }
 .gx-chip.is-on {
+  flex-shrink: 0;
+  min-width: 7.2rem;
   opacity: 1;
   width: 7.2rem;
   border-color: rgba(240, 184, 102, 0.95);
   box-shadow: 0 0.6rem 1.6rem rgba(0, 0, 0, 0.45);
 }
 @media (min-width: 768px) {
-  .gx-chip.is-on { width: 9rem; }
+  .gx-chip.is-on { width: 9rem; min-width: 9rem; }
 }
 .gx-chip-no {
   position: absolute;

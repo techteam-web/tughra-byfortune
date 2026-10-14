@@ -22,7 +22,7 @@ const isName = (v) => v.trim().length >= 2
 const isPhone = (v) => v.replace(/\D/g, '').length >= 7
 
 const input =
-  'mt-1.5 w-full border-0 border-b border-[rgba(249,228,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#f9e4d4] outline-none transition-colors duration-300 placeholder:text-[rgba(249,228,212,0.3)] focus:border-[#f0b866] [&:-webkit-autofill]:[-webkit-text-fill-color:#f9e4d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#561430]'
+  'mt-1.5 w-full border-0 border-b border-[rgba(249,228,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#f9e4d4] outline-none transition-colors duration-300 placeholder:text-[rgba(249,228,212,0.3)] focus:border-[#f0b866] [&:-webkit-autofill]:[-webkit-text-fill-color:#f9e4d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#2a1219]'
 
 const caption = 'flex items-center gap-1.5 text-[0.5625rem] font-medium uppercase tracking-[0.28rem] text-[rgba(249,228,212,0.6)]'
 
@@ -103,7 +103,7 @@ function Enquiry({ onClose }) {
     <section
       ref={rootRef}
       className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream lg:h-svh lg:flex-row"
-      style={{ background: 'linear-gradient(160deg, rgba(18,3,9,0) 30%, rgba(18,3,9,0.5) 70%, rgba(14,2,7,0.78) 100%), linear-gradient(180deg, rgba(18,3,9,0.42) 0%, rgba(18,3,9,0) 26%), radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.08) 0%, transparent 62%), radial-gradient(52rem 40rem at 75% 45%, rgba(128,30,66,0.5) 0%, transparent 72%), #470d21' }}
+      style={{ background: 'radial-gradient(52rem 40rem at 78% 45%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 76%), radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.07) 0%, transparent 62%), radial-gradient(40rem 28rem at 100% 100%, rgba(71,13,33,0.4) 0%, transparent 70%), var(--royal-base)' }}
     >
       {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
       <img

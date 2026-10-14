@@ -2,7 +2,8 @@ import BrandMark from '../components/BrandMark.jsx'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import menuBg from '../assets/render/menu.png'
-import menuLeaves from '../assets/decor/menu-leaves.png'
+import waves from '../assets/decor/enquiry-waves.png'
+import { Specks } from '../components/Ornaments.jsx'
 import extGolden from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
 import extEvening from '../assets/gallery/exterior/fortune-evenin01-1.webp'
 import extEveningCrop from '../assets/gallery/exterior/fortune-evening-crop-1.webp'
@@ -26,6 +27,12 @@ const MENU_ITEMS = [
 
 const GOLD = '#f0b866'
 const GOLD_LIGHT = '#ffd58a'
+
+// The left panel's right edge, in a 100x100 box stretched to the panel: a long S-curve.
+const CURVE_EDGE = 'M84 0 C98 18 66 40 78 60 C88 76 96 88 70 100'
+const CURVE_MASK =
+  'data:image/svg+xml,' +
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L84 0 C98 18 66 40 78 60 C88 76 96 88 70 100 L0 100 Z"/></svg>`)
 
 const HomeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -92,18 +99,43 @@ function Menu({ onClose, onSelect }) {
         </div>
       </div>
 
-      {/* Left side: the dark leaf artwork, easing into the photograph */}
-      <div
-        className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[88%] max-w-[30rem] lg:w-[34%] lg:max-w-[36rem]"
-        style={{
-          background: `url(${menuLeaves}) left top / cover, #080506`,
-          WebkitMaskImage: 'radial-gradient(ellipse 100% 78% at 0% 50%, #000 0%, #000 45%, rgba(0,0,0,0.55) 70%, transparent 100%)',
-          maskImage: 'radial-gradient(ellipse 100% 78% at 0% 50%, #000 0%, #000 45%, rgba(0,0,0,0.55) 70%, transparent 100%)',
-          filter: 'blur(2.5px)',
-          transform: 'scale(1.04)',
-          transformOrigin: 'left center',
-        }}
-      />
+      {/* Left side: a mostly-black panel with a maroon glow, its right edge a flowing curve traced in gold */}
+      <div className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[92%] max-w-[30rem] lg:w-[36%] lg:max-w-[38rem]" aria-hidden="true">
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            background: 'radial-gradient(34rem 26rem at 18% 48%, rgba(110,22,52,0.5) 0%, rgba(71,13,33,0.22) 45%, transparent 75%), radial-gradient(28rem 20rem at 0% 100%, rgba(71,13,33,0.35) 0%, transparent 70%), linear-gradient(180deg, #0d0608 0%, #0a0507 100%)',
+            WebkitMaskImage: `url("${CURVE_MASK}")`,
+            maskImage: `url("${CURVE_MASK}")`,
+            WebkitMaskSize: '100% 100%',
+            maskSize: '100% 100%',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+          }}
+        >
+          <img
+            src={waves}
+            alt=""
+            draggable={false}
+            className="absolute -left-[12%] bottom-0 h-[36%] w-auto max-w-none select-none opacity-75 mix-blend-screen"
+            style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)', maskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)' }}
+          />
+          <Specks className="z-0" />
+        </div>
+        {/* the curve, in gold: a bright line and a fainter echo */}
+        <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="mnCurveGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor={GOLD} stopOpacity="0.15" />
+              <stop offset="0.35" stopColor={GOLD_LIGHT} stopOpacity="1" />
+              <stop offset="0.7" stopColor={GOLD} stopOpacity="0.9" />
+              <stop offset="1" stopColor={GOLD} stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+          <path d={CURVE_EDGE} fill="none" stroke="url(#mnCurveGold)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          <path d={CURVE_EDGE} transform="translate(2.6 0)" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
 
       {/* Logo: fixed to the top-left corner */}
       <button type="button" onClick={onClose} className="mn-brand absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">

@@ -24,6 +24,8 @@ import intTheatre from '../assets/amenities/theater.webp'
 
 // Add more entries to either list as renders come in - the tabs, the ticks
 // and the counter all size themselves to the data.
+// A render that would lose too much of itself filling the page is framed automatically. To decide for
+// one yourself, add `frame: true` (always framed) or `frame: false` (always fills) to its entry.
 const CATEGORIES = [
   {
     id: 'exterior',
@@ -56,9 +58,28 @@ const CATEGORIES = [
   },
 ]
 
+// per-render choices written in the data above
+const FRAME_PREF = new Map(CATEGORIES.flatMap((c) => c.slides.filter((x) => typeof x.frame === 'boolean').map((x) => [x.src, x.frame])))
+
 const pad = (n) => String(n).padStart(2, '0')
 const GOLD = '#f0b866'
 
+const WideIcon = ({ on }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="6" width="18" height="12" rx="1.5" />
+    <path d={on ? 'M8 12h8M10 10l-2 2 2 2M14 10l2 2-2 2' : 'M7 12h10M9.5 9.5L7 12l2.5 2.5M14.5 9.5L17 12l-2.5 2.5'} />
+  </svg>
+)
+const FrameIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3.5" y="3.5" width="17" height="17" rx="1" />
+    <rect x="7.5" y="7.5" width="9" height="9" rx="0.5" />
+  </svg>
+)
+// A render is framed when filling the page would cut away too much of it (more than this share of the picture).
+const FRAME_CROP = 0.22
+// Space the framed picture keeps clear of the page: header above, caption and thumbnails below.
+const frameMargins = (w) => (w < 768 ? { top: 192, bottom: 235, side: 22 } : { top: 104, bottom: 138, side: 56 })
 const ExpandIcon = ({ on }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d={on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
@@ -76,6 +97,14 @@ function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
   const [fs, setFs] = useState(false)
+  // fill: the render covers the whole page edge to edge. wide: the whole render, uncropped, with the interface out of the way.
+  const [wide, setWide] = useState(false)
+  const railRef = useRef(null)
+  const [railMore, setRailMore] = useState(false)
+  // each render's own shape (known once it has loaded), the window's shape, and any per-render choice to frame or fill
+  const [aspects, setAspects] = useState({})
+  const [vp, setVp] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
+  const [frameOver, setFrameOver] = useState({})
   const [idle, setIdle] = useState(false)
   const sectionRef = useRef(null)
   const tabRefs = useRef([])
@@ -141,6 +170,56 @@ function Gallery({ onClose }) {
     }
   }, [])
 
+  useEffect(() => {
+    const onResize = () => setVp({ w: window.innerWidth, h: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const noteAspect = (src, img) => {
+    if (!img.naturalWidth) return
+    setAspects((a) => (a[src] ? a : { ...a, [src]: { w: img.naturalWidth, h: img.naturalHeight } }))
+  }
+  // A choice made with the button wins, then one written in the data, then auto: framed when the page would crop away more than FRAME_CROP of the render.
+  const isFramed = (src) => {
+    if (src in frameOver) return frameOver[src]
+    if (FRAME_PREF.has(src)) return FRAME_PREF.get(src)
+    const a = aspects[src]
+    if (!a) return false
+    const ar = a.w / a.h
+    const vpAr = vp.w / vp.h
+    return 1 - Math.min(ar / vpAr, vpAr / ar) > FRAME_CROP
+  }
+  // The framed picture: as large as fits between the margins, keeping its own shape, plus its mat.
+  const frameBox = (src) => {
+    const a = aspects[src]
+    if (!a) return null
+    const m = frameMargins(vp.w)
+    const mat = 8
+    const k = Math.min((vp.w - m.side * 2 - mat * 2) / a.w, (vp.h - m.top - m.bottom - mat * 2) / a.h)
+    return { w: Math.round(a.w * k + mat * 2), h: Math.round(a.h * k + mat * 2), dy: Math.round((m.top - m.bottom) / 2) }
+  }
+  const toggleFrame = () => setFrameOver((o) => ({ ...o, [slide.src]: !isFramed(slide.src) }))
+
+  // The thumbnail strip follows the current render, and shows a fade at its edges when more are out of sight
+  useEffect(() => {
+    const r = railRef.current
+    if (!r) return
+    const follow = () => {
+      const el = r.children[idx]
+      if (el) r.scrollTo({ left: el.offsetLeft - (r.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' })
+      setRailMore(r.scrollWidth > r.clientWidth + 2)
+    }
+    follow()
+    const t = setTimeout(follow, 750) // once the active thumbnail has finished growing
+    const ro = new ResizeObserver(() => setRailMore(r.scrollWidth > r.clientWidth + 2))
+    ro.observe(r)
+    return () => {
+      clearTimeout(t)
+      ro.disconnect()
+    }
+  }, [idx, cat])
+
   // The tab pill slides to the active tab
   useLayoutEffect(() => {
     const place = () => {
@@ -186,6 +265,7 @@ function Gallery({ onClose }) {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
       if (e.key === 'f' || e.key === 'F') toggleFs()
+      if (e.key === 'w' || e.key === 'W') setWide((v) => !v)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -205,16 +285,31 @@ function Gallery({ onClose }) {
         wheelAt.current = now
         step(e.deltaY > 0 ? 1 : -1)
       }}
-      className={`gx-page ${idle ? 'is-idle' : ''}`}
+      className={`gx-page ${idle ? 'is-idle' : ''} ${wide ? 'is-wide' : ''}`}
     >
-      {/* The render fills the whole window; every render is stacked, only one is lit */}
+      {/* Every render is stacked, only one is lit. Fill mode shows .gv-bg edge to edge; wide mode blurs it into a backdrop and shows .gv-fg, the whole render */}
       <div className="gv-stage" aria-live="polite">
         {CATEGORIES.flatMap((c, ci) =>
-          c.slides.map((s, i) => (
-            <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''}`}>
-              <img src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} />
-            </div>
-          ))
+          c.slides.map((s, i) => {
+            const framed = isFramed(s.src)
+            const box = framed ? frameBox(s.src) : null
+            return (
+              <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''} ${framed ? 'is-framed' : ''}`}>
+                {/* the render, edge to edge; blurred into a backdrop when it is shown framed or wide */}
+                <img className="gv-bg" src={s.src} alt="" aria-hidden="true" draggable={false} onLoad={(e) => noteAspect(s.src, e.currentTarget)} />
+                {/* wide view: the whole render */}
+                <div className="gv-fg">
+                  <img src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} />
+                </div>
+                {/* framed: the whole render in a gold double frame, set clear of the header and the caption */}
+                {box && (
+                  <div className="gv-frame" style={{ width: box.w, height: box.h, '--fy': `${box.dy}px` }}>
+                    <img src={s.src} alt="" aria-hidden="true" draggable={false} />
+                  </div>
+                )}
+              </div>
+            )
+          })
         )}
       </div>
       <div className="gv-scrim" />
@@ -222,10 +317,10 @@ function Gallery({ onClose }) {
       {/* Logo, tabs, full screen, Back */}
       <div className="gv-ui gv-ui--top">
         <header className="g-chrome relative flex items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9">
-          <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
+          <button type="button" onClick={onClose} className="g-hide-wide border-none bg-transparent p-0 text-left">
             <BrandMark />
           </button>
-          <div className="mt-1 hidden lg:block">
+          <div className="g-hide-wide mt-1 hidden lg:block">
             <div className="gl-tabs" role="tablist" aria-label="Collections">
               <span className="gl-pill" style={{ width: pill.w, transform: `translateX(${pill.x}px)` }} />
               {CATEGORIES.map((c, ci) => (
@@ -236,6 +331,26 @@ function Gallery({ onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-2.5 md:gap-3">
+            <button
+              type="button"
+              onClick={toggleFrame}
+              aria-label={isFramed(slide.src) ? 'Fill the page with this render' : 'Frame this render'}
+              aria-pressed={isFramed(slide.src)}
+              title={isFramed(slide.src) ? 'Fill the page with this render' : 'Show this render whole, in a frame'}
+              className={ctrlClass + ' g-nowide' + (isFramed(slide.src) ? ' is-active' : '')}
+            >
+              <FrameIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => setWide((v) => !v)}
+              aria-label={wide ? 'Fill the page' : 'Wide view'}
+              aria-pressed={wide}
+              title={wide ? 'Fill the page (W)' : 'Wide view: the whole render (W)'}
+              className={ctrlClass + (wide ? ' is-active' : '')}
+            >
+              <WideIcon on={wide} />
+            </button>
             <button type="button" onClick={toggleFs} aria-label={fs ? 'Exit full screen' : 'Enter full screen'} className={ctrlClass}>
               <ExpandIcon on={fs} />
             </button>
@@ -244,7 +359,7 @@ function Gallery({ onClose }) {
         </header>
 
         {/* Tabs for small screens */}
-        <div className="g-chrome relative flex justify-center px-5 pt-4 lg:hidden">
+        <div className="g-chrome g-hide-wide relative flex justify-center px-5 pt-4 lg:hidden">
           <div className="gl-tabs" role="tablist" aria-label="Collections">
             <span className="gl-pill" style={{ width: pillSm.w, transform: `translateX(${pillSm.x}px)` }} />
             {CATEGORIES.map((c, ci) => (
@@ -277,7 +392,7 @@ function Gallery({ onClose }) {
             <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/70">{slide.subtitle}</p>
           </div>
 
-          <div className="sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[52%]" role="tablist" aria-label={`${category.label} renders`}>
+          <div ref={railRef} className={`sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[60%] ${railMore ? 'has-more' : ''}`} role="tablist" aria-label={`${category.label} renders`}>
             {slides.map((s, i) => (
               <button
                 key={s.src}

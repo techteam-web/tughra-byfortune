@@ -77,8 +77,17 @@ function Preloader({ onComplete }) {
 
   return (
     <div ref={rootRef} className="fixed inset-0 z-[100] overflow-hidden" aria-hidden="true">
-      <div ref={topRef} className="absolute inset-x-0 top-0 h-1/2" style={{ background: '#2a0713' }} />
-      <div ref={bottomRef} className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: '#2a0713' }} />
+      {/* each half paints its own side of one continuous surface: warm charcoal, darkest and glowing maroon at the seam (the bottom half's base is mirrored so the two meet without a step) */}
+      <div
+        ref={topRef}
+        className="absolute inset-x-0 top-0 h-1/2"
+        style={{ background: 'radial-gradient(48rem 30rem at 50% 100%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 78%), var(--royal-base)' }}
+      />
+      <div
+        ref={bottomRef}
+        className="absolute inset-x-0 bottom-0 h-1/2"
+        style={{ background: 'radial-gradient(48rem 30rem at 50% 0%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 78%), linear-gradient(0deg, #1c1013 0%, #140a0d 100%)' }}
+      />
 
       {/* The line that opens across the middle, then the curtain parts along it */}
       <svg className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none">

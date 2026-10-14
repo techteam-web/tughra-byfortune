@@ -1,5 +1,5 @@
-// Mumbai Central railway station — the project's location. [lng, lat]
-export const PROJECT = [72.8194, 18.9696]
+// The project's location. [lng, lat] (18.972319, 72.822374)
+export const PROJECT = [72.822374, 18.972319]
 
 // Landmarks around the project. Coordinates are approximate; distances are
 // computed (straight-line, km) from PROJECT so they always match the map.
