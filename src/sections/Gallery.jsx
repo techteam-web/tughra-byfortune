@@ -24,8 +24,7 @@ import intTheatre from '../assets/amenities/theater.webp'
 
 // Add more entries to either list as renders come in - the tabs, the ticks
 // and the counter all size themselves to the data.
-// A render that would lose too much of itself filling the page is framed automatically. To decide for
-// one yourself, add `frame: true` (always framed) or `frame: false` (always fills) to its entry.
+// Every render is shown whole, in the same gold frame. Full screen fills the page with the render instead.
 const CATEGORIES = [
   {
     id: 'exterior',
@@ -58,9 +57,6 @@ const CATEGORIES = [
   },
 ]
 
-// per-render choices written in the data above
-const FRAME_PREF = new Map(CATEGORIES.flatMap((c) => c.slides.filter((x) => typeof x.frame === 'boolean').map((x) => [x.src, x.frame])))
-
 const pad = (n) => String(n).padStart(2, '0')
 const GOLD = '#f0b866'
 
@@ -70,14 +66,6 @@ const WideIcon = ({ on }) => (
     <path d={on ? 'M8 12h8M10 10l-2 2 2 2M14 10l2 2-2 2' : 'M7 12h10M9.5 9.5L7 12l2.5 2.5M14.5 9.5L17 12l-2.5 2.5'} />
   </svg>
 )
-const FrameIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3.5" y="3.5" width="17" height="17" rx="1" />
-    <rect x="7.5" y="7.5" width="9" height="9" rx="0.5" />
-  </svg>
-)
-// A render is framed when filling the page would cut away too much of it (more than this share of the picture).
-const FRAME_CROP = 0.22
 // Space the framed picture keeps clear of the page: header above, caption and thumbnails below.
 const frameMargins = (w) => (w < 768 ? { top: 192, bottom: 235, side: 22 } : { top: 104, bottom: 138, side: 56 })
 const ExpandIcon = ({ on }) => (
@@ -96,7 +84,8 @@ const ctrlClass = 'lux-btn flex h-10 w-10 items-center justify-center rounded-fu
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  const [fs, setFs] = useState(false)
+  // full: the render fills the whole page, edge to edge (and the browser goes full screen). Otherwise every render sits in the gold frame.
+  const [full, setFull] = useState(false)
   // fill: the render covers the whole page edge to edge. wide: the whole render, uncropped, with the interface out of the way.
   const [wide, setWide] = useState(false)
   const railRef = useRef(null)
@@ -104,7 +93,6 @@ function Gallery({ onClose }) {
   // each render's own shape (known once it has loaded), the window's shape, and any per-render choice to frame or fill
   const [aspects, setAspects] = useState({})
   const [vp, setVp] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
-  const [frameOver, setFrameOver] = useState({})
   const [idle, setIdle] = useState(false)
   const sectionRef = useRef(null)
   const tabRefs = useRef([])
@@ -180,16 +168,7 @@ function Gallery({ onClose }) {
     if (!img.naturalWidth) return
     setAspects((a) => (a[src] ? a : { ...a, [src]: { w: img.naturalWidth, h: img.naturalHeight } }))
   }
-  // A choice made with the button wins, then one written in the data, then auto: framed when the page would crop away more than FRAME_CROP of the render.
-  const isFramed = (src) => {
-    if (src in frameOver) return frameOver[src]
-    if (FRAME_PREF.has(src)) return FRAME_PREF.get(src)
-    const a = aspects[src]
-    if (!a) return false
-    const ar = a.w / a.h
-    const vpAr = vp.w / vp.h
-    return 1 - Math.min(ar / vpAr, vpAr / ar) > FRAME_CROP
-  }
+  const isFramed = () => !full
   // The framed picture: as large as fits between the margins, keeping its own shape, plus its mat.
   const frameBox = (src) => {
     const a = aspects[src]
@@ -199,7 +178,6 @@ function Gallery({ onClose }) {
     const k = Math.min((vp.w - m.side * 2 - mat * 2) / a.w, (vp.h - m.top - m.bottom - mat * 2) / a.h)
     return { w: Math.round(a.w * k + mat * 2), h: Math.round(a.h * k + mat * 2), dy: Math.round((m.top - m.bottom) / 2) }
   }
-  const toggleFrame = () => setFrameOver((o) => ({ ...o, [slide.src]: !isFramed(slide.src) }))
 
   // The thumbnail strip follows the current render, and shows a fade at its edges when more are out of sight
   useEffect(() => {
@@ -240,13 +218,24 @@ function Gallery({ onClose }) {
   }
   const step = (d) => total > 1 && setIdx((i) => (i + d + total) % total)
 
+  // Full screen: the render fills the page edge to edge, and the browser goes full screen too (where it allows).
+  // If the browser refuses, the page still fills.
   const toggleFs = () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    else document.documentElement.requestFullscreen?.().catch(() => {})
+    if (full) {
+      setFull(false)
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+    } else {
+      setFull(true)
+      setWide(false)
+      document.documentElement.requestFullscreen?.().catch(() => {})
+    }
   }
 
   useEffect(() => {
-    const onChange = () => setFs(!!document.fullscreenElement)
+    // leaving browser full screen (Esc) returns to the frame
+    const onChange = () => {
+      if (!document.fullscreenElement) setFull(false)
+    }
     document.addEventListener('fullscreenchange', onChange)
     return () => {
       document.removeEventListener('fullscreenchange', onChange)
@@ -285,13 +274,13 @@ function Gallery({ onClose }) {
         wheelAt.current = now
         step(e.deltaY > 0 ? 1 : -1)
       }}
-      className={`gx-page ${idle ? 'is-idle' : ''} ${wide ? 'is-wide' : ''}`}
+      className={`gx-page ${idle ? 'is-idle' : ''} ${wide ? 'is-wide' : ''} ${full ? 'is-full' : ''}`}
     >
       {/* Every render is stacked, only one is lit. Fill mode shows .gv-bg edge to edge; wide mode blurs it into a backdrop and shows .gv-fg, the whole render */}
       <div className="gv-stage" aria-live="polite">
         {CATEGORIES.flatMap((c, ci) =>
           c.slides.map((s, i) => {
-            const framed = isFramed(s.src)
+            const framed = isFramed()
             const box = framed ? frameBox(s.src) : null
             return (
               <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''} ${framed ? 'is-framed' : ''}`}>
@@ -333,26 +322,16 @@ function Gallery({ onClose }) {
           <div className="flex items-center gap-2.5 md:gap-3">
             <button
               type="button"
-              onClick={toggleFrame}
-              aria-label={isFramed(slide.src) ? 'Fill the page with this render' : 'Frame this render'}
-              aria-pressed={isFramed(slide.src)}
-              title={isFramed(slide.src) ? 'Fill the page with this render' : 'Show this render whole, in a frame'}
-              className={ctrlClass + ' g-nowide' + (isFramed(slide.src) ? ' is-active' : '')}
-            >
-              <FrameIcon />
-            </button>
-            <button
-              type="button"
               onClick={() => setWide((v) => !v)}
-              aria-label={wide ? 'Fill the page' : 'Wide view'}
+              aria-label={wide ? 'Back to the frame' : 'Wide view'}
               aria-pressed={wide}
-              title={wide ? 'Fill the page (W)' : 'Wide view: the whole render (W)'}
+              title={wide ? 'Back to the frame (W)' : 'Wide view: the whole render, no frame (W)'}
               className={ctrlClass + (wide ? ' is-active' : '')}
             >
               <WideIcon on={wide} />
             </button>
-            <button type="button" onClick={toggleFs} aria-label={fs ? 'Exit full screen' : 'Enter full screen'} className={ctrlClass}>
-              <ExpandIcon on={fs} />
+            <button type="button" onClick={toggleFs} aria-label={full ? 'Exit full screen' : 'Full screen'} title={full ? 'Back to the frame (F)' : 'Full screen: fill the page (F)'} aria-pressed={full} className={ctrlClass + (full ? ' is-active' : '')}>
+              <ExpandIcon on={full} />
             </button>
             <BackButton onClick={onClose} />
           </div>

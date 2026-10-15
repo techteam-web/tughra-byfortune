@@ -237,7 +237,7 @@
   transform: none;
   z-index: 1;
 }
-/* Fill (default): the render covers the whole page, edge to edge */
+/* Full screen: the render covers the whole page, edge to edge. (Every other view frames it.) */
 .gv-bg {
   position: absolute;
   inset: 0;
@@ -283,8 +283,11 @@
   to { transform: scale(1.2); }
 }
 .is-wide .gv-fg { opacity: 1; }
+/* Wide and full screen show the picture alone: no shade, caption, thumbnails, logo or tabs (the arrows and the top-right buttons stay) */
 .is-wide .gv-scrim,
-.is-wide .gv-ui--bottom { opacity: 0; pointer-events: none; }
+.is-wide .gv-ui--bottom,
+.is-full .gv-scrim,
+.is-full .gv-ui--bottom { opacity: 0; pointer-events: none; }
 /* Framed: the whole render inside a gold double frame, on the blurred backdrop */
 .gv-frame {
   position: absolute;
@@ -309,10 +312,10 @@
 }
 .gv-slide.is-framed .gv-frame { opacity: 1; }
 .is-wide .gv-slide.is-framed .gv-frame { opacity: 0; }
-.is-wide .g-nowide { display: none; }
 
 .g-hide-wide { transition: opacity 0.5s ease; }
-.is-wide .g-hide-wide { opacity: 0; pointer-events: none; }
+.is-wide .g-hide-wide,
+.is-full .g-hide-wide { opacity: 0; pointer-events: none; }
 .lux-btn.is-active { color: #ffd58a; border-color: rgba(240, 184, 102, 0.7); }
 
 /* just enough shade for the type to sit on the picture */

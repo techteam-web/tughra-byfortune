@@ -16,23 +16,27 @@ import './Menu.css'
 // Each entry also owns a picture and a line about itself: pointing at it brings the
 // room around to that subject, and the panel on the right tells you what is behind it.
 const MENU_ITEMS = [
-  { num: '01', title: 'GALLERY', subtitle: 'EXPLORE THE VISION', key: 'gallery', name: 'Gallery', tag: 'Explore the vision', line: 'Every render of the tower and its amenities, shown full screen.', bg: extGolden },
-  { num: '02', title: 'FLOOR PLANS', subtitle: 'FIND YOUR PERFECT SPACE', key: 'floors', name: 'Floor Plans', tag: 'Find your perfect space', line: 'The 4, 5 and 6 BHK residences, laid out floor by floor.', bg: extEveningCrop },
-  { num: '03', title: 'NEIGHBORHOOD', subtitle: 'AT THE HEART OF IT ALL', key: 'location', name: 'Neighborhood', tag: 'At the heart of it all', line: 'Steps from Mumbai Central, with the city and the sea around you.', bg: extMetro },
-  { num: '04', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views', name: '360° View', tag: 'Step inside', line: 'Look all the way round from the terrace, in a full panorama.', bg: extDay },
-  { num: '05', title: 'AMENITIES', subtitle: 'REFINED LUXURY', key: 'amenities', name: 'Amenities', tag: 'Refined luxury', line: 'A pool, fitness studio, private theatre, banquet hall and more.', bg: amPool },
-  { num: '06', title: 'FEATURES', subtitle: 'COMING SOON', key: 'features', name: 'Features', tag: 'Coming soon', line: 'The details will be added here.', bg: amTheater },
+   { num: '01', title: 'FEATURES', subtitle: 'COMING SOON', key: 'features', name: 'Features', tag: 'Coming soon', line: 'The details will be added here.', bg: amTheater },
+  { num: '02', title: 'GALLERY', subtitle: 'EXPLORE THE VISION', key: 'gallery', name: 'Gallery', tag: 'Explore the vision', line: 'Every render of the tower and its amenities, shown full screen.', bg: extGolden },
+   { num: '03', title: 'AMENITIES', subtitle: 'REFINED LUXURY', key: 'amenities', name: 'Amenities', tag: 'Refined luxury', line: 'A pool, fitness studio, private theatre, banquet hall and more.', bg: amPool },
+  { num: '04', title: 'FLOOR PLANS', subtitle: 'FIND YOUR PERFECT SPACE', key: 'floors', name: 'Floor Plans', tag: 'Find your perfect space', line: 'The 4, 5 and 6 BHK residences, laid out floor by floor.', bg: extEveningCrop },
+  { num: '05', title: 'NEIGHBORHOOD', subtitle: 'AT THE HEART OF IT ALL', key: 'location', name: 'Neighborhood', tag: 'At the heart of it all', line: 'Steps from Mumbai Central, with the city and the sea around you.', bg: extMetro },
+  { num: '06', title: '360° VIEW', subtitle: 'STEP INSIDE', key: 'views', name: '360° View', tag: 'Step inside', line: 'Look all the way round from the terrace, in a full panorama.', bg: extDay },
+ 
+ 
   { num: '07', title: 'ENQUIRE', subtitle: 'CONNECT WITH US', key: 'enquiry', name: 'Enquire', tag: 'Connect with us', line: 'Tell us what you are looking for, and begin the conversation.', bg: extEvening },
 ]
 
 const GOLD = '#f0b866'
 const GOLD_LIGHT = '#ffd58a'
 
-// The left panel's right edge, in a 100x100 box stretched to the panel: a long S-curve.
-const CURVE_EDGE = 'M84 0 C98 18 66 40 78 60 C88 76 96 88 70 100'
+// The left panel's right edge, in a 100x100 box stretched to the panel: a straight line that drops from the
+// top, then bends at BEND and sweeps in toward the bottom-left in one long curve.
+const BEND = [80, 54]
+const CURVE_EDGE = `M80 0 L${BEND[0]} ${BEND[1]} C80 76 64 92 36 100`
 const CURVE_MASK =
   'data:image/svg+xml,' +
-  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L84 0 C98 18 66 40 78 60 C88 76 96 88 70 100 L0 100 Z"/></svg>`)
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L80 0 L${BEND[0]} ${BEND[1]} C80 76 64 92 36 100 L0 100 Z"/></svg>`)
 
 const HomeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -99,8 +103,13 @@ function Menu({ onClose, onSelect }) {
         </div>
       </div>
 
-      {/* Left side: a mostly-black panel with a maroon glow, its right edge a flowing curve traced in gold */}
+      {/* Left side: a mostly-black panel with a maroon glow. Its edge is a gold line that is drawn down the page: straight, then bending into a sweeping curve */}
       <div className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[92%] max-w-[30rem] lg:w-[36%] lg:max-w-[38rem]" aria-hidden="true">
+        <style>{`
+          @keyframes mnDraw { from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 0 -2% 0) } }
+          @keyframes mnNode { from { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(0.2) } to { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1) } }
+          @keyframes mnPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.7 } to { transform: translate(-50%, -50%) scale(2.6); opacity: 0 } }
+        `}</style>
         <div
           className="absolute inset-0 overflow-hidden"
           style={{
@@ -122,19 +131,33 @@ function Menu({ onClose, onSelect }) {
           />
           <Specks className="z-0" />
         </div>
-        {/* the curve, in gold: a bright line and a fainter echo */}
-        <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {/* the edge, in gold: a soft glow, the line itself and a fainter echo, all drawn down from the top */}
+        <svg
+          className="absolute inset-0 h-full w-full overflow-visible"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{ animation: 'mnDraw 2.2s cubic-bezier(0.65, 0, 0.35, 1) 0.5s both' }}
+        >
           <defs>
             <linearGradient id="mnCurveGold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={GOLD} stopOpacity="0.15" />
-              <stop offset="0.35" stopColor={GOLD_LIGHT} stopOpacity="1" />
-              <stop offset="0.7" stopColor={GOLD} stopOpacity="0.9" />
-              <stop offset="1" stopColor={GOLD} stopOpacity="0.2" />
+              <stop offset="0" stopColor={GOLD} stopOpacity="0.35" />
+              <stop offset="0.3" stopColor={GOLD_LIGHT} stopOpacity="1" />
+              <stop offset="0.75" stopColor={GOLD} stopOpacity="0.95" />
+              <stop offset="1" stopColor={GOLD} stopOpacity="0.3" />
             </linearGradient>
           </defs>
-          <path d={CURVE_EDGE} fill="none" stroke="url(#mnCurveGold)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-          <path d={CURVE_EDGE} transform="translate(2.6 0)" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <path d={CURVE_EDGE} fill="none" stroke={GOLD} strokeOpacity="0.3" strokeWidth="7" vectorEffect="non-scaling-stroke" style={{ filter: 'blur(5px)' }} />
+          <path d={CURVE_EDGE} transform="translate(2.4 0)" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <path d={CURVE_EDGE} fill="none" stroke="url(#mnCurveGold)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
         </svg>
+        {/* a small gold pivot where the straight line turns into the curve */}
+        <span className="absolute" style={{ left: `${BEND[0]}%`, top: `${BEND[1]}%` }}>
+          <i className="absolute block h-2 w-2 rounded-full border border-[#f0b866]" style={{ left: 0, top: 0, animation: 'mnPulse 3.4s ease-out 2.6s infinite', transform: 'translate(-50%, -50%)' }} />
+          <i
+            className="absolute block h-2.5 w-2.5"
+            style={{ background: 'linear-gradient(135deg,#fff1cf,#e0a24e)', boxShadow: '0 0 0.7rem rgba(255,213,138,0.85)', animation: 'mnNode 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both' }}
+          />
+        </span>
       </div>
 
       {/* Logo: fixed to the top-left corner */}
@@ -152,7 +175,7 @@ function Menu({ onClose, onSelect }) {
       </button>
 
       {/* Left column: brand, then the six entries as plain type on the photograph */}
-      <nav className="absolute inset-y-0 left-0 z-10 flex w-full max-w-[26rem] flex-col px-6 pb-10 pt-6 sm:px-10 lg:max-w-[28rem] lg:pl-14 xl:pl-[4.5rem]" aria-label="Main menu">
+      <nav className="absolute inset-y-0 left-0 z-10 flex w-full max-w-[26rem] flex-col px-6 pb-10 pt-6 sm:px-10 lg:max-w-[28rem] lg:pt-[7.5rem] lg:pl-14 xl:pl-[4.5rem]" aria-label="Main menu">
         <ul className="my-auto flex w-full max-w-[21rem] flex-col gap-[clamp(0.2rem,0.9svh,0.5rem)]" onMouseLeave={() => setActive(-1)}>
           {MENU_ITEMS.map((m, i) => {
             const on = i === active
