@@ -460,9 +460,12 @@ function Location({ onClose }) {
     let cancelled = false
     const controller = new AbortController()
     const desktop = window.innerWidth >= 768
-    const padding = desktop
-      ? { top: 120, bottom: 100, left: 420, right: 80 }
-      : { top: 100, bottom: Math.round(window.innerHeight * 0.48), left: 40, right: 40 }
+    const sideways = window.innerHeight < 520 && window.innerWidth > window.innerHeight
+    const padding = sideways
+      ? { top: 70, bottom: 50, left: 290, right: 50 }
+      : desktop
+        ? { top: 120, bottom: 100, left: 420, right: 80 }
+        : { top: 100, bottom: Math.round(window.innerHeight * 0.48), left: 40, right: 40 }
     const { at } = selectedPlace
 
     // Fetch the road route (falls back to an arc offline / rate-limited).
@@ -568,12 +571,12 @@ function Location({ onClose }) {
       </div>
 
       {/* Location table */}
-      <aside className="loc-panel absolute inset-x-4 bottom-4 z-10 flex max-h-[44svh] flex-col rounded-2xl p-4 md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-h-[72svh] md:w-[22rem] md:-translate-y-1/2 md:p-6">
-        <h2 className="font-serif text-[1.5rem] font-light uppercase leading-none tracking-[0.04em] text-cream md:text-[1.75rem]">
+      <aside className="loc-panel absolute inset-x-4 bottom-4 z-10 flex max-h-[44svh] flex-col rounded-2xl p-4 md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-h-[72svh] md:w-[22rem] md:-translate-y-1/2 md:p-6 short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[15.5rem] short:translate-y-0 short:p-3">
+        <h2 className="font-serif text-[1.5rem] font-light uppercase leading-none tracking-[0.04em] text-cream md:text-[1.75rem] short:text-[1.1rem]">
           Location Highlights
         </h2>
         <span className="mt-3 block h-px w-10 bg-gold/60" />
-        <div className="mt-4 flex gap-x-4 gap-y-1 overflow-x-auto md:flex-wrap md:overflow-visible">
+        <div className="mt-4 flex gap-x-4 gap-y-1 overflow-x-auto md:flex-wrap md:overflow-visible short:mt-2 short:flex-nowrap short:overflow-x-auto">
           {PLACES.map((c) => (
             <button
               key={c.key}
@@ -607,7 +610,7 @@ function Location({ onClose }) {
         <button
           type="button"
           onClick={overview}
-          className="lux-btn absolute right-16 top-24 z-10 rounded-full px-5 py-2.5 text-[0.625rem] uppercase tracking-[0.25rem] md:bottom-6 md:top-auto md:py-3"
+          className="lux-btn absolute right-16 top-24 z-10 rounded-full px-5 py-2.5 text-[0.625rem] uppercase tracking-[0.25rem] md:bottom-6 md:top-auto md:py-3 short:bottom-3 short:right-4 short:top-auto short:py-2"
         >
           Overview
         </button>

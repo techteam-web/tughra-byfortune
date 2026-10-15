@@ -30,13 +30,14 @@ const MENU_ITEMS = [
 const GOLD = '#f0b866'
 const GOLD_LIGHT = '#ffd58a'
 
-// The left panel's right edge, in a 100x100 box stretched to the panel: a straight line that drops from the
-// top, then bends at BEND and sweeps in toward the bottom-left in one long curve.
-const BEND = [80, 54]
-const CURVE_EDGE = `M80 0 L${BEND[0]} ${BEND[1]} C80 76 64 92 36 100`
+// The left panel's right edge, in a 100x100 box stretched to the panel: a gentle S-curve. It leans in to its
+// narrowest point at BEND (where the gold node sits), then swells back out toward the bottom.
+const BEND = [68, 42]
+const EDGE_PATH = 'C78 16 68 28 68 42 C68 58 88 72 86 88 C85 95 84 98 83 100'
+const CURVE_EDGE = `M78 0 ${EDGE_PATH}`
 const CURVE_MASK =
   'data:image/svg+xml,' +
-  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L80 0 L${BEND[0]} ${BEND[1]} C80 76 64 92 36 100 L0 100 Z"/></svg>`)
+  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L78 0 ${EDGE_PATH} L0 100 Z"/></svg>`)
 
 const HomeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -104,7 +105,7 @@ function Menu({ onClose, onSelect }) {
       </div>
 
       {/* Left side: a mostly-black panel with a maroon glow. Its edge is a gold line that is drawn down the page: straight, then bending into a sweeping curve */}
-      <div className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[92%] max-w-[30rem] lg:w-[36%] lg:max-w-[38rem]" aria-hidden="true">
+      <div className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[92%] max-w-[30rem] lg:w-[36%] lg:max-w-[38rem] short:w-[54%] short:max-w-none" aria-hidden="true">
         <style>{`
           @keyframes mnDraw { from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 0 -2% 0) } }
           @keyframes mnNode { from { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(0.2) } to { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1) } }
@@ -150,7 +151,7 @@ function Menu({ onClose, onSelect }) {
           <path d={CURVE_EDGE} transform="translate(2.4 0)" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           <path d={CURVE_EDGE} fill="none" stroke="url(#mnCurveGold)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
         </svg>
-        {/* a small gold pivot where the straight line turns into the curve */}
+        {/* a small gold node set on the curve at its narrowest point */}
         <span className="absolute" style={{ left: `${BEND[0]}%`, top: `${BEND[1]}%` }}>
           <i className="absolute block h-2 w-2 rounded-full border border-[#f0b866]" style={{ left: 0, top: 0, animation: 'mnPulse 3.4s ease-out 2.6s infinite', transform: 'translate(-50%, -50%)' }} />
           <i
@@ -161,7 +162,7 @@ function Menu({ onClose, onSelect }) {
       </div>
 
       {/* Logo: fixed to the top-left corner */}
-      <button type="button" onClick={onClose} className="mn-brand absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
+      <button type="button" onClick={onClose} className="mn-brand absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9 short:left-5 short:top-3">
         <BrandMark />
       </button>
 
@@ -169,19 +170,19 @@ function Menu({ onClose, onSelect }) {
       <button
         type="button"
         onClick={onClose}
-        className="mn-home lux-btn absolute right-5 top-5 z-20 flex items-center gap-3 rounded-full px-6 py-2.5 text-[0.625rem] uppercase tracking-[0.3rem] sm:right-8 md:right-12 md:top-9"
+        className="mn-home lux-btn absolute right-5 top-5 z-20 flex items-center gap-3 rounded-full px-6 py-2.5 text-[0.625rem] uppercase tracking-[0.3rem] sm:right-8 md:right-12 md:top-9 short:right-5 short:top-3 short:py-1.5"
       >
         <HomeIcon /> Home
       </button>
 
       {/* Left column: brand, then the six entries as plain type on the photograph */}
-      <nav className="absolute inset-y-0 left-0 z-10 flex w-full max-w-[26rem] flex-col px-6 pb-10 pt-6 sm:px-10 lg:max-w-[28rem] lg:pt-[7.5rem] lg:pl-14 xl:pl-[4.5rem]" aria-label="Main menu">
-        <ul className="my-auto flex w-full max-w-[21rem] flex-col gap-[clamp(0.2rem,0.9svh,0.5rem)]" onMouseLeave={() => setActive(-1)}>
+      <nav className="absolute inset-y-0 left-0 z-10 flex w-full max-w-[26rem] flex-col px-6 pb-10 pt-6 sm:px-10 lg:max-w-[28rem] lg:pt-[7.5rem] lg:pl-14 xl:pl-[4.5rem] short:max-w-none short:px-5 short:pb-2 short:pt-[3.6rem] short:pl-5">
+        <ul className="my-auto flex w-full max-w-[21rem] flex-col gap-[clamp(0.2rem,0.9svh,0.5rem)] lg:max-w-[18rem] short:max-w-[18rem] short:gap-0" onMouseLeave={() => setActive(-1)}>
           {MENU_ITEMS.map((m, i) => {
             const on = i === active
             return (
               <li key={m.num} className="mn-item flex items-start gap-3">
-                <span className="w-6 pt-3.5 text-[0.5625rem] tracking-[0.1rem] text-cream/60">{m.num}</span>
+                <span className="w-6 pt-3.5 short:pt-2 text-[0.5625rem] tracking-[0.1rem] text-cream/60">{m.num}</span>
                 <button
                   type="button"
                   onClick={() => onSelect?.(m.key)}
@@ -193,11 +194,11 @@ function Menu({ onClose, onSelect }) {
                     e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
                     e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
                   }}
-                  className={`mn-glow flex flex-1 items-center justify-between gap-2 rounded-lg border-none bg-transparent px-3.5 py-[clamp(0.4rem,1.3svh,0.6rem)] text-left ${on ? 'is-on' : ''}`}
+                  className={`mn-glow flex flex-1 items-center justify-between gap-2 rounded-lg border-none bg-transparent px-3.5 py-[clamp(0.4rem,1.3svh,0.6rem)] short:py-[0.15rem] text-left ${on ? 'is-on' : ''}`}
                 >
                   <span className="relative">
-                    <span className="block text-[0.8125rem] font-medium tracking-[0.18rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#f9e4d4' }}>{m.title}</span>
-                    <span className="mt-1 block text-[0.5rem] tracking-[0.12rem] text-cream/65">{m.subtitle}</span>
+                    <span className="block text-[0.8125rem] short:text-[0.6875rem] font-medium tracking-[0.18rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#f9e4d4' }}>{m.title}</span>
+                    <span className="mt-1 short:mt-0 block text-[0.5rem] short:text-[0.4375rem] tracking-[0.12rem] text-cream/65">{m.subtitle}</span>
                   </span>
                   <span
                     className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all duration-500"

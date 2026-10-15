@@ -58,6 +58,10 @@
   cursor: pointer;
   transition: background 0.3s, color 0.3s, padding-left 0.3s;
 }
+@media (max-height: 520px) and (orientation: landscape) {
+  .loc-row { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
+  .loc-tab { font-size: 0.5625rem; padding: 0.25rem 0; }
+}
 .loc-row .km { color: var(--gold); font-variant-numeric: tabular-nums; }
 .loc-row:hover { background: rgba(240, 184, 102, 0.07); padding-left: 1rem; }
 .loc-row.is-on {

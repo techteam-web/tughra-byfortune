@@ -171,18 +171,18 @@ function Amenities({ onClose }) {
       </div>
 
       {/* Centre foot: counter, title, copy, then the controls */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-5 pb-8 text-center md:pb-12" style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.5)' }}>
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-5 pb-8 text-center md:pb-12 short:pb-3" style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.5)' }}>
         <div className="am-fade flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.3rem]" style={{ color: GOLD_LIGHT }}>
           <span className="h-px w-8 md:w-12" style={{ background: 'linear-gradient(90deg, transparent, ' + GOLD + ')' }} />
           {pad(index + 1)} <span className="opacity-50">/</span> {pad(total)}
           <span className="h-px w-8 md:w-12" style={{ background: 'linear-gradient(90deg, ' + GOLD + ', transparent)' }} />
         </div>
-        <h2 className="mt-3 block overflow-hidden pb-1.5 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream">
+        <h2 className="mt-3 block overflow-hidden pb-1.5 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream short:text-[1.1rem]">
           <span className="am-line block">{item.title}</span>
         </h2>
-        <p className="am-fade mt-1 max-w-[26rem] text-[0.75rem] leading-[1.75] tracking-[0.02rem] text-cream/75 md:text-[0.8125rem]">{item.description}</p>
+        <p className="am-fade mt-1 max-w-[26rem] text-[0.75rem] leading-[1.75] tracking-[0.02rem] text-cream/75 md:text-[0.8125rem] short:hidden">{item.description}</p>
 
-        <div className="am-bot mt-5 flex w-full items-center justify-center gap-4 md:mt-6 md:gap-8">
+        <div className="am-bot mt-5 short:mt-2 flex w-full items-center justify-center gap-4 md:mt-6 md:gap-8">
           <button type="button" onClick={goPrev} aria-label="Previous amenity" className={roundBtn}><Svg size={20}><path d="M15 18l-6-6 6-6" /></Svg></button>
 
           <div className="flex items-center gap-1.5 md:gap-2" role="tablist" aria-label="Amenities">

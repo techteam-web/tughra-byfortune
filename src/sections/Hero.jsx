@@ -14,8 +14,8 @@ function Copy({ mode, onExplore }) {
   const hideText = mode === 'ui' ? { visibility: 'hidden' } : undefined
   
   return (
-    <div className="flex flex-col items-center px-6 text-center">
-      <h1 style={{ marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', ...hideText }} className="hr-depth font-serif text-[clamp(2.6rem,5.2vw,5.6rem)] font-medium uppercase leading-[1.04] tracking-[0.03em]">
+    <div className="flex flex-col items-center px-6 text-center portrait:-translate-y-[14svh] short:-translate-y-[2svh]">
+      <h1 style={{ marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', ...hideText }} className="hr-depth font-serif text-[clamp(2.6rem,5.2vw,5.6rem)] font-medium uppercase leading-[1.04] tracking-[0.03em] max-md:portrait:text-[clamp(2rem,9.4vw,3.2rem)] short:text-[clamp(1.6rem,5.4vh,2.6rem)]">
         <span className="block overflow-hidden px-2 pb-3">
           <span className="hr-line hr-copper inline-block">A World</span>
         </span>
@@ -30,13 +30,13 @@ function Copy({ mode, onExplore }) {
         <span className="hr-rule h-px w-14 origin-left md:w-20" style={{ background: COPPER_RULE_R }} />
       </div>
 
-      <p className="hr-depth hr-fade mt-6 text-[0.6875rem] uppercase tracking-[0.4rem] hr-copy-text md:text-xs" style={hideText}>All within reach.</p>
+      <p className="hr-depth hr-fade mt-6 text-[0.6875rem] uppercase tracking-[0.4rem] hr-copy-text md:text-xs short:mt-2 short:text-[0.625rem]" style={hideText}>All within reach.</p>
 
       <button
         type="button"
         onClick={onExplore}
         tabIndex={mode === 'ui' ? 0 : -1}
-        className={`${mode === 'ui' ? 'hr-btn pointer-events-auto' : ''} lux-btn group mt-10 inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-[0.6875rem] uppercase tracking-[0.25rem] md:mt-12`}
+        className={`${mode === 'ui' ? 'hr-btn pointer-events-auto' : ''} lux-btn group mt-10 inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-[0.6875rem] uppercase tracking-[0.25rem] md:mt-12 short:mt-4 short:py-2.5`}
         style={mode === 'text' ? { visibility: 'hidden' } : undefined}
       >
         Click here to explore

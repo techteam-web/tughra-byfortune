@@ -63,7 +63,7 @@ function FloorStage({ floor, unitId, setUnitId }) {
   return (
     <div ref={rootRef} className="contents">
       {/* ---------- Centre ---------- */}
-      <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-col gap-4 short:gap-2 lg:overflow-hidden">
         <div className="text-center">
           <div className="overflow-hidden pb-1">
             <h1 className="fs-line font-serif text-[clamp(1.625rem,2.4vw,2.25rem)] font-medium uppercase tracking-[0.12rem]" style={{ color: '#470d21' }}>Floor Plans</h1>
@@ -89,7 +89,7 @@ function FloorStage({ floor, unitId, setUnitId }) {
           })}
         </div>
 
-        <div className="fs-plan relative min-h-[16rem] flex-1 overflow-hidden rounded-[1.5rem] bg-[#fffaf4]/70 lg:min-h-[9rem] ring-1 ring-white/80 shadow-[0_1rem_2.5rem_rgba(120,70,40,0.12)] backdrop-blur-sm">
+        <div className="fs-plan relative min-h-[16rem] short:min-h-[10rem] flex-1 overflow-hidden rounded-[1.5rem] bg-[#fffaf4]/70 lg:min-h-[9rem] ring-1 ring-white/80 shadow-[0_1rem_2.5rem_rgba(120,70,40,0.12)] backdrop-blur-sm">
           <div className="h-full w-full">
             {iso ? <img src={unit.iso} alt={`${unit.label} isometric view`} className="h-full w-full object-contain" draggable={false} /> : <Plan2D key={unit.id} src={unit.plan2d} label={unit.label} />}
           </div>

@@ -413,6 +413,12 @@
 @media (min-width: 768px) {
   .gx-chip.is-on { width: 9rem; min-width: 9rem; }
 }
+/* phones held sideways: smaller thumbnails */
+@media (max-height: 520px) and (orientation: landscape) {
+  .gx-chip { height: 2.5rem; width: 3.6rem; min-width: 2.2rem; }
+  .gx-chip.is-on { width: 5.2rem; min-width: 5.2rem; }
+  .gx-rail { gap: 0.4rem; }
+}
 .gx-chip-no {
   position: absolute;
   left: 0.35rem;

@@ -67,7 +67,7 @@ const WideIcon = ({ on }) => (
   </svg>
 )
 // Space the framed picture keeps clear of the page: header above, caption and thumbnails below.
-const frameMargins = (w) => (w < 768 ? { top: 192, bottom: 235, side: 22 } : { top: 104, bottom: 138, side: 56 })
+const frameMargins = (w, h) => (h < 520 && w > h ? { top: 76, bottom: 92, side: 28 } : w < 768 ? { top: 192, bottom: 235, side: 22 } : { top: 104, bottom: 138, side: 56 })
 const ExpandIcon = ({ on }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d={on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
@@ -173,7 +173,7 @@ function Gallery({ onClose }) {
   const frameBox = (src) => {
     const a = aspects[src]
     if (!a) return null
-    const m = frameMargins(vp.w)
+    const m = frameMargins(vp.w, vp.h)
     const mat = 8
     const k = Math.min((vp.w - m.side * 2 - mat * 2) / a.w, (vp.h - m.top - m.bottom - mat * 2) / a.h)
     return { w: Math.round(a.w * k + mat * 2), h: Math.round(a.h * k + mat * 2), dy: Math.round((m.top - m.bottom) / 2) }
@@ -305,11 +305,11 @@ function Gallery({ onClose }) {
 
       {/* Logo, tabs, full screen, Back */}
       <div className="gv-ui gv-ui--top">
-        <header className="g-chrome relative flex items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9">
+        <header className="g-chrome relative flex items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9 short:pt-3">
           <button type="button" onClick={onClose} className="g-hide-wide border-none bg-transparent p-0 text-left">
             <BrandMark />
           </button>
-          <div className="g-hide-wide mt-1 hidden lg:block">
+          <div className="g-hide-wide mt-1 hidden lg:block short:block">
             <div className="gl-tabs" role="tablist" aria-label="Collections">
               <span className="gl-pill" style={{ width: pill.w, transform: `translateX(${pill.x}px)` }} />
               {CATEGORIES.map((c, ci) => (
@@ -338,7 +338,7 @@ function Gallery({ onClose }) {
         </header>
 
         {/* Tabs for small screens */}
-        <div className="g-chrome g-hide-wide relative flex justify-center px-5 pt-4 lg:hidden">
+        <div className="g-chrome g-hide-wide relative flex justify-center px-5 pt-4 lg:hidden short:hidden">
           <div className="gl-tabs" role="tablist" aria-label="Collections">
             <span className="gl-pill" style={{ width: pillSm.w, transform: `translateX(${pillSm.x}px)` }} />
             {CATEGORIES.map((c, ci) => (
@@ -360,18 +360,18 @@ function Gallery({ onClose }) {
 
       {/* Caption on the left, every render in the collection on the right */}
       <div className="gv-ui gv-ui--bottom">
-        <footer className="g-chrome relative flex flex-col gap-5 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9">
+        <footer className="g-chrome relative flex flex-col gap-5 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:justify-between short:gap-6 short:px-5 short:pb-3">
           <div className="min-w-0">
             <span className="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD }}>
               {pad(idx + 1)} <span className="h-px w-7" style={{ background: GOLD }} /> {pad(total)}
             </span>
-            <h2 className="mt-2 overflow-hidden font-serif text-[clamp(1.8rem,3.4vw,3.2rem)] font-normal leading-tight text-cream">
+            <h2 className="mt-2 overflow-hidden font-serif text-[clamp(1.8rem,3.4vw,3.2rem)] font-normal leading-tight text-cream short:text-[1.3rem]">
               <span className="g-line block truncate">{slide.title}</span>
             </h2>
-            <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/70">{slide.subtitle}</p>
+            <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/70 short:hidden">{slide.subtitle}</p>
           </div>
 
-          <div ref={railRef} className={`sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[60%] ${railMore ? 'has-more' : ''}`} role="tablist" aria-label={`${category.label} renders`}>
+          <div ref={railRef} className={`sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[60%] short:max-w-[58%] ${railMore ? 'has-more' : ''}`} role="tablist" aria-label={`${category.label} renders`}>
             {slides.map((s, i) => (
               <button
                 key={s.src}

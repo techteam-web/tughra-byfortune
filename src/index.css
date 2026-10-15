@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
 @import 'tailwindcss';
 
+/* Side-by-side layouts: on desktop-width screens, and on phones held sideways. Use as side:… */
+@custom-variant side {
+  @media (min-width: 1024px) {
+    @slot;
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    @slot;
+  }
+}
+/* Phones held sideways (and any very short window): wide but only ~400px tall. Use as short:…
+   Declared after `side` so that short:… overrides side:… on those screens. */
+@custom-variant short (@media (max-height: 520px) and (orientation: landscape));
+
 @theme {
   --color-bg: #470d21;
   --color-gold: #f0b866;
@@ -39,6 +52,13 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* Phones: keep the text size we set when the screen turns sideways, and no grey flash on tap */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {

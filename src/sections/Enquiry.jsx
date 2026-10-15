@@ -102,7 +102,7 @@ function Enquiry({ onClose }) {
   return (
     <section
       ref={rootRef}
-      className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream lg:h-svh lg:flex-row"
+      className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream side:h-svh side:flex-row"
       style={{ background: 'radial-gradient(52rem 40rem at 78% 45%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 76%), radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.07) 0%, transparent 62%), radial-gradient(40rem 28rem at 100% 100%, rgba(71,13,33,0.4) 0%, transparent 70%), var(--royal-base)' }}
     >
       {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
@@ -110,30 +110,30 @@ function Enquiry({ onClose }) {
         src={waves}
         alt=""
         draggable={false}
-        className="eq-waves pointer-events-none absolute -right-[6%] bottom-0 h-[26%] w-auto max-w-none -scale-x-100 select-none opacity-60 mix-blend-screen lg:h-[78%] lg:opacity-70"
+        className="eq-waves pointer-events-none absolute -right-[6%] bottom-0 h-[26%] w-auto max-w-none -scale-x-100 select-none opacity-60 mix-blend-screen side:h-[78%] side:opacity-70"
         style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)', maskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)' }}
       />
       <Specks className="z-[1]" />
 
       {/* ---------- The photograph, cut on a slant ---------- */}
-      <div className="eq-media relative z-[2] h-[22rem] w-full shrink-0 sm:h-[26rem] lg:absolute lg:inset-y-0 lg:left-0 lg:h-auto lg:w-[62%]">
-        <div className="absolute inset-0 overflow-hidden bg-[#0a0607] [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] lg:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
+      <div className="eq-media relative z-[2] h-[22rem] w-full shrink-0 sm:h-[26rem] side:absolute side:inset-y-0 side:left-0 side:h-auto side:w-[62%] short:w-[56%]">
+        <div className="absolute inset-0 overflow-hidden bg-[#0a0607] [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] side:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
           <img src={tower} alt="Tughra Royale at golden hour" className="eq-photo absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 30%' }} draggable={false} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,4,5,0.9) 0%, rgba(8,4,5,0.45) 28%, rgba(8,4,5,0) 56%), linear-gradient(180deg, rgba(8,4,5,0.55) 0%, rgba(8,4,5,0) 24%)' }} />
         </div>
 
         {/* gold double rule along the cut */}
-        <svg className="eq-rule pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg className="eq-rule pointer-events-none absolute inset-0 hidden h-full w-full side:block" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <line x1="100" y1="0" x2="82" y2="100" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
           <line x1="101.6" y1="0" x2="83.6" y2="100" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         </svg>
-        <svg className="eq-rule pointer-events-none absolute inset-0 h-full w-full lg:hidden" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg className="eq-rule pointer-events-none absolute inset-0 h-full w-full side:hidden" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <line x1="0" y1="100" x2="100" y2="88" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
           <line x1="0" y1="103.5" x2="100" y2="91.5" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         </svg>
 
         {/* caption, bottom-left of the photograph */}
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 lg:pb-12 lg:pl-14 xl:pl-[4.5rem]">
+        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 side:pb-12 side:pl-14 xl:pl-[4.5rem]">
           <span className="eq-cap flex items-center gap-3 text-[0.5625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD_LIGHT }}>
             <i className="block h-px w-8" style={{ background: GOLD }} />
             Tughra Royale
@@ -155,8 +155,8 @@ function Enquiry({ onClose }) {
       </div>
 
       {/* ---------- The form: just name, phone and send ---------- */}
-      <div className="relative z-10 flex flex-1 items-center px-6 pb-12 pt-10 sm:px-10 lg:ml-[62%] lg:px-0 lg:pb-0 lg:pt-0">
-        <div className="mx-auto w-full max-w-[26rem] lg:max-w-[24rem] xl:max-w-[26rem]">
+      <div className="relative z-10 flex flex-1 items-center px-6 pb-12 pt-10 sm:px-10 side:ml-[62%] side:px-0 side:pb-0 side:pt-0 short:ml-[56%] short:px-5 short:pb-2 short:pt-12">
+        <div className="mx-auto w-full max-w-[26rem] side:max-w-[24rem] xl:max-w-[26rem] short:max-w-none">
           {status === 'done' ? (
             <div className="text-center">
               <svg width="66" height="66" viewBox="0 0 64 64" fill="none" className="mx-auto" aria-hidden="true">
@@ -178,15 +178,15 @@ function Enquiry({ onClose }) {
                 <i className="block h-px w-10" style={{ background: `linear-gradient(90deg, transparent, ${GOLD})` }} />
                 Enquire
               </span>
-              <div className="mt-4 overflow-hidden pb-1.5">
-                <h1 className="eq-line font-serif text-[clamp(2.1rem,3.3vw,3.3rem)] font-normal leading-[1.08] text-cream">
+              <div className="mt-4 short:mt-2 overflow-hidden pb-1.5">
+                <h1 className="eq-line font-serif text-[clamp(2.1rem,3.3vw,3.3rem)] font-normal leading-[1.08] text-cream short:text-[1.7rem]">
                   Begin the
                   <br />
                   <span className="italic" style={{ color: GOLD_LIGHT }}>conversation.</span>
                 </h1>
               </div>
 
-              <div className="mt-8 space-y-4">
+              <div className="mt-8 space-y-4 short:mt-3 short:space-y-1">
                 <Field label="Full name" error={errors.name}>
                   <input className={input} placeholder="Your name" value={values.name} onChange={set('name')} autoComplete="name" />
                 </Field>
@@ -200,7 +200,7 @@ function Enquiry({ onClose }) {
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="eq-row group mt-5 flex w-full items-center justify-between rounded-full px-8 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.25rem] transition-all duration-300 hover:brightness-110 disabled:opacity-60"
+                className="eq-row group mt-5 short:mt-2 flex w-full items-center justify-between rounded-full px-8 py-4 short:py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.25rem] transition-all duration-300 hover:brightness-110 disabled:opacity-60"
                 style={{ background: GOLD_BTN, color: INK, boxShadow: '0 0.75rem 2rem rgba(240,184,102,0.25)' }}
               >
                 {status === 'sending' ? 'Sending…' : 'Send enquiry'}

@@ -321,7 +321,7 @@ const ViewsPage = ({ onClose, onHome }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#0b0507', fontFamily: 'var(--sans)', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100svh', backgroundColor: '#0b0507', fontFamily: 'var(--sans)', overflow: 'hidden' }}>
       {/* The 360 Canvas */}
       <div
         ref={panoElementRef}
@@ -338,7 +338,7 @@ const ViewsPage = ({ onClose, onHome }) => {
       {/* Top-Left: Home + Back, unobtrusive, fades with the rest of the chrome on idle */}
       <div
         ref={topLeftRef}
-        className="views-chrome absolute top-5 left-6 md:top-8 md:left-8 z-20 flex items-center gap-3"
+        className="views-chrome absolute top-5 left-6 md:top-8 md:left-8 short:top-3 short:left-4 z-20 flex items-center gap-3"
       >
         <BackButton onClick={handleHomeButtonClick} label="Home" icon="home" />
         <BackButton onClick={handleBackButtonClick} label="Back" icon="arrow" />
@@ -372,6 +372,7 @@ const ViewsPage = ({ onClose, onHome }) => {
       <div className="absolute z-20" style={{ top: '50%', right: '1.375rem', transform: 'translateY(-50%)' }}>
       <div ref={dockRef} className="views-chrome">
         <div
+          className="short:origin-right short:scale-[0.68]"
           style={{
             display: 'flex',
             flexDirection: 'column',

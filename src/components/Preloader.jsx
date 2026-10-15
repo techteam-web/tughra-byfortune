@@ -95,10 +95,10 @@ function Preloader({ onComplete }) {
       </svg>
 
       <div className="pl-stage absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">
-        <Mark tag="pt" logo={TUGHRA} className="pl-tughra absolute" style={{ width: 'clamp(13rem, 32vw, 22rem)', height: 'auto' }} />
+        <Mark tag="pt" logo={TUGHRA} className="pl-tughra absolute h-auto w-[clamp(14rem,62vw,22rem)] md:w-[clamp(13rem,32vw,22rem)]" />
 
         <span className="pl-by text-[0.625rem] uppercase tracking-[0.4rem] text-cream/85 md:text-[0.6875rem]">An initiative by</span>
-        <Mark tag="pf" logo={FORTUNE} className="pl-fortune" style={{ width: 'clamp(9rem, 21vw, 14rem)', height: 'auto' }} />
+        <Mark tag="pf" logo={FORTUNE} className="pl-fortune h-auto w-[clamp(10rem,46vw,14rem)] md:w-[clamp(9rem,21vw,14rem)]" />
       </div>
     </div>
   )

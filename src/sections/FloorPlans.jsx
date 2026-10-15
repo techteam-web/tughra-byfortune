@@ -122,7 +122,7 @@ function FloorPlans({ onClose }) {
         </g>
       </svg>
       {/* Top bar */}
-      <div className="relative z-20 flex shrink-0 items-start justify-between px-6 py-5 md:px-10 md:py-6">
+      <div className="relative z-20 flex shrink-0 items-start justify-between px-6 py-5 md:px-10 md:py-6 short:px-4 short:py-2">
         <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
           <BrandMark tone="dark" />
         </button>
@@ -136,10 +136,10 @@ function FloorPlans({ onClose }) {
         </button>
       </div>
 
-      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-6 px-6 pb-6 md:px-10 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-8 lg:pb-[4.5rem]">
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-6 px-6 pb-6 md:px-10 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-6 short:grid-cols-[9.5rem_minmax(0,1fr)] short:gap-4 short:px-4 short:pb-4 lg:grid-cols-[17rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-8 lg:pb-[4.5rem]">
         {/* ---------- Left: tower, the floor selector ---------- */}
         <div
-          className="relative flex flex-col overflow-hidden rounded-[1.75rem] p-4 [--tower-h:min(54svh,24rem)] md:row-span-2 md:self-start md:[--tower-h:min(70svh,19rem)] lg:row-span-1 lg:self-stretch lg:[--tower-h:min(calc(100svh-18rem),23rem)]"
+          className="relative flex flex-col overflow-hidden rounded-[1.75rem] p-4 [--tower-h:min(54svh,24rem)] md:row-span-2 md:self-start md:[--tower-h:min(70svh,19rem)] short:row-span-2 short:self-start short:p-3 short:[--tower-h:min(60svh,14rem)] lg:row-span-1 lg:self-stretch lg:[--tower-h:min(calc(100svh-18rem),23rem)]"
           style={{ background: 'radial-gradient(18rem 24rem at 30% 42%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 55%, transparent 80%), var(--royal-base)', boxShadow: '0 1.5rem 3rem rgba(71,13,33,0.28)' }}
         >
           <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 270 700" preserveAspectRatio="none" aria-hidden="true">

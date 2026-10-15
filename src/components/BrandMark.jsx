@@ -73,11 +73,11 @@ function BrandMark({ tone = 'light' }) {
   return (
     <span className="flex flex-col items-center gap-1">
       <span className="flex items-end">
-        <span className="block h-[3.25rem] md:h-[4.25rem]" style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
+        <span className="block h-[3.25rem] md:h-[4.25rem] short:h-[2.4rem]" style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
           {logo && <img src={logo.url} alt="Tughra Royale" className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
-      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#470d21]' : 'text-cream/80'} md:text-[0.5625rem]`}>
+      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#470d21]' : 'text-cream/80'} md:text-[0.5625rem] short:hidden`}>
         An Initiative by Fortune Square
       </span>
     </span>
