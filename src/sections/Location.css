@@ -1,123 +1,50 @@
-/* Neighbourhood map — wine & gold, matched to the rest of the site. */
+/* Neighbourhood map — pins, the tower marker and MapLibre's own controls, in the brand's tokens. */
 
-.loc-panel {
-  background: linear-gradient(160deg, rgba(40,31,26, 0.82) 0%, rgba(20,16,14, 0.9) 100%);
-  border: 1px solid rgba(201,139,98, 0.24);
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(232,180,143, 0.04);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
+.loc-list { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--bronze) 40%, transparent) transparent; }
 
-.loc-tab {
-  position: relative;
-  padding: 0.4rem 0;
-  border: 0;
-  background: none;
-  font-size: 0.625rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--muted);
-  opacity: 0.7;
-  cursor: pointer;
-  transition: color 0.3s, opacity 0.3s;
-}
-.loc-tab::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--gold);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.loc-tab:hover { opacity: 1; }
-.loc-tab.is-on { color: var(--gold); opacity: 1; }
-.loc-tab.is-on::after { transform: scaleX(1); }
-
-.loc-list { scrollbar-width: thin; scrollbar-color: rgba(201,139,98, 0.35) transparent; }
-.loc-list::-webkit-scrollbar { width: 4px; }
-.loc-list::-webkit-scrollbar-thumb { background: rgba(201,139,98, 0.35); border-radius: 4px; }
-
-.loc-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.7rem 0.75rem;
-  border: 0;
-  border-bottom: 1px solid rgba(201,139,98, 0.12);
-  background: transparent;
-  color: var(--cream);
-  font-size: 0.8125rem;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.3s, color 0.3s, padding-left 0.3s;
-}
-@media (max-height: 520px) and (orientation: landscape) {
-  .loc-row { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
-  .loc-tab { font-size: 0.5625rem; padding: 0.25rem 0; }
-}
-.loc-row .km { color: var(--gold); font-variant-numeric: tabular-nums; }
-.loc-row:hover { background: rgba(201,139,98, 0.07); padding-left: 1rem; }
-.loc-row.is-on {
-  background: linear-gradient(90deg, rgba(201,139,98, 0.22), rgba(201,139,98, 0.04));
-  color: var(--gold-light);
-  box-shadow: inset 2px 0 0 var(--gold);
-}
-
-/* ---- Map markers ---- */
+/* ---- Map pins: bronze, the chosen one gold; no pulsing ---- */
 .loc-mk { width: 0.75rem; height: 0.75rem; cursor: pointer; }
 .loc-pin {
   position: relative;
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background: var(--gold);
-  border: 2px solid #2a0614;
-  box-shadow: 0 0 0 1px rgba(201,139,98, 0.6), 0 0 0.9rem rgba(201,139,98, 0.55);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
+  background: var(--bronze);
+  border: 2px solid var(--espresso);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bronze) 70%, transparent);
+  transition: transform 0.4s var(--ease-silk), background-color 0.3s var(--ease-silk);
 }
 .loc-pin span {
   position: absolute;
   left: 50%;
   bottom: 1.35rem;
-  transform: translate(-50%, 0.4rem);
-  padding: 0.3rem 0.65rem;
+  transform: translate(-50%, 0.35rem);
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(201,139,98, 0.45);
-  background: rgba(28,22,19, 0.92);
+  border: 1px solid color-mix(in srgb, var(--bronze) 50%, transparent);
+  background: var(--cocoa);
   color: var(--cream);
+  font-family: var(--sans);
   font-size: 0.6875rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s, transform 0.3s;
+  transition: opacity 0.35s var(--ease-silk), transform 0.35s var(--ease-silk);
 }
-.loc-mk:hover .loc-pin { transform: scale(1.35); }
+.loc-mk:hover .loc-pin { transform: scale(1.25); }
 .loc-mk:hover .loc-pin span,
 .loc-mk.is-on .loc-pin span { opacity: 1; transform: translate(-50%, 0); }
-.loc-mk.is-on .loc-pin { transform: scale(1.5); background: var(--gold-light); }
+.loc-mk.is-on .loc-pin { transform: scale(1.35); background: var(--gold); }
 .loc-mk.is-on .loc-pin::after {
   content: '';
   position: absolute;
-  inset: -0.2rem;
+  inset: -0.3rem;
   border-radius: 50%;
-  border: 1px solid var(--gold);
-  animation: loc-pulse 1.8s ease-out infinite;
+  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
 }
 
-@keyframes loc-pulse {
-  from { transform: scale(1); opacity: 0.9; }
-  to { transform: scale(3.2); opacity: 0; }
-}
-
-/* The project tower, standing on a pulsing gold footprint. */
+/* ---- The project tower, standing on a bronze footprint ---- */
 .loc-tower-mk { pointer-events: none; }
 .loc-tower {
   position: relative;
@@ -130,93 +57,44 @@
   z-index: 1;
   height: clamp(6.5rem, 17svh, 10rem);
   width: auto;
-  filter: drop-shadow(0 0 1.25rem rgba(201,139,98, 0.35)) drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.6));
 }
 .loc-tower .base {
   position: absolute;
-  bottom: -0.55rem;
+  bottom: -0.45rem;
   left: 50%;
   width: 4.5rem;
-  height: 1.4rem;
+  height: 1.2rem;
   margin-left: -2.25rem;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(232,180,143, 0.8), rgba(201,139,98, 0) 70%);
+  border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
+  background: color-mix(in srgb, var(--bronze) 22%, transparent);
 }
-.loc-tower .base::before,
 .loc-tower .base::after {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -0.45rem -0.9rem;
   border-radius: 50%;
-  border: 1px solid var(--gold);
-  animation: loc-ring 2.8s ease-out infinite;
-}
-.loc-tower .base::after { animation-delay: 1.4s; }
-@keyframes loc-ring {
-  from { transform: scale(0.6); opacity: 0.9; }
-  to { transform: scale(3.4); opacity: 0; }
+  border: 1px solid color-mix(in srgb, var(--bronze) 35%, transparent);
 }
 
-/* ---- Sky: Mumbai's birds ---- */
-.sky-flight { position: absolute; left: 0; opacity: 0; will-change: transform, opacity; }
-.sky-fx.is-open .sky-flight { animation: sky-fly var(--dur) linear var(--delay) infinite; }
-.sky-fx.is-open .sky-flight.rev { animation-name: sky-fly-rev; }
-/* They grow a little as they cross, so they read as flying toward the camera. */
-@keyframes sky-fly {
-  0% { transform: translate3d(-15vw, 3vh, 0) scale(0.8); opacity: 0; }
-  8% { opacity: 1; }
-  92% { opacity: 1; }
-  100% { transform: translate3d(112vw, -4vh, 0) scale(1.25); opacity: 0; }
+/* ---- MapLibre's zoom / compass buttons, as bronze-outline controls ---- */
+.loc-stage .maplibregl-ctrl-bottom-right { right: max(0.75rem, var(--safe-r)); bottom: max(0.75rem, var(--safe-b)); }
+.loc-stage .maplibregl-ctrl-group {
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--bronze) 70%, transparent);
+  background: color-mix(in srgb, var(--espresso) 80%, transparent);
+  box-shadow: none;
 }
-@keyframes sky-fly-rev {
-  0% { transform: translate3d(112vw, -2vh, 0) scale(0.8) scaleX(-1); opacity: 0; }
-  8% { opacity: 1; }
-  92% { opacity: 1; }
-  100% { transform: translate3d(-15vw, 4vh, 0) scale(1.25) scaleX(-1); opacity: 0; }
+.loc-stage .maplibregl-ctrl-group button {
+  width: 2.375rem;
+  height: 2.375rem;
+  background-color: transparent;
 }
-
-/* Seen at a distance, in the low warm light: soft silhouettes, no outline or glow. */
-.sky-bird { display: block; overflow: visible; opacity: var(--o); }
-.sky-bird .wing, .sky-bird .tail, .sky-bird .body { fill: var(--c); transform-box: fill-box; }
-.sky-bird .wing-l { transform-origin: 100% 100%; }
-.sky-bird .wing-r { transform-origin: 0% 100%; }
-
-.sp-black { --c: #0b0b0d; --o: 1; --flap: 0.3s; filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)); }
-.sp-white { --c: #ffffff; --o: 0.95; --flap: 0.34s; }
-
-.sky-fx.is-open .sky-bird { animation: sky-bob 2.4s ease-in-out infinite alternate; }
-.sky-fx.is-open .sky-bird .wing-l { animation: sky-flap-l var(--flap) ease-in-out infinite alternate; }
-.sky-fx.is-open .sky-bird .wing-r { animation: sky-flap-r var(--flap) ease-in-out infinite alternate; }
-@keyframes sky-flap-l { from { transform: rotate(-34deg) scaleY(0.9); } to { transform: rotate(38deg) scaleY(1.05); } }
-@keyframes sky-flap-r { from { transform: rotate(34deg) scaleY(0.9); } to { transform: rotate(-38deg) scaleY(1.05); } }
-@keyframes sky-bob { from { translate: 0 -3px; } to { translate: 0 4px; } }
-
-/* The location table arrives as the camera settles. */
-.loc-stage .loc-panel { transition: opacity 1.2s ease 1.6s; }
-.loc-stage:not(.is-open) .loc-panel { opacity: 0; }
-
-/* ---- Koli fishing boats ---- */
-.loc-boat {
-  position: relative;
-  width: 2.5rem;
-  height: 1.7rem;
-  transition: transform 1s ease;
-  filter: drop-shadow(0 0.2rem 0.25rem rgba(0, 0, 0, 0.7));
-  animation: loc-bob 5s ease-in-out infinite;
-}
-.loc-boat.flip { transform: scaleX(-1); }
-.loc-boat svg { position: relative; display: block; width: 100%; height: 100%; }
-/* A thin trail of foam behind the stern, fading out. */
-.loc-boat::after {
-  content: '';
-  position: absolute;
-  left: -90%;
-  right: 80%;
-  bottom: 0.18rem;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(232, 222, 210, 0.45));
-}
-@keyframes loc-bob {
-  0%, 100% { translate: 0 0; rotate: -0.8deg; }
-  50% { translate: 0 -1px; rotate: 0.8deg; }
+.loc-stage .maplibregl-ctrl-group button + button { border-top: 1px solid color-mix(in srgb, var(--bronze) 30%, transparent); }
+.loc-stage .maplibregl-ctrl-group button:not(:disabled):hover { background-color: var(--cocoa); }
+/* the built-in icons are dark sprites; this turns them a pale gold */
+.loc-stage .maplibregl-ctrl-icon { filter: invert(1) sepia(0.55) saturate(1.6) hue-rotate(-12deg) brightness(0.95); opacity: 0.9; }
+@media (max-width: 767px) {
+  .loc-stage .maplibregl-ctrl-bottom-right { bottom: calc(46svh + 1.25rem); }
 }

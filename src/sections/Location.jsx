@@ -1,19 +1,37 @@
-import BrandMark from '../components/BrandMark.jsx'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import BackButton from '../components/BackButton.jsx'
+import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
+import { TopBar, BackControl, Segmented, Corners } from '../ui/controls.jsx'
+import { T, alpha, mix } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
-import SkyFx from './SkyFx.jsx'
 import './Location.css'
 
 // In production the worker is shipped by the maplibreWorker plugin in vite.config.js
 // (dev serves it straight from node_modules, so no override is needed there).
 if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
-// Recolors the OpenFreeMap "liberty" style to the site's dark gold theme —
-// near-black ground, warm gold roads, cream labels — instead of its default
-// bright/white look.
+// The map in the brand's palette, every shade derived from the tokens:
+// espresso water, cocoa land, bronze roads, cream labels.
+const M = {
+  ground: mix(T.cocoa, T.espresso, 0.55),
+  land: T.cocoa,
+  park: mix(T.bronzeDeep, T.cocoa, 0.16),
+  water: T.espresso,
+  river: mix(T.bronzeDeep, T.espresso, 0.25),
+  building: mix(T.bronzeDeep, T.cocoa, 0.32),
+  major: T.bronze,
+  secondary: T.bronzeDeep,
+  minor: mix(T.bronze, T.cocoa, 0.3),
+  casing: T.espresso,
+  rail: mix(T.bronze, T.cocoa, 0.55),
+  boundary: mix(T.bronzeDeep, T.cocoa, 0.6),
+  label: T.cream,
+  halo: T.espresso,
+  clear: alpha(T.espresso, 0),
+}
+
+// Recolours the OpenFreeMap "liberty" style to the palette above instead of its default bright look.
 function applyBrandTheme(map) {
   const touched = new Set()
   const set = (id, prop, value) => {
@@ -60,7 +78,7 @@ function applyBrandTheme(map) {
   set('poi_r20', 'icon-opacity', 0)
   set('airport', 'icon-opacity', 0)
 
-  set('background', 'background-color', '#15110f')
+  set('background', 'background-color', M.ground)
 
   // Ground cover
   for (const id of [
@@ -77,26 +95,26 @@ function applyBrandTheme(map) {
     'landuse_school',
     'aeroway_fill',
   ]) {
-    set(id, 'fill-color', '#1f1916')
+    set(id, 'fill-color', M.land)
   }
-  set('park', 'fill-color', '#2b0f1a')
-  set('park_outline', 'line-color', '#3a1624')
+  set('park', 'fill-color', M.park)
+  set('park_outline', 'line-color', M.park)
 
   // Water
-  set('water', 'fill-color', '#100d0c')
+  set('water', 'fill-color', M.water)
   for (const id of ['waterway_tunnel', 'waterway_river', 'waterway_other']) {
-    set(id, 'line-color', '#2a0f1c')
+    set(id, 'line-color', M.river)
   }
 
   // Buildings
-  set('building', 'fill-color', '#3a2e27')
+  set('building', 'fill-color', M.building)
 
-  // Roads — copper-gold for major routes, warm bronze for minor ones
+  // Roads — bronze for major routes, deeper bronze for secondary, a faint warm line for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
-    set(id, 'line-color', '#b98660')
+    set(id, 'line-color', M.major)
   }
   for (const id of ['road_secondary_tertiary', 'bridge_secondary_tertiary', 'tunnel_secondary_tertiary']) {
-    set(id, 'line-color', '#a0723f')
+    set(id, 'line-color', M.secondary)
   }
   for (const id of [
     'road_minor',
@@ -112,7 +130,7 @@ function applyBrandTheme(map) {
     'tunnel_minor',
     'tunnel_path_pedestrian',
   ]) {
-    set(id, 'line-color', '#4a3a30')
+    set(id, 'line-color', M.minor)
   }
   for (const id of [
     'road_motorway_casing',
@@ -131,31 +149,22 @@ function applyBrandTheme(map) {
     'tunnel_trunk_primary_casing',
     'tunnel_secondary_tertiary_casing',
   ]) {
-    set(id, 'line-color', '#15110f')
+    set(id, 'line-color', M.casing)
   }
-  for (const id of [
-    'road_major_rail',
-    'road_transit_rail',
-    'bridge_major_rail',
-    'bridge_transit_rail',
-    'tunnel_major_rail',
-    'tunnel_transit_rail',
-  ]) {
-    set(id, 'line-color', '#8a5a48')
+  for (const id of ['road_major_rail', 'road_transit_rail', 'bridge_major_rail', 'bridge_transit_rail', 'tunnel_major_rail', 'tunnel_transit_rail']) {
+    set(id, 'line-color', M.rail)
   }
 
   // Layers the base style draws in white / light grey / yellow that would
   // otherwise show up as stray bright lines once zoomed in.
-  set('building', 'fill-outline-color', 'rgba(0,0,0,0)')
-  set('park', 'fill-outline-color', 'rgba(0,0,0,0)')
-  set('landuse_pitch', 'fill-color', '#1f1916')
-  set('landuse_track', 'fill-color', '#1f1916')
+  set('building', 'fill-outline-color', M.clear)
+  set('park', 'fill-outline-color', M.clear)
   set('aeroway_fill', 'fill-opacity', 0.3)
   for (const id of ['tunnel_service_track', 'bridge_service_track', 'tunnel_minor']) {
-    set(id, 'line-color', '#4a3a30')
+    set(id, 'line-color', M.minor)
   }
   for (const id of ['road_motorway_link', 'bridge_motorway_link', 'tunnel_motorway_link']) {
-    set(id, 'line-color', '#a0723f')
+    set(id, 'line-color', M.secondary)
   }
   for (const id of [
     'road_motorway_link_casing',
@@ -165,15 +174,15 @@ function applyBrandTheme(map) {
     'bridge_street_casing',
     'bridge_path_pedestrian_casing',
   ]) {
-    set(id, 'line-color', '#15110f')
+    set(id, 'line-color', M.casing)
   }
 
   // Boundaries
   for (const id of ['boundary_2', 'boundary_3', 'boundary_disputed']) {
-    set(id, 'line-color', '#7a4a3a')
+    set(id, 'line-color', M.boundary)
   }
 
-  // Labels — cream text, dark halo
+  // Labels — cream text, espresso halo
   for (const id of [
     'water_name_point_label',
     'water_name_line_label',
@@ -196,8 +205,8 @@ function applyBrandTheme(map) {
     'label_country_2',
     'label_country_1',
   ]) {
-    set(id, 'text-color', '#efe2d4')
-    set(id, 'text-halo-color', '#15110f')
+    set(id, 'text-color', M.label)
+    set(id, 'text-halo-color', M.halo)
   }
 
   // Safety net: anything the lists above missed that is still light (white road
@@ -207,7 +216,7 @@ function applyBrandTheme(map) {
   const isLight = (css) => {
     if (typeof css !== 'string' || !probe) return false
     probe.clearRect(0, 0, 1, 1)
-    probe.fillStyle = '#000'
+    probe.fillStyle = T.espresso
     probe.fillStyle = css
     probe.fillRect(0, 0, 1, 1)
     const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data
@@ -216,36 +225,40 @@ function applyBrandTheme(map) {
   for (const layer of map.getStyle().layers) {
     const { id, type } = layer
     if (type === 'line' && !touched.has(id + 'line-color') && isLight(map.getPaintProperty(id, 'line-color'))) {
-      set(id, 'line-color', '#4a3a30')
+      set(id, 'line-color', M.minor)
     }
     if (type === 'fill') {
-      if (!touched.has(id + 'fill-color') && isLight(map.getPaintProperty(id, 'fill-color'))) set(id, 'fill-color', '#1f1916')
-      if (!touched.has(id + 'fill-outline-color')) set(id, 'fill-outline-color', 'rgba(0,0,0,0)')
+      if (!touched.has(id + 'fill-color') && isLight(map.getPaintProperty(id, 'fill-color'))) set(id, 'fill-color', M.land)
+      if (!touched.has(id + 'fill-outline-color')) set(id, 'fill-outline-color', M.clear)
     }
   }
 }
 
 // Everything the "3D" feel needs beyond colors: taller, height-graded
-// buildings, a hazy wine horizon, and an atmospheric sky.
+// buildings, a warm horizon, and an atmospheric sky.
 function applyDepth(map) {
   if (map.getLayer('building-3d')) {
     map.setPaintProperty('building-3d', 'fill-extrusion-color', [
       'interpolate',
       ['linear'],
       ['get', 'render_height'],
-      0, '#2e2520',
-      40, '#4a3a30',
-      120, '#9a6240',
-      300, '#b98660',
+      0,
+      mix(T.bronzeDeep, T.cocoa, 0.15),
+      40,
+      mix(T.bronzeDeep, T.cocoa, 0.4),
+      120,
+      T.bronzeDeep,
+      300,
+      T.bronze,
     ])
     map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.92)
     map.setLayerZoomRange('building-3d', 13, 24)
   }
   try {
     map.setSky({
-      'sky-color': '#100d0c',
-      'horizon-color': '#4a382e',
-      'fog-color': '#1f1916',
+      'sky-color': T.espresso,
+      'horizon-color': mix(T.bronzeDeep, T.espresso, 0.35),
+      'fog-color': M.ground,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
       'fog-ground-blend': 0.85,
@@ -256,49 +269,27 @@ function applyDepth(map) {
 }
 
 const ROUTE_SRC = 'route'
+const ROUTE_GLOW = alpha(T.bronze, 0.6)
+const ROUTE_CORE = T.goldPale
+const ROUTE_OFF = alpha(T.goldPale, 0)
 // The route is revealed by masking a line-gradient (cheap) rather than re-sending
 // the geometry every frame (which re-parses and re-tiles it).
 function routeGradient(p, color) {
   const edge = Math.min(Math.max(p, 0.0001), 0.9999)
-  return ['interpolate', ['linear'], ['line-progress'], 0, color, edge, color, Math.min(edge + 0.0001, 1), 'rgba(255,246,230,0)', 1, 'rgba(255,246,230,0)']
+  return ['interpolate', ['linear'], ['line-progress'], 0, color, edge, color, Math.min(edge + 0.0001, 1), ROUTE_OFF, 1, ROUTE_OFF]
 }
 function setRouteProgress(map, p) {
   if (!map.getLayer('route-line')) return
-  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, 'rgba(214,150,105,0.7)'))
-  map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, '#fff6e6'))
+  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, ROUTE_GLOW))
+  map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, ROUTE_CORE))
 }
 const EMPTY = { type: 'FeatureCollection', features: [] }
-// Koli fishing boats keep to open water: lanes in the Arabian Sea off the
-// western shore and one in Mumbai Harbour. Each sails its lane and back.
-// Painted-hull colours vary per boat, as the real ones do.
-const BOATS = [
-  { path: [[72.783, 18.925], [72.787, 19.012]], period: 130000, phase: 0, hull: '#33506b', stripe: '#b9a169', roof: '#4a3226' },
-  { path: [[72.774, 18.99], [72.788, 18.948]], period: 105000, phase: 0.4, hull: '#7a3d36', stripe: '#cfc6b6', roof: '#2f4156' },
-  { path: [[72.778, 18.935], [72.781, 18.985]], period: 120000, phase: 0.75, hull: '#b9b2a4', stripe: '#3f6b5a', roof: '#6a4a2e' },
-  { path: [[72.855, 18.915], [72.872, 18.975]], period: 115000, phase: 0.2, hull: '#a98a45', stripe: '#2f4a73', roof: '#cfc6b6' },
-]
-
-// Side view, bow to the right: a weathered wooden hull with a faded stripe,
-// a small wheelhouse, a mast with a single stay, and a lantern.
-function boatSvg({ hull, stripe, roof }) {
-  return `<svg viewBox="0 0 60 40" aria-hidden="true">
-    <path d="M41 3 L41 21" stroke="#2a2018" stroke-width="1.2"/>
-    <path d="M41 4 L58 18" stroke="#2a2018" stroke-width="0.5"/>
-    <circle cx="41" cy="3.6" r="1" fill="#e2b28c"/>
-    <rect x="23" y="12" width="13" height="9" rx="0.8" fill="#cfc6b6"/>
-    <rect x="21.5" y="10.2" width="16" height="2.4" rx="0.5" fill="${roof}"/>
-    <rect x="25" y="14.4" width="3" height="3" fill="#1d2630"/>
-    <rect x="30" y="14.4" width="3" height="3" fill="#1d2630"/>
-    <path d="M2 20 L55 20 Q60 13 58.5 9 Q57 14.5 53.5 18 L58 22 Q54 32 44 34 L13 34 Q5 32 2 20 Z" fill="${hull}"/>
-    <path d="M4.4 25 L56 25 L54.6 27.6 L6.4 27.6 Z" fill="${stripe}" opacity="0.85"/>
-    <path d="M2 20 L55 20" stroke="#17110c" stroke-width="1"/>
-    <path d="M13 34 Q30 36 44 34" stroke="#17110c" stroke-width="0.8" fill="none"/>
-  </svg>`
-}
 
 const OVERVIEW = { center: PROJECT, zoom: 15.2, pitch: 64, bearing: -25 }
+const TABS = PLACES.map((c) => ({ value: c.key, label: c.label }))
 
 function Location({ onClose }) {
+  const rootRef = useRef(null)
   const mapContainerRef = useRef(null)
   const mapRef = useRef(null)
   const markersRef = useRef(new globalThis.Map())
@@ -307,6 +298,8 @@ function Location({ onClose }) {
   const [ready, setReady] = useState(false)
   const [category, setCategory] = useState(PLACES[0].key)
   const [selected, setSelected] = useState(null)
+  const [late, setLate] = useState(false) // the map is slow or offline: show the table anyway
+  const panelOn = ready || late
 
   const current = PLACES.find((c) => c.key === category)
   const selectedPlace = selected && current.places.find((p) => p.id === selected)
@@ -339,20 +332,20 @@ function Location({ onClose }) {
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 14, 'line-blur': 9, 'line-gradient': routeGradient(0, 'rgba(214,150,105,0.7)') },
+        paint: { 'line-width': 12, 'line-blur': 8, 'line-gradient': routeGradient(0, ROUTE_GLOW) },
       })
       map.addLayer({
         id: 'route-line',
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 4.5, 'line-gradient': routeGradient(0, '#fff6e6') },
+        paint: { 'line-width': 3.5, 'line-gradient': routeGradient(0, ROUTE_CORE) },
       })
       setReady(true)
-      // Cinematic arrival: drop from a flat overview into the tilted view.
-      map.easeTo({ ...OVERVIEW, duration: 4800, easing: (t) => 1 - Math.pow(1 - t, 3) })
+      // Arrival: a slow drop from a flat overview into the tilted view.
+      map.easeTo({ ...OVERVIEW, duration: REDUCED ? 0 : 4800, easing: (t) => 1 - Math.pow(1 - t, 3) })
       map.once('moveend', () => {
-        orbit.paused = false
+        orbit.paused = REDUCED
       })
     })
 
@@ -362,17 +355,6 @@ function Location({ onClose }) {
     }
     for (const ev of ['mousedown', 'touchstart', 'wheel']) map.on(ev, touch)
 
-    // Boats — HTML markers (styled on an inner node) sailing back and forth.
-    const boats = BOATS.map((b) => {
-      const el = document.createElement('div')
-      el.className = 'loc-boat-mk'
-      const inner = document.createElement('div')
-      inner.className = 'loc-boat'
-      inner.innerHTML = boatSvg(b)
-      el.appendChild(inner)
-      return { ...b, inner, marker: new Marker({ element: el }).setLngLat(b.path[0]).addTo(map) }
-    })
-
     let raf = 0
     let prev = performance.now()
     const tick = (now) => {
@@ -381,18 +363,11 @@ function Location({ onClose }) {
       if (!orbit.paused && now - orbit.lastTouch > 4000 && !map.isMoving()) {
         map.setBearing(map.getBearing() + dt * 0.004)
       }
-      for (const b of boats) {
-        const u = ((now / b.period + b.phase) % 1) * 2
-        const f = u < 1 ? u : 2 - u
-        const [a, z] = b.path
-        b.marker.setLngLat([a[0] + (z[0] - a[0]) * f, a[1] + (z[1] - a[1]) * f])
-        b.inner.classList.toggle('flip', u >= 1)
-      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
 
-    // Project tower — the floor-plan render, standing on a pulsing footprint.
+    // Project tower — the elevation render, standing on a bronze footprint.
     // MapLibre owns the marker element's position/transform, so all styling
     // lives on an inner node — otherwise the marker drifts while zooming.
     const tower = document.createElement('div')
@@ -400,9 +375,8 @@ function Location({ onClose }) {
     tower.innerHTML = '<div class="loc-tower"><span class="base"></span><img alt="" src="/assets/img/menu_crop.png" draggable="false" /></div>'
     new Marker({ element: tower, anchor: 'bottom' }).setLngLat(PROJECT).addTo(map)
 
-    // The section mounts inside an animated transition (Framer Motion), so
-    // the container can still be settling its final size when MapLibre first
-    // measures it — keep it in sync as the layout stabilizes.
+    // The section mounts inside the page transition, so the container can still be
+    // settling its final size when MapLibre first measures it — keep it in sync.
     const resizeObserver = new ResizeObserver(() => map.resize())
     resizeObserver.observe(mapContainerRef.current)
 
@@ -464,16 +438,15 @@ function Location({ onClose }) {
     const padding = sideways
       ? { top: 70, bottom: 50, left: 290, right: 50 }
       : desktop
-        ? { top: 120, bottom: 100, left: 420, right: 80 }
+        ? { top: 120, bottom: 100, left: 440, right: 80 }
         : { top: 100, bottom: Math.round(window.innerHeight * 0.48), left: 40, right: 40 }
     const { at } = selectedPlace
 
     // Fetch the road route (falls back to an arc offline / rate-limited).
     const timeout = setTimeout(() => controller.abort(), 7000)
-    const routed = fetch(
-      `https://router.project-osrm.org/route/v1/driving/${PROJECT.join(',')};${at.join(',')}?overview=full&geometries=geojson`,
-      { signal: controller.signal },
-    )
+    const routed = fetch(`https://router.project-osrm.org/route/v1/driving/${PROJECT.join(',')};${at.join(',')}?overview=full&geometries=geojson`, {
+      signal: controller.signal,
+    })
       .then((r) => r.json())
       .then((json) => {
         const coords = json.routes?.[0]?.geometry?.coordinates
@@ -493,7 +466,7 @@ function Location({ onClose }) {
 
       // One slow, steady camera move that frames the whole road (no chasing the
       // line round its corners), while the line draws on independently.
-      const duration = Math.min(8000, Math.max(4500, 3000 + total * 400))
+      const duration = REDUCED ? 600 : Math.min(8000, Math.max(4500, 3000 + total * 400))
       const xs = coords.map((c) => c[0])
       const ys = coords.map((c) => c[1])
       map.fitBounds(
@@ -530,87 +503,120 @@ function Location({ onClose }) {
     }
   }, [ready, selected, selectedPlace])
 
+  // Top bar first; the panel arrives once the map has loaded and the camera is settling
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.timeline({ delay: PAGE_IN }).add(fx.fade('.tb-anim, .loc-back', { y: -10 }), 0)
+    }, rootRef)
+    return () => ctx.revert()
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => setLate(true), 4000)
+    return () => clearTimeout(t)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!panelOn) return
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: REDUCED || late ? 0 : 1.4 })
+      tl.add(fx.panel('.loc-panel'), 0)
+      tl.add(fx.corners('.loc-panel .tr-corner'), 0.3)
+      tl.add(fx.fade('.loc-rise', { stagger: 0.07 }), 0.2)
+      tl.add(fx.line('.loc-hair'), 0.3)
+    }, rootRef)
+    return () => ctx.revert()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelOn])
+
+  // rows rise in whenever the category changes
+  useLayoutEffect(() => {
+    if (!panelOn) return
+    const ctx = gsap.context(() => fx.fade('.loc-row', { y: 8, stagger: 0.04, duration: 0.45 }), rootRef)
+    return () => ctx.revert()
+  }, [category, panelOn])
+
   const overview = () => {
     const map = mapRef.current
     if (!map) return
     setSelected(null)
     orbitRef.current.paused = true
-    map.easeTo({ ...OVERVIEW, duration: 2200 })
+    map.easeTo({ ...OVERVIEW, duration: REDUCED ? 0 : 2200 })
     map.once('moveend', () => {
-      orbitRef.current.paused = false
+      orbitRef.current.paused = REDUCED
     })
   }
 
+  const pickCategory = (key) => {
+    setCategory(key)
+    setSelected(null)
+  }
+
   return (
-    <section className={`loc-stage relative h-svh w-full overflow-hidden bg-bg text-cream ${ready ? 'is-open' : ''}`}>
+    <section ref={rootRef} className="loc-stage relative h-svh w-full overflow-hidden bg-espresso text-cream">
       {/* Map — MapLibre's own CSS forces position:relative on the container it's
           given, overriding an "absolute" utility class via cascade order, so
           the sizing wrapper has to be a separate element. */}
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="h-full w-full" />
       </div>
-      {/* Wine vignette + depth haze so the edges fall away into the theme. */}
+      {/* The edges fall away into espresso */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 85% 75% at 60% 55%, rgba(18,14,12,0) 40%, rgba(18,14,12,0.78) 100%), linear-gradient(180deg, rgba(46,34,28,0.35) 0%, rgba(46,34,28,0) 22%)',
-        }}
+        style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
       />
 
-      <SkyFx open={ready} />
-
-      {/* Top bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-6 md:px-12 md:py-10">
-        <button type="button" onClick={onClose} className="pointer-events-auto flex items-center border-none bg-transparent p-0 text-left">
-          <BrandMark />
-        </button>
-        <div className="pointer-events-auto">
-          <BackButton onClick={onClose} />
-        </div>
-      </div>
+      <TopBar onBrand={onClose}>
+        <span className="loc-back">
+          <BackControl onClick={onClose} />
+        </span>
+      </TopBar>
 
       {/* Location table */}
-      <aside className="loc-panel absolute inset-x-4 bottom-4 z-10 flex max-h-[44svh] flex-col rounded-2xl p-4 md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-h-[72svh] md:w-[22rem] md:-translate-y-1/2 md:p-6 short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[15.5rem] short:translate-y-0 short:p-3">
-        <h2 className="font-serif text-[1.5rem] font-light uppercase leading-none tracking-[0.04em] text-cream md:text-[1.75rem] short:text-[1.1rem]">
-          Location Highlights
-        </h2>
-        <span className="mt-3 block h-px w-10 bg-gold/60" />
-        <div className="mt-4 flex gap-x-4 gap-y-1 overflow-x-auto md:flex-wrap md:overflow-visible short:mt-2 short:flex-nowrap short:overflow-x-auto">
-          {PLACES.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              className={`loc-tab ${c.key === category ? 'is-on' : ''}`}
-              onClick={() => {
-                setCategory(c.key)
-                setSelected(null)
-              }}
-            >
-              {c.label}
-            </button>
-          ))}
+      <aside
+        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-h-[70svh] md:w-[23rem] md:-translate-y-1/2 md:p-6 xl:left-[4.5rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[16rem] short:translate-y-0 short:p-3"
+      >
+        <Corners />
+        <span className="loc-rise tr-label block short:hidden">Neighborhood · Mumbai Central</span>
+        <h2 className="loc-rise mt-2 font-serif text-[1.6rem] font-normal leading-none text-cream md:text-[2rem] short:mt-0 short:text-[1.15rem]">Location Highlights</h2>
+        <i className="loc-hair tr-hair mt-4 short:mt-2" />
+
+        <div className="loc-rise mt-4 hidden md:block short:mt-2">
+          <Segmented options={TABS} value={category} onChange={pickCategory} label="Categories" grid={2} className="w-full" />
         </div>
-        <div className="loc-list mt-3 min-h-0 flex-1 overflow-y-auto">
-          {current.places.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`loc-row ${p.id === selected ? 'is-on' : ''}`}
-              onClick={() => setSelected((s) => (s === p.id ? null : p.id))}
-            >
-              <span>{p.name}</span>
-              <span className="km">{p.km.toFixed(1)} km</span>
-            </button>
-          ))}
+        <div className="loc-rise tr-noscroll -mx-1 mt-3 overflow-x-auto px-1 md:hidden">
+          <Segmented options={TABS} value={category} onChange={pickCategory} label="Categories" />
         </div>
+
+        <ul className="loc-list mt-3 min-h-0 flex-1 overflow-y-auto">
+          {current.places.map((p) => {
+            const on = p.id === selected
+            return (
+              <li key={p.id} className="loc-row">
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  className={`tr-focus group relative flex w-full items-center justify-between gap-4 border-0 border-b border-bronze/15 bg-transparent py-3 pl-4 pr-1 text-left text-[0.875rem] transition-colors duration-300 short:py-1.5 short:text-[0.75rem] ${on ? 'text-gold-pale' : 'text-cream hover:text-gold-pale'}`}
+                  onClick={() => setSelected((s) => (s === p.id ? null : p.id))}
+                >
+                  <span
+                    className={`absolute left-0 top-1/2 h-4 w-px -translate-y-1/2 origin-center bg-gold transition-transform duration-500 ${on ? 'scale-y-100' : 'scale-y-0'}`}
+                    aria-hidden="true"
+                  />
+                  <span>{p.name}</span>
+                  <span className="shrink-0 font-sans text-[0.75rem] tabular-nums tracking-[0.04em] text-gold-pale/80">{p.km.toFixed(1)} km</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
       </aside>
 
       {selected && (
         <button
           type="button"
           onClick={overview}
-          className="lux-btn absolute right-16 top-24 z-10 rounded-full px-5 py-2.5 text-[0.625rem] uppercase tracking-[0.25rem] md:bottom-6 md:top-auto md:py-3 short:bottom-3 short:right-4 short:top-auto short:py-2"
+          className="tr-btn tr-btn--outline absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
         >
           Overview
         </button>
