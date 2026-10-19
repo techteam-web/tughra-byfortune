@@ -10,6 +10,7 @@ const TUGHRA = '/assets/logo/tughra.png'
 const TONE = {
   light: { token: '--hero-logo', caption: 'text-hero-cream/80' },
   gold: { token: '--gold', caption: 'text-gold-pale/80' },
+  pale: { token: '--gold-pale', caption: 'text-gold-pale/80' },
   dark: { token: '--ink', caption: 'text-ink' },
 }
 
@@ -17,12 +18,15 @@ const SIZE = {
   hero: 'h-[3.25rem] md:h-[4.25rem] short:h-[2.4rem]',
   page: 'h-[2.75rem] md:h-[3.6rem] short:h-[2.1rem]',
   crown: 'h-[3.4rem] md:h-[4.6rem] short:h-[2.3rem]',
+  seal: 'h-[2.6rem] side:h-[2.9rem] short:h-[2rem]',
 }
 
 const cache = {}
 
-function tintedLogo(src, tone) {
-  const key = src + tone
+const SEAL_CUT = 0.605
+
+function tintedLogo(src, tone, sealOnly = false) {
+  const key = src + tone + (sealOnly ? ':seal' : '')
   if (cache[key]) return cache[key]
   cache[key] = new Promise((resolve, reject) => {
     const img = new Image()
@@ -43,7 +47,7 @@ function tintedLogo(src, tone) {
         for (let x = 0; x < w; x++) {
           const i = (y * w + x) * 4
           const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
-          const a = Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
+          const a = sealOnly && y > h * SEAL_CUT ? 0 : Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
           px[i] = tint[0]
           px[i + 1] = tint[1]
           px[i + 2] = tint[2]
@@ -71,22 +75,22 @@ function tintedLogo(src, tone) {
   return cache[key]
 }
 
-function BrandMark({ tone = 'light', size = 'hero', credit = true }) {
+function BrandMark({ tone = 'light', size = 'hero', credit = true, seal = false }) {
   const [logo, setLogo] = useState(null)
 
   useEffect(() => {
     let live = true
-    tintedLogo(TUGHRA, tone).then((l) => live && setLogo(l), () => {})
+    tintedLogo(TUGHRA, tone, seal).then((l) => live && setLogo(l), () => {})
     return () => {
       live = false
     }
-  }, [tone])
+  }, [tone, seal])
 
   return (
     <span className="flex flex-col items-center gap-1">
       <span className="flex items-end">
         <span className={`block ${SIZE[size]}`} style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
-          {logo && <img src={logo.url} alt="Tughra Royale" className="h-full w-full object-contain" draggable={false} />}
+          {logo && <img src={logo.url} alt={seal ? '' : 'Tughra Royale'} className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
       {credit && (

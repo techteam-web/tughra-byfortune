@@ -146,3 +146,6 @@ export function IcLeaf(props) {
 export function IcDeck(props) {
   return <Icon {...props}><path d="M3.5 20.5h17M5 17.5l4-9h9M9 8.5l-1.5-4M12.5 8.5l-2 9M16.5 8.5l1.5 9" /></Icon>
 }
+export function IcDiamond(props) {
+  return <Icon {...props}><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" /></Icon>
+}

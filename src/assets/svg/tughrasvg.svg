@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 900" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="72" y1="0" x2="330" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E7B878"/>
+      <stop offset="0.48" stop-color="#FFF0C9"/>
+      <stop offset="0.76" stop-color="#D99550"/>
+      <stop offset="1" stop-color="#F5C47D"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-20%" width="200%" height="140%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0.9  0 1 0 0 0.55  0 0 1 0 0.2  0 0 0 0.7 0" result="tint"/>
+      <feMerge><feMergeNode in="tint"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Single immersive side frame: vertical line flowing into a long, soft curve -->
+  <path d="M82 -24 V622 C82 686 101 719 157 747 C209 773 272 789 306 824 C329 847 338 875 338 924"
+        stroke="#E5A45D" stroke-opacity=".24" stroke-width="10" stroke-linecap="round"/>
+  <path d="M82 -24 V622 C82 686 101 719 157 747 C209 773 272 789 306 824 C329 847 338 875 338 924"
+        stroke="url(#gold)" stroke-width="2.2" stroke-linecap="round" filter="url(#softGlow)"/>
+  <path d="M91 -24 V620 C91 679 109 709 163 736 C216 763 279 779 313 814 C336 838 347 872 347 924"
+        stroke="#F8D4A0" stroke-opacity=".68" stroke-width=".8" stroke-linecap="round"/>
+</svg>
