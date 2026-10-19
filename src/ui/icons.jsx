@@ -4,6 +4,7 @@ export function Icon({ size = 18, children, className, strokeWidth = 1.4 }) {
     <svg
       width={size}
       height={size}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

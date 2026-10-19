@@ -8,7 +8,7 @@
 /* tracking label: gold-pale on dark, bronze-deep on cream */
 .tr-label {
   font-family: var(--sans);
-  font-size: 0.6875rem;
+  font-size: max(0.6875rem, 10px);
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0.22em;
@@ -219,7 +219,7 @@
   border: 0;
   background: transparent;
   font-family: var(--sans);
-  font-size: 0.625rem;
+  font-size: max(0.625rem, 9.5px);
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;

@@ -16,6 +16,7 @@ const TONE = {
 const SIZE = {
   hero: 'h-[3.25rem] md:h-[4.25rem] short:h-[2.4rem]',
   page: 'h-[2.75rem] md:h-[3.6rem] short:h-[2.1rem]',
+  crown: 'h-[3.4rem] md:h-[4.6rem] short:h-[2.3rem]',
 }
 
 const cache = {}

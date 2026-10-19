@@ -11,6 +11,7 @@ import Enquiry from './sections/Enquiry.jsx'
 import Features from './sections/Features.jsx'
 import Preloader from './components/Preloader.jsx'
 import FullscreenGate from './components/FullscreenGate.jsx'
+import menuTower from './assets/render/menu-tower.webp'
 
 function App() {
   // The home page's button lights up around the cursor (kept exactly as it was)
@@ -74,6 +75,11 @@ function App() {
     tl.to(curtainRef.current, { opacity: 0, duration: REDUCED ? 0.15 : 0.75, ease: EASE.soft }, REDUCED ? 0 : 0.1)
     tl.set(curtainRef.current, { autoAlpha: 0 })
   }, [view, navigate])
+
+  // the menu's full-screen photograph is fetched while the intro plays, so it is there on arrival
+  useEffect(() => {
+    if (started) new Image().src = menuTower
+  }, [started])
 
   const toMenu = () => navigate('menu')
   const onEnter = useCallback(() => setStarted(true), [])
