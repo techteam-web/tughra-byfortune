@@ -15,30 +15,30 @@
 @custom-variant short (@media (max-height: 520px) and (orientation: landscape));
 
 @theme {
-  --color-bg: #470d21;
-  --color-gold: #f0b866;
-  --color-gold-light: #ffd58a;
-  --color-cream: #f9e4d4;
-  --color-muted: #d9b39c;
+  --color-bg: #1c1714;
+  --color-gold: #c98b62;
+  --color-gold-light: #e8b48f;
+  --color-cream: #efe2d4;
+  --color-muted: #c9b3a2;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
-  --bg: #470d21;
-  --gold: #f0b866;
-  --gold-light: #ffd58a;
-  --cream: #f9e4d4;
-  --muted: #d9b39c;
+  --bg: #1c1714;
+  --gold: #c98b62;
+  --gold-light: #e8b48f;
+  --cream: #efe2d4;
+  --muted: #c9b3a2;
 
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  /* The menu's black-and-maroon, in a slightly lighter black, for the rest of the site:
-     warm charcoal as the ground, a maroon glow set on top of it wherever a page wants one. */
-  --royal-base: linear-gradient(180deg, #1c1013 0%, #140a0d 100%);
-  --royal-glow: rgba(110, 22, 52, 0.5);
+  /* The site's ground: warm charcoal-brown, with a soft copper glow set on top of it
+     wherever a page wants one. */
+  --royal-base: linear-gradient(180deg, #1d1815 0%, #13100e 100%);
+  --royal-glow: rgba(120,80,56, 0.5);
 
   font: 16px/1.6 var(--sans);
   color-scheme: dark;
@@ -131,11 +131,11 @@ h1 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(240,184,102, 0.35);
+  background: rgba(201,139,98, 0.35);
   border-radius: 0.625rem;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(240,184,102, 0.65);
+  background: rgba(201,139,98, 0.65);
 }
 
 @media (max-width: 768px) {

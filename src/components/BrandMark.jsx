@@ -77,7 +77,7 @@ function BrandMark({ tone = 'light' }) {
           {logo && <img src={logo.url} alt="Tughra Royale" className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
-      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#470d21]' : 'text-cream/80'} md:text-[0.5625rem] short:hidden`}>
+      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#1c1714]' : 'text-cream/80'} md:text-[0.5625rem] short:hidden`}>
         An Initiative by Fortune Square
       </span>
     </span>

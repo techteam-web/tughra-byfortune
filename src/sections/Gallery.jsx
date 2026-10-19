@@ -58,16 +58,10 @@ const CATEGORIES = [
 ]
 
 const pad = (n) => String(n).padStart(2, '0')
-const GOLD = '#f0b866'
+const GOLD = '#c98b62'
 
-const WideIcon = ({ on }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="6" width="18" height="12" rx="1.5" />
-    <path d={on ? 'M8 12h8M10 10l-2 2 2 2M14 10l2 2-2 2' : 'M7 12h10M9.5 9.5L7 12l2.5 2.5M14.5 9.5L17 12l-2.5 2.5'} />
-  </svg>
-)
-// Space the framed picture keeps clear of the page: header above, caption and thumbnails below.
-const frameMargins = (w, h) => (h < 520 && w > h ? { top: 76, bottom: 92, side: 28 } : w < 768 ? { top: 192, bottom: 235, side: 22 } : { top: 104, bottom: 138, side: 56 })
+// Full screen shows the whole render in a fine frame. Space it keeps clear: the top-right buttons above, the arrows at the sides.
+const frameMargins = (w, h) => (h < 520 && w > h ? { top: 56, bottom: 20, side: 64 } : w < 768 ? { top: 84, bottom: 40, side: 16 } : { top: 96, bottom: 48, side: 96 })
 const ExpandIcon = ({ on }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d={on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
@@ -86,10 +80,6 @@ function Gallery({ onClose }) {
   const [idx, setIdx] = useState(0)
   // full: the render fills the whole page, edge to edge (and the browser goes full screen). Otherwise every render sits in the gold frame.
   const [full, setFull] = useState(false)
-  // fill: the render covers the whole page edge to edge. wide: the whole render, uncropped, with the interface out of the way.
-  const [wide, setWide] = useState(false)
-  const railRef = useRef(null)
-  const [railMore, setRailMore] = useState(false)
   // each render's own shape (known once it has loaded), the window's shape, and any per-render choice to frame or fill
   const [aspects, setAspects] = useState({})
   const [vp, setVp] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
@@ -168,7 +158,8 @@ function Gallery({ onClose }) {
     if (!img.naturalWidth) return
     setAspects((a) => (a[src] ? a : { ...a, [src]: { w: img.naturalWidth, h: img.naturalHeight } }))
   }
-  const isFramed = () => !full
+  // Normally the render fills the page, as on Amenities; full screen shows it whole.
+  const isFramed = () => full
   // The framed picture: as large as fits between the margins, keeping its own shape, plus its mat.
   const frameBox = (src) => {
     const a = aspects[src]
@@ -178,25 +169,6 @@ function Gallery({ onClose }) {
     const k = Math.min((vp.w - m.side * 2 - mat * 2) / a.w, (vp.h - m.top - m.bottom - mat * 2) / a.h)
     return { w: Math.round(a.w * k + mat * 2), h: Math.round(a.h * k + mat * 2), dy: Math.round((m.top - m.bottom) / 2) }
   }
-
-  // The thumbnail strip follows the current render, and shows a fade at its edges when more are out of sight
-  useEffect(() => {
-    const r = railRef.current
-    if (!r) return
-    const follow = () => {
-      const el = r.children[idx]
-      if (el) r.scrollTo({ left: el.offsetLeft - (r.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' })
-      setRailMore(r.scrollWidth > r.clientWidth + 2)
-    }
-    follow()
-    const t = setTimeout(follow, 750) // once the active thumbnail has finished growing
-    const ro = new ResizeObserver(() => setRailMore(r.scrollWidth > r.clientWidth + 2))
-    ro.observe(r)
-    return () => {
-      clearTimeout(t)
-      ro.disconnect()
-    }
-  }, [idx, cat])
 
   // The tab pill slides to the active tab
   useLayoutEffect(() => {
@@ -218,15 +190,13 @@ function Gallery({ onClose }) {
   }
   const step = (d) => total > 1 && setIdx((i) => (i + d + total) % total)
 
-  // Full screen: the render fills the page edge to edge, and the browser goes full screen too (where it allows).
-  // If the browser refuses, the page still fills.
+  // Full screen: the whole render, uncropped, with nothing else on screen; the browser goes full screen too (where it allows).
   const toggleFs = () => {
     if (full) {
       setFull(false)
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
     } else {
       setFull(true)
-      setWide(false)
       document.documentElement.requestFullscreen?.().catch(() => {})
     }
   }
@@ -254,7 +224,6 @@ function Gallery({ onClose }) {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
       if (e.key === 'f' || e.key === 'F') toggleFs()
-      if (e.key === 'w' || e.key === 'W') setWide((v) => !v)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -274,9 +243,9 @@ function Gallery({ onClose }) {
         wheelAt.current = now
         step(e.deltaY > 0 ? 1 : -1)
       }}
-      className={`gx-page ${idle ? 'is-idle' : ''} ${wide ? 'is-wide' : ''} ${full ? 'is-full' : ''}`}
+      className={`gx-page ${idle ? 'is-idle' : ''} ${full ? 'is-full' : ''}`}
     >
-      {/* Every render is stacked, only one is lit. Fill mode shows .gv-bg edge to edge; wide mode blurs it into a backdrop and shows .gv-fg, the whole render */}
+      {/* Every render is stacked, only one is lit. Normally it fills the page; full screen shows it whole, framed, over a blurred, shaded copy of itself */}
       <div className="gv-stage" aria-live="polite">
         {CATEGORIES.flatMap((c, ci) =>
           c.slides.map((s, i) => {
@@ -284,13 +253,9 @@ function Gallery({ onClose }) {
             const box = framed ? frameBox(s.src) : null
             return (
               <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''} ${framed ? 'is-framed' : ''}`}>
-                {/* the render, edge to edge; blurred into a backdrop when it is shown framed or wide */}
-                <img className="gv-bg" src={s.src} alt="" aria-hidden="true" draggable={false} onLoad={(e) => noteAspect(s.src, e.currentTarget)} />
-                {/* wide view: the whole render */}
-                <div className="gv-fg">
-                  <img src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} />
-                </div>
-                {/* framed: the whole render in a gold double frame, set clear of the header and the caption */}
+                {/* the render, edge to edge; blurred and shaded into a backdrop in full screen */}
+                <img className="gv-bg" src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} onLoad={(e) => noteAspect(s.src, e.currentTarget)} />
+                {/* full screen: the whole render in a fine gold frame */}
                 {box && (
                   <div className="gv-frame" style={{ width: box.w, height: box.h, '--fy': `${box.dy}px` }}>
                     <img src={s.src} alt="" aria-hidden="true" draggable={false} />
@@ -320,17 +285,7 @@ function Gallery({ onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-2.5 md:gap-3">
-            <button
-              type="button"
-              onClick={() => setWide((v) => !v)}
-              aria-label={wide ? 'Back to the frame' : 'Wide view'}
-              aria-pressed={wide}
-              title={wide ? 'Back to the frame (W)' : 'Wide view: the whole render, no frame (W)'}
-              className={ctrlClass + (wide ? ' is-active' : '')}
-            >
-              <WideIcon on={wide} />
-            </button>
-            <button type="button" onClick={toggleFs} aria-label={full ? 'Exit full screen' : 'Full screen'} title={full ? 'Back to the frame (F)' : 'Full screen: fill the page (F)'} aria-pressed={full} className={ctrlClass + (full ? ' is-active' : '')}>
+            <button type="button" onClick={toggleFs} aria-label={full ? 'Exit full screen' : 'Full screen'} title={full ? 'Exit full screen (F)' : 'Full screen: the whole render (F)'} aria-pressed={full} className={ctrlClass + (full ? ' is-active' : '')}>
               <ExpandIcon on={full} />
             </button>
             <BackButton onClick={onClose} />
@@ -365,30 +320,27 @@ function Gallery({ onClose }) {
             <span className="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD }}>
               {pad(idx + 1)} <span className="h-px w-7" style={{ background: GOLD }} /> {pad(total)}
             </span>
-            <h2 className="mt-2 overflow-hidden font-serif text-[clamp(1.8rem,3.4vw,3.2rem)] font-normal leading-tight text-cream short:text-[1.3rem]">
+            <h2 className="mt-3 overflow-hidden pb-1 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream short:text-[1.1rem]">
               <span className="g-line block truncate">{slide.title}</span>
             </h2>
-            <p className="g-fade mt-1 truncate text-[0.75rem] uppercase tracking-[0.2rem] text-cream/70 short:hidden">{slide.subtitle}</p>
+            <p className="g-fade mt-1 truncate text-[0.8125rem] leading-[1.7] text-cream/75 short:hidden">{slide.subtitle}</p>
           </div>
 
-          <div ref={railRef} className={`sc-noscroll gx-rail min-w-0 max-w-full md:max-w-[60%] short:max-w-[58%] ${railMore ? 'has-more' : ''}`} role="tablist" aria-label={`${category.label} renders`}>
-            {slides.map((s, i) => (
-              <button
-                key={s.src}
-                type="button"
-                role="tab"
-                aria-selected={i === idx}
-                aria-label={s.title}
-                onClick={() => setIdx(i)}
-                className={`gx-chip ${i === idx ? 'is-on' : ''}`}
-              >
-                <img src={s.src} alt="" loading="lazy" />
-                <span className="gx-chip-no">{pad(i + 1)}</span>
-              </button>
-            ))}
+          {/* the run of renders, marked as on Amenities */}
+          <div className="flex items-center gap-1.5 md:gap-2" role="tablist" aria-label={`${category.label} renders`}>
+            {slides.map((sl, i) => {
+              const on = i === idx
+              return (
+                <button key={sl.src} type="button" role="tab" aria-selected={on} aria-label={sl.title} onClick={() => setIdx(i)} className="flex h-6 items-center border-none bg-transparent p-0">
+                  <span
+                    className="block h-[3px] rounded-full transition-all duration-700"
+                    style={{ width: on ? 'clamp(1.6rem,3vw,2.6rem)' : 'clamp(0.7rem,1.5vw,1.5rem)', background: on ? GOLD : 'rgba(239,226,212,0.3)' }}
+                  />
+                </button>
+              )
+            })}
           </div>
         </footer>
-        <div className="gv-progress"><i key={category.id + idx} /></div>
       </div>
     </section>
   )

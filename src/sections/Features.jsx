@@ -5,7 +5,7 @@ import BackButton from '../components/BackButton.jsx'
 import { Specks } from '../components/Ornaments.jsx'
 import waves from '../assets/decor/enquiry-waves.png'
 
-const GOLD = '#f0b866'
+const GOLD = '#c98b62'
 
 // Placeholder page: the content for Features has not been provided yet, so this is the page's
 // frame only, in the site's maroon with gold details, with room for the content to come.
@@ -28,7 +28,7 @@ function Features({ onClose }) {
     <section
       ref={rootRef}
       className="relative h-svh w-full overflow-hidden text-cream"
-      style={{ background: 'radial-gradient(60rem 38rem at 50% 38%, rgba(128,30,66,0.55) 0%, transparent 72%), radial-gradient(70rem 40rem at 50% 0%, rgba(240,184,102,0.08) 0%, transparent 62%), #470d21' }}
+      style={{ background: 'radial-gradient(60rem 38rem at 50% 38%, rgba(120,80,56,0.55) 0%, transparent 72%), radial-gradient(70rem 40rem at 50% 0%, rgba(201,139,98,0.08) 0%, transparent 62%), #1c1714' }}
     >
       <img
         src={waves}

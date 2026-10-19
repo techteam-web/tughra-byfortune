@@ -26,7 +26,7 @@ function Copy({ mode, onExplore }) {
 
       <div className="hr-fade mt-3 flex items-center gap-3 md:mt-5" style={hideText}>
         <span className="hr-rule h-px w-14 origin-right md:w-20" style={{ background: COPPER_RULE_L }} />
-        <span className="block h-2 w-2 rotate-45" style={{ background: 'linear-gradient(135deg,#ffd9a8,#c77b3f)' }} />
+        <span className="block h-2 w-2 rotate-45" style={{ background: 'linear-gradient(135deg,#f0c9a8,#c77b3f)' }} />
         <span className="hr-rule h-px w-14 origin-left md:w-20" style={{ background: COPPER_RULE_R }} />
       </div>
 
@@ -95,9 +95,9 @@ function Hero({ onExplore, ready = true }) {
     <section ref={rootRef} className="relative h-svh w-full overflow-hidden text-cream">
       <style>{`
         .hr-copper {
-          color: hsl(339, 71%, 10%);
+          color: hsl(20, 30%, 10%);
         }
-        .hr-copy-text { color: hsl(339, 71%, 10%); }
+        .hr-copy-text { color: hsl(20, 30%, 10%); }
         /* the pano is soft; razor-sharp type is what makes copy look pasted on top of it */
         .hr-depth { filter: blur(0.45px); }
       `}</style>

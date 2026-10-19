@@ -1,9 +1,9 @@
 /* Neighbourhood map — wine & gold, matched to the rest of the site. */
 
 .loc-panel {
-  background: linear-gradient(160deg, rgba(58, 12, 30, 0.82) 0%, rgba(24, 5, 12, 0.9) 100%);
-  border: 1px solid rgba(240, 184, 102, 0.24);
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 213, 138, 0.04);
+  background: linear-gradient(160deg, rgba(40,31,26, 0.82) 0%, rgba(20,16,14, 0.9) 100%);
+  border: 1px solid rgba(201,139,98, 0.24);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(232,180,143, 0.04);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -38,9 +38,9 @@
 .loc-tab.is-on { color: var(--gold); opacity: 1; }
 .loc-tab.is-on::after { transform: scaleX(1); }
 
-.loc-list { scrollbar-width: thin; scrollbar-color: rgba(240, 184, 102, 0.35) transparent; }
+.loc-list { scrollbar-width: thin; scrollbar-color: rgba(201,139,98, 0.35) transparent; }
 .loc-list::-webkit-scrollbar { width: 4px; }
-.loc-list::-webkit-scrollbar-thumb { background: rgba(240, 184, 102, 0.35); border-radius: 4px; }
+.loc-list::-webkit-scrollbar-thumb { background: rgba(201,139,98, 0.35); border-radius: 4px; }
 
 .loc-row {
   display: flex;
@@ -50,7 +50,7 @@
   gap: 1rem;
   padding: 0.7rem 0.75rem;
   border: 0;
-  border-bottom: 1px solid rgba(240, 184, 102, 0.12);
+  border-bottom: 1px solid rgba(201,139,98, 0.12);
   background: transparent;
   color: var(--cream);
   font-size: 0.8125rem;
@@ -63,9 +63,9 @@
   .loc-tab { font-size: 0.5625rem; padding: 0.25rem 0; }
 }
 .loc-row .km { color: var(--gold); font-variant-numeric: tabular-nums; }
-.loc-row:hover { background: rgba(240, 184, 102, 0.07); padding-left: 1rem; }
+.loc-row:hover { background: rgba(201,139,98, 0.07); padding-left: 1rem; }
 .loc-row.is-on {
-  background: linear-gradient(90deg, rgba(240, 184, 102, 0.22), rgba(240, 184, 102, 0.04));
+  background: linear-gradient(90deg, rgba(201,139,98, 0.22), rgba(201,139,98, 0.04));
   color: var(--gold-light);
   box-shadow: inset 2px 0 0 var(--gold);
 }
@@ -79,7 +79,7 @@
   border-radius: 50%;
   background: var(--gold);
   border: 2px solid #2a0614;
-  box-shadow: 0 0 0 1px rgba(240, 184, 102, 0.6), 0 0 0.9rem rgba(240, 184, 102, 0.55);
+  box-shadow: 0 0 0 1px rgba(201,139,98, 0.6), 0 0 0.9rem rgba(201,139,98, 0.55);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
 }
 .loc-pin span {
@@ -89,8 +89,8 @@
   transform: translate(-50%, 0.4rem);
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid rgba(240, 184, 102, 0.45);
-  background: rgba(30, 6, 15, 0.92);
+  border: 1px solid rgba(201,139,98, 0.45);
+  background: rgba(28,22,19, 0.92);
   color: var(--cream);
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
@@ -130,7 +130,7 @@
   z-index: 1;
   height: clamp(6.5rem, 17svh, 10rem);
   width: auto;
-  filter: drop-shadow(0 0 1.25rem rgba(240, 184, 102, 0.35)) drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 0 1.25rem rgba(201,139,98, 0.35)) drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.6));
 }
 .loc-tower .base {
   position: absolute;
@@ -140,7 +140,7 @@
   height: 1.4rem;
   margin-left: -2.25rem;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255, 213, 138, 0.8), rgba(240, 184, 102, 0) 70%);
+  background: radial-gradient(ellipse, rgba(232,180,143, 0.8), rgba(201,139,98, 0) 70%);
 }
 .loc-tower .base::before,
 .loc-tower .base::after {

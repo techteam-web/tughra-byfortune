@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Original full-size renders (the app uses the WebP copies in src/assets)
+public/assets/Amenties/
+public/assets/galleryexteriorrender/
+public/assets/galleryinteriorrender/
+public/assets/iso/

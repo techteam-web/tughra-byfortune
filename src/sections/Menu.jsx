@@ -27,17 +27,8 @@ const MENU_ITEMS = [
   { num: '07', title: 'ENQUIRE', subtitle: 'CONNECT WITH US', key: 'enquiry', name: 'Enquire', tag: 'Connect with us', line: 'Tell us what you are looking for, and begin the conversation.', bg: extEvening },
 ]
 
-const GOLD = '#f0b866'
-const GOLD_LIGHT = '#ffd58a'
-
-// The left panel's right edge, in a 100x100 box stretched to the panel: a gentle S-curve. It leans in to its
-// narrowest point at BEND (where the gold node sits), then swells back out toward the bottom.
-const BEND = [68, 42]
-const EDGE_PATH = 'C78 16 68 28 68 42 C68 58 88 72 86 88 C85 95 84 98 83 100'
-const CURVE_EDGE = `M78 0 ${EDGE_PATH}`
-const CURVE_MASK =
-  'data:image/svg+xml,' +
-  encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L78 0 ${EDGE_PATH} L0 100 Z"/></svg>`)
+const GOLD = '#c98b62'
+const GOLD_LIGHT = '#e8b48f'
 
 const HomeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -81,7 +72,7 @@ function Menu({ onClose, onSelect }) {
   }, [])
 
   return (
-    <section ref={rootRef} className="relative h-svh w-full overflow-hidden bg-[#1a0a0c] text-cream">
+    <section ref={rootRef} className="relative h-svh w-full overflow-hidden bg-[#15110f] text-cream">
       {/* The room: every picture stacked, the one being pointed at is brought forward */}
       <div className="mn-bg absolute inset-0 overflow-hidden">
         {/* isolate: the active picture has z-index 1 and must stay inside this box, so the shade below always paints over it (before, it only did so after the parallax first set a transform) */}
@@ -97,68 +88,38 @@ function Menu({ onClose, onSelect }) {
         </div>
         {/* the dark shading over the picture: fades in by itself on arrival */}
         <div className="mn-shade pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[rgba(14,6,10,0.3)]" />
-          <div className="absolute inset-0 bg-[rgba(10,4,6,0.4)] lg:hidden" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,4,6,0.6) 0%, rgba(10,4,6,0.25) 55%, rgba(10,4,6,0) 100%), radial-gradient(ellipse 55% 80% at 100% 50%, rgba(10,4,6,0.62) 0%, rgba(10,4,6,0) 100%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,4,6,0.45) 0%, rgba(10,4,6,0) 22%, rgba(10,4,6,0) 70%, rgba(10,4,6,0.5) 100%)' }} />
+          <div className="absolute inset-0 bg-[rgba(14,11,10,0.3)]" />
+          <div className="absolute inset-0 bg-[rgba(10,8,7,0.4)] lg:hidden" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 85% at 0% 50%, rgba(10,8,7,0.6) 0%, rgba(10,8,7,0.25) 55%, rgba(10,8,7,0) 100%), radial-gradient(ellipse 55% 80% at 100% 50%, rgba(10,8,7,0.62) 0%, rgba(10,8,7,0) 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(10,8,7,0.45) 0%, rgba(10,8,7,0) 22%, rgba(10,8,7,0) 70%, rgba(10,8,7,0.5) 100%)' }} />
         </div>
       </div>
 
-      {/* Left side: a mostly-black panel with a maroon glow. Its edge is a gold line that is drawn down the page: straight, then bending into a sweeping curve */}
+      {/* Left side: a dark panel framed in copper - its right edge drops straight from the top, turns through one
+          rounded corner below the list, and runs straight to the left edge. The frame draws itself down on arrival. */}
       <div className="mn-side pointer-events-none absolute inset-y-0 left-0 z-[5] w-[92%] max-w-[30rem] lg:w-[36%] lg:max-w-[38rem] short:w-[54%] short:max-w-none" aria-hidden="true">
-        <style>{`
-          @keyframes mnDraw { from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 0 -2% 0) } }
-          @keyframes mnNode { from { opacity: 0; transform: translate(-50%, -50%) rotate(45deg) scale(0.2) } to { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1) } }
-          @keyframes mnPulse { from { transform: translate(-50%, -50%) scale(1); opacity: 0.7 } to { transform: translate(-50%, -50%) scale(2.6); opacity: 0 } }
-        `}</style>
-        <div
-          className="absolute inset-0 overflow-hidden"
-          style={{
-            background: 'radial-gradient(34rem 26rem at 18% 48%, rgba(110,22,52,0.5) 0%, rgba(71,13,33,0.22) 45%, transparent 75%), radial-gradient(28rem 20rem at 0% 100%, rgba(71,13,33,0.35) 0%, transparent 70%), linear-gradient(180deg, #0d0608 0%, #0a0507 100%)',
-            WebkitMaskImage: `url("${CURVE_MASK}")`,
-            maskImage: `url("${CURVE_MASK}")`,
-            WebkitMaskSize: '100% 100%',
-            maskSize: '100% 100%',
-            WebkitMaskRepeat: 'no-repeat',
-            maskRepeat: 'no-repeat',
-          }}
-        >
-          <img
-            src={waves}
-            alt=""
-            draggable={false}
-            className="absolute -left-[12%] bottom-0 h-[36%] w-auto max-w-none select-none opacity-75 mix-blend-screen"
-            style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)', maskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)' }}
-          />
-          <Specks className="z-0" />
+        <style>{`@keyframes mnDraw { from { clip-path: inset(0 0 100% 0) } to { clip-path: inset(0 -2rem -2rem 0) } }`}</style>
+        <div className="absolute inset-0" style={{ animation: 'mnDraw 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.3s both' }}>
+          {/* a faint echo of the frame, set just outside it */}
+          <div className="absolute left-0 top-0 h-[calc(86%+0.45rem)] w-[calc(88%+0.45rem)] rounded-br-[3.45rem] border-b border-r border-[#c98b62]/30 lg:w-[calc(70%+0.45rem)] short:h-[calc(88%+0.45rem)] short:w-[calc(80%+0.45rem)]" />
+          {/* the panel itself */}
+          <div
+            className="absolute left-0 top-0 h-[86%] w-[88%] overflow-hidden rounded-br-[3rem] border-b border-r border-[#c98b62]/85 lg:w-[70%] short:h-[88%] short:w-[80%]"
+            style={{
+              background: 'radial-gradient(34rem 26rem at 18% 48%, rgba(120,80,56,0.42) 0%, rgba(46,34,28,0.2) 45%, transparent 75%), linear-gradient(180deg, #13100e 0%, #0d0b0a 100%)',
+              boxShadow: '0.25rem 0.25rem 1.75rem rgba(201,139,98,0.18), 0 1.5rem 3rem rgba(0,0,0,0.45)',
+            }}
+          >
+            <img
+              src={waves}
+              alt=""
+              draggable={false}
+              className="absolute -left-[12%] bottom-0 h-[26%] w-auto max-w-none select-none opacity-60 mix-blend-screen"
+              style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)', maskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)' }}
+            />
+            <Specks className="z-0" />
+          </div>
         </div>
-        {/* the edge, in gold: a soft glow, the line itself and a fainter echo, all drawn down from the top */}
-        <svg
-          className="absolute inset-0 h-full w-full overflow-visible"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          style={{ animation: 'mnDraw 2.2s cubic-bezier(0.65, 0, 0.35, 1) 0.5s both' }}
-        >
-          <defs>
-            <linearGradient id="mnCurveGold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={GOLD} stopOpacity="0.35" />
-              <stop offset="0.3" stopColor={GOLD_LIGHT} stopOpacity="1" />
-              <stop offset="0.75" stopColor={GOLD} stopOpacity="0.95" />
-              <stop offset="1" stopColor={GOLD} stopOpacity="0.3" />
-            </linearGradient>
-          </defs>
-          <path d={CURVE_EDGE} fill="none" stroke={GOLD} strokeOpacity="0.3" strokeWidth="7" vectorEffect="non-scaling-stroke" style={{ filter: 'blur(5px)' }} />
-          <path d={CURVE_EDGE} transform="translate(2.4 0)" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-          <path d={CURVE_EDGE} fill="none" stroke="url(#mnCurveGold)" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
-        </svg>
-        {/* a small gold node set on the curve at its narrowest point */}
-        <span className="absolute" style={{ left: `${BEND[0]}%`, top: `${BEND[1]}%` }}>
-          <i className="absolute block h-2 w-2 rounded-full border border-[#f0b866]" style={{ left: 0, top: 0, animation: 'mnPulse 3.4s ease-out 2.6s infinite', transform: 'translate(-50%, -50%)' }} />
-          <i
-            className="absolute block h-2.5 w-2.5"
-            style={{ background: 'linear-gradient(135deg,#fff1cf,#e0a24e)', boxShadow: '0 0 0.7rem rgba(255,213,138,0.85)', animation: 'mnNode 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both' }}
-          />
-        </span>
       </div>
 
       {/* Logo: fixed to the top-left corner */}
@@ -197,12 +158,12 @@ function Menu({ onClose, onSelect }) {
                   className={`mn-glow flex flex-1 items-center justify-between gap-2 rounded-lg border-none bg-transparent px-3.5 py-[clamp(0.4rem,1.3svh,0.6rem)] short:py-[0.15rem] text-left ${on ? 'is-on' : ''}`}
                 >
                   <span className="relative">
-                    <span className="block text-[0.8125rem] short:text-[0.6875rem] font-medium tracking-[0.18rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#f9e4d4' }}>{m.title}</span>
+                    <span className="block text-[0.8125rem] short:text-[0.6875rem] font-medium tracking-[0.18rem] transition-colors duration-500" style={{ color: on ? GOLD_LIGHT : '#efe2d4' }}>{m.title}</span>
                     <span className="mt-1 short:mt-0 block text-[0.5rem] short:text-[0.4375rem] tracking-[0.12rem] text-cream/65">{m.subtitle}</span>
                   </span>
                   <span
                     className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all duration-500"
-                    style={{ borderColor: 'rgba(240,184,102,0.7)', color: GOLD_LIGHT, opacity: on ? 1 : 0, transform: on ? 'none' : 'translateX(-0.4rem)' }}
+                    style={{ borderColor: 'rgba(201,139,98,0.7)', color: GOLD_LIGHT, opacity: on ? 1 : 0, transform: on ? 'none' : 'translateX(-0.4rem)' }}
                   >
                     <svg width="11" height="8" viewBox="0 0 16 12" fill="none" aria-hidden="true">
                       <path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -257,7 +218,7 @@ function Menu({ onClose, onSelect }) {
             ) : (
               <dl className="inline-flex items-stretch">
                 {FACTS.map(([k, v], i) => (
-                  <div key={k} className="whitespace-nowrap text-right" style={{ borderLeft: i ? '1px solid rgba(240,184,102,0.35)' : 'none', paddingLeft: i ? '1.4rem' : 0, paddingRight: i < FACTS.length - 1 ? '1.4rem' : 0 }}>
+                  <div key={k} className="whitespace-nowrap text-right" style={{ borderLeft: i ? '1px solid rgba(201,139,98,0.35)' : 'none', paddingLeft: i ? '1.4rem' : 0, paddingRight: i < FACTS.length - 1 ? '1.4rem' : 0 }}>
                     <dt className="text-[0.5625rem] uppercase tracking-[0.25rem] text-cream/55">{k}</dt>
                     <dd className="mt-2 text-[0.9375rem] font-medium tracking-[0.05rem] text-cream">{v}</dd>
                   </div>

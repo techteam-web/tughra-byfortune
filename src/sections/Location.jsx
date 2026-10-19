@@ -60,7 +60,7 @@ function applyBrandTheme(map) {
   set('poi_r20', 'icon-opacity', 0)
   set('airport', 'icon-opacity', 0)
 
-  set('background', 'background-color', '#1d0711')
+  set('background', 'background-color', '#15110f')
 
   // Ground cover
   for (const id of [
@@ -77,23 +77,23 @@ function applyBrandTheme(map) {
     'landuse_school',
     'aeroway_fill',
   ]) {
-    set(id, 'fill-color', '#2a0b18')
+    set(id, 'fill-color', '#1f1916')
   }
   set('park', 'fill-color', '#2b0f1a')
   set('park_outline', 'line-color', '#3a1624')
 
   // Water
-  set('water', 'fill-color', '#12050b')
+  set('water', 'fill-color', '#100d0c')
   for (const id of ['waterway_tunnel', 'waterway_river', 'waterway_other']) {
     set(id, 'line-color', '#2a0f1c')
   }
 
   // Buildings
-  set('building', 'fill-color', '#4a1a2a')
+  set('building', 'fill-color', '#3a2e27')
 
   // Roads — copper-gold for major routes, warm bronze for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
-    set(id, 'line-color', '#e0a85a')
+    set(id, 'line-color', '#b98660')
   }
   for (const id of ['road_secondary_tertiary', 'bridge_secondary_tertiary', 'tunnel_secondary_tertiary']) {
     set(id, 'line-color', '#a0723f')
@@ -112,7 +112,7 @@ function applyBrandTheme(map) {
     'tunnel_minor',
     'tunnel_path_pedestrian',
   ]) {
-    set(id, 'line-color', '#6a2f3a')
+    set(id, 'line-color', '#4a3a30')
   }
   for (const id of [
     'road_motorway_casing',
@@ -131,7 +131,7 @@ function applyBrandTheme(map) {
     'tunnel_trunk_primary_casing',
     'tunnel_secondary_tertiary_casing',
   ]) {
-    set(id, 'line-color', '#1d0711')
+    set(id, 'line-color', '#15110f')
   }
   for (const id of [
     'road_major_rail',
@@ -148,11 +148,11 @@ function applyBrandTheme(map) {
   // otherwise show up as stray bright lines once zoomed in.
   set('building', 'fill-outline-color', 'rgba(0,0,0,0)')
   set('park', 'fill-outline-color', 'rgba(0,0,0,0)')
-  set('landuse_pitch', 'fill-color', '#2a0b18')
-  set('landuse_track', 'fill-color', '#2a0b18')
+  set('landuse_pitch', 'fill-color', '#1f1916')
+  set('landuse_track', 'fill-color', '#1f1916')
   set('aeroway_fill', 'fill-opacity', 0.3)
   for (const id of ['tunnel_service_track', 'bridge_service_track', 'tunnel_minor']) {
-    set(id, 'line-color', '#6a2f3a')
+    set(id, 'line-color', '#4a3a30')
   }
   for (const id of ['road_motorway_link', 'bridge_motorway_link', 'tunnel_motorway_link']) {
     set(id, 'line-color', '#a0723f')
@@ -165,7 +165,7 @@ function applyBrandTheme(map) {
     'bridge_street_casing',
     'bridge_path_pedestrian_casing',
   ]) {
-    set(id, 'line-color', '#1d0711')
+    set(id, 'line-color', '#15110f')
   }
 
   // Boundaries
@@ -196,8 +196,8 @@ function applyBrandTheme(map) {
     'label_country_2',
     'label_country_1',
   ]) {
-    set(id, 'text-color', '#f9e4d4')
-    set(id, 'text-halo-color', '#1d0711')
+    set(id, 'text-color', '#efe2d4')
+    set(id, 'text-halo-color', '#15110f')
   }
 
   // Safety net: anything the lists above missed that is still light (white road
@@ -216,10 +216,10 @@ function applyBrandTheme(map) {
   for (const layer of map.getStyle().layers) {
     const { id, type } = layer
     if (type === 'line' && !touched.has(id + 'line-color') && isLight(map.getPaintProperty(id, 'line-color'))) {
-      set(id, 'line-color', '#6a2f3a')
+      set(id, 'line-color', '#4a3a30')
     }
     if (type === 'fill') {
-      if (!touched.has(id + 'fill-color') && isLight(map.getPaintProperty(id, 'fill-color'))) set(id, 'fill-color', '#2a0b18')
+      if (!touched.has(id + 'fill-color') && isLight(map.getPaintProperty(id, 'fill-color'))) set(id, 'fill-color', '#1f1916')
       if (!touched.has(id + 'fill-outline-color')) set(id, 'fill-outline-color', 'rgba(0,0,0,0)')
     }
   }
@@ -233,19 +233,19 @@ function applyDepth(map) {
       'interpolate',
       ['linear'],
       ['get', 'render_height'],
-      0, '#3a1422',
-      40, '#5a2230',
+      0, '#2e2520',
+      40, '#4a3a30',
       120, '#9a6240',
-      300, '#e0a85a',
+      300, '#b98660',
     ])
     map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.92)
     map.setLayerZoomRange('building-3d', 13, 24)
   }
   try {
     map.setSky({
-      'sky-color': '#12050b',
-      'horizon-color': '#6b2a35',
-      'fog-color': '#2a0b18',
+      'sky-color': '#100d0c',
+      'horizon-color': '#4a382e',
+      'fog-color': '#1f1916',
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
       'fog-ground-blend': 0.85,
@@ -264,7 +264,7 @@ function routeGradient(p, color) {
 }
 function setRouteProgress(map, p) {
   if (!map.getLayer('route-line')) return
-  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, 'rgba(255,190,90,0.7)'))
+  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, 'rgba(214,150,105,0.7)'))
   map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, '#fff6e6'))
 }
 const EMPTY = { type: 'FeatureCollection', features: [] }
@@ -284,7 +284,7 @@ function boatSvg({ hull, stripe, roof }) {
   return `<svg viewBox="0 0 60 40" aria-hidden="true">
     <path d="M41 3 L41 21" stroke="#2a2018" stroke-width="1.2"/>
     <path d="M41 4 L58 18" stroke="#2a2018" stroke-width="0.5"/>
-    <circle cx="41" cy="3.6" r="1" fill="#f2c26b"/>
+    <circle cx="41" cy="3.6" r="1" fill="#e2b28c"/>
     <rect x="23" y="12" width="13" height="9" rx="0.8" fill="#cfc6b6"/>
     <rect x="21.5" y="10.2" width="16" height="2.4" rx="0.5" fill="${roof}"/>
     <rect x="25" y="14.4" width="3" height="3" fill="#1d2630"/>
@@ -339,7 +339,7 @@ function Location({ onClose }) {
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 14, 'line-blur': 9, 'line-gradient': routeGradient(0, 'rgba(255,190,90,0.7)') },
+        paint: { 'line-width': 14, 'line-blur': 9, 'line-gradient': routeGradient(0, 'rgba(214,150,105,0.7)') },
       })
       map.addLayer({
         id: 'route-line',
@@ -554,7 +554,7 @@ function Location({ onClose }) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 85% 75% at 60% 55%, rgba(29,7,17,0) 40%, rgba(29,7,17,0.78) 100%), linear-gradient(180deg, rgba(71,13,33,0.35) 0%, rgba(71,13,33,0) 22%)',
+            'radial-gradient(ellipse 85% 75% at 60% 55%, rgba(18,14,12,0) 40%, rgba(18,14,12,0.78) 100%), linear-gradient(180deg, rgba(46,34,28,0.35) 0%, rgba(46,34,28,0) 22%)',
         }}
       />
 

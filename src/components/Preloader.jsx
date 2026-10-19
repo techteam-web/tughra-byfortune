@@ -9,7 +9,7 @@ gsap.registerPlugin(DrawSVGPlugin)
 // them contour by contour, in reading order, the way a hand would write them.
 // Once a mark is written its strokes soften and the fill settles in behind.
 
-const INK = '#f9e4d4'
+const INK = '#efe2d4'
 
 function Mark({ tag, logo, className, style }) {
   // One combined path carries the solid mark: even-odd keeps the counters and
@@ -81,17 +81,17 @@ function Preloader({ onComplete }) {
       <div
         ref={topRef}
         className="absolute inset-x-0 top-0 h-1/2"
-        style={{ background: 'radial-gradient(48rem 30rem at 50% 100%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 78%), var(--royal-base)' }}
+        style={{ background: 'radial-gradient(48rem 30rem at 50% 100%, var(--royal-glow) 0%, rgba(46,34,28,0.2) 50%, transparent 78%), var(--royal-base)' }}
       />
       <div
         ref={bottomRef}
         className="absolute inset-x-0 bottom-0 h-1/2"
-        style={{ background: 'radial-gradient(48rem 30rem at 50% 0%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 78%), linear-gradient(0deg, #1c1013 0%, #140a0d 100%)' }}
+        style={{ background: 'radial-gradient(48rem 30rem at 50% 0%, var(--royal-glow) 0%, rgba(46,34,28,0.2) 50%, transparent 78%), linear-gradient(0deg, #1d1815 0%, #13100e 100%)' }}
       />
 
       {/* The line that opens across the middle, then the curtain parts along it */}
       <svg className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none">
-        <line ref={lineRef} x1="0" y1="50%" x2="100%" y2="50%" stroke="#f0b866" strokeWidth="1.5" />
+        <line ref={lineRef} x1="0" y1="50%" x2="100%" y2="50%" stroke="#c98b62" strokeWidth="1.5" />
       </svg>
 
       <div className="pl-stage absolute inset-0 flex flex-col items-center justify-center gap-5 px-6">

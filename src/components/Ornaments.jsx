@@ -55,7 +55,7 @@ export function MarbleBg({ tint = 0.25 }) {
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true">
       <div className="absolute inset-0" style={{ background: `url(${marble}) center / cover, #2a0710` }} />
-      <div className="absolute inset-0" style={{ background: `rgba(20,4,9,${tint})` }} />
+      <div className="absolute inset-0" style={{ background: `rgba(18,14,12,${tint})` }} />
     </div>
   )
 }
@@ -67,7 +67,7 @@ export function Specks({ className = 'z-[4]' }) {
     <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
       <style>{`@keyframes orRise { 0% { transform: translateY(0); opacity: 0 } 15% { opacity: .7 } 85% { opacity: .5 } 100% { transform: translateY(-105svh) translateX(2rem); opacity: 0 } }`}</style>
       {SPECKS.map((p, i) => (
-        <span key={i} className="absolute rounded-full" style={{ left: p.x + '%', bottom: '-2%', width: p.s, height: p.s, background: '#ffd58a', boxShadow: '0 0 6px #f0b866', opacity: 0, animation: `orRise ${p.d}s linear ${p.t}s infinite` }} />
+        <span key={i} className="absolute rounded-full" style={{ left: p.x + '%', bottom: '-2%', width: p.s, height: p.s, background: '#e8b48f', boxShadow: '0 0 6px #c98b62', opacity: 0, animation: `orRise ${p.d}s linear ${p.t}s infinite` }} />
       ))}
     </div>
   )

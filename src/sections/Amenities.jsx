@@ -37,8 +37,7 @@ const Svg = ({ children, size = 18 }) => (
 
 const AUTOPLAY_MS = 7000
 const pad = (n) => String(n).padStart(2, '0')
-const GOLD = '#f0b866'
-const GOLD_LIGHT = '#ffd58a'
+const GOLD = '#c98b62'
 
 function Amenities({ onClose }) {
   const [index, setIndex] = useState(0)
@@ -55,19 +54,12 @@ function Amenities({ onClose }) {
       tl.fromTo('.am-top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.3)
       tl.fromTo('.am-bot', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.9 }, 0.9)
 
-      // the photograph drifts against the pointer, and the light follows it
+      // the photograph drifts against the pointer
       const px = gsap.quickTo('.am-stage', 'x', { duration: 1.6, ease: 'power3.out' })
       const py = gsap.quickTo('.am-stage', 'y', { duration: 1.6, ease: 'power3.out' })
-      const gx = gsap.quickTo('.am-light', 'x', { duration: 1.1, ease: 'power3.out' })
-      const gy = gsap.quickTo('.am-light', 'y', { duration: 1.1, ease: 'power3.out' })
       const onMove = (e) => {
-        const nx = e.clientX / window.innerWidth - 0.5
-        const ny = e.clientY / window.innerHeight - 0.5
-        px(-nx * 34)
-        py(-ny * 20)
-        gx(e.clientX)
-        gy(e.clientY)
-        gsap.to('.am-light', { opacity: 1, duration: 0.8, overwrite: 'auto' })
+        px(-(e.clientX / window.innerWidth - 0.5) * 34)
+        py(-(e.clientY / window.innerHeight - 0.5) * 20)
       }
       window.addEventListener('mousemove', onMove)
       return () => window.removeEventListener('mousemove', onMove)
@@ -124,10 +116,10 @@ function Amenities({ onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [full])
 
-  const roundBtn = 'lux-btn flex h-11 w-11 items-center justify-center rounded-full md:h-14 md:w-14'
+  const roundBtn = 'lux-btn flex h-10 w-10 items-center justify-center rounded-full md:h-11 md:w-11'
 
   return (
-    <section ref={sectionRef} className="relative h-svh w-full overflow-hidden bg-[#2a0713] text-cream">
+    <section ref={sectionRef} className="relative h-svh w-full overflow-hidden bg-[#13100e] text-cream">
       <style>{`@keyframes amenityFill { from { transform: scaleX(0) } to { transform: scaleX(1) } } @keyframes amKen { from { transform: scale(1.12) translate3d(1.2%, 0.8%, 0) } to { transform: scale(1) translate3d(0, 0, 0) } }`}</style>
 
       {/* The photograph is the page: every amenity stacked, the chosen one crossfades in */}
@@ -152,84 +144,75 @@ function Amenities({ onClose }) {
         })}
       </div>
 
-      {/* Grading: dark at the foot where the type sits, a touch at the top for the logo */}
+      {/* The same shade as the Gallery: the site's charcoal, at the top for the logo and at the foot for the type */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'linear-gradient(0deg, rgba(28,4,13,0.92) 0%, rgba(28,4,13,0.55) 30%, rgba(28,4,13,0) 60%), linear-gradient(180deg, rgba(28,4,13,0.55) 0%, rgba(28,4,13,0) 22%)' }}
+        style={{ background: 'linear-gradient(180deg, rgba(18,15,13,0.66) 0%, rgba(18,15,13,0) 24%), linear-gradient(0deg, rgba(18,15,13,0.92) 0%, rgba(18,15,13,0.55) 24%, rgba(18,15,13,0) 50%)' }}
       />
 
-      {/* Depth: a soft vignette pulls the eye to the centre, and a warm light trails the cursor */}
-      <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 75% 70% at 50% 45%, rgba(28,4,13,0) 55%, rgba(28,4,13,0.55) 100%)' }} />
-      <div className="am-light pointer-events-none absolute left-0 top-0 z-[2] h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 opacity-0" style={{ background: 'radial-gradient(closest-side, rgba(255,200,130,0.16), rgba(255,200,130,0.05) 55%, transparent 100%)', mixBlendMode: 'screen' }} />
-
-      {/* Logo, top-left, and Back, top-right */}
+      {/* Logo, top-left; full screen and Back, top-right */}
       <button type="button" onClick={onClose} className="am-top absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
         <BrandMark />
       </button>
-      <div className="am-top absolute right-5 top-5 z-20 sm:right-8 md:right-12 md:top-9">
+      <div className="am-top absolute right-5 top-5 z-20 flex items-center gap-2.5 sm:right-8 md:right-12 md:top-9 md:gap-3">
+        <button type="button" onClick={openFull} aria-label={`View ${item.title} full screen`} title="Full screen (F)" className={roundBtn}>
+          <Svg size={20}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></Svg>
+        </button>
         <BackButton onClick={onClose} />
       </div>
 
-      {/* Centre foot: counter, title, copy, then the controls */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-5 pb-8 text-center md:pb-12 short:pb-3" style={{ textShadow: '0 0.125rem 1.25rem rgba(0,0,0,0.5)' }}>
-        <div className="am-fade flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.3rem]" style={{ color: GOLD_LIGHT }}>
-          <span className="h-px w-8 md:w-12" style={{ background: 'linear-gradient(90deg, transparent, ' + GOLD + ')' }} />
-          {pad(index + 1)} <span className="opacity-50">/</span> {pad(total)}
-          <span className="h-px w-8 md:w-12" style={{ background: 'linear-gradient(90deg, ' + GOLD + ', transparent)' }} />
+      {/* Side arrows */}
+      <div className="am-bot pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between px-4 md:px-8">
+        <button type="button" onClick={goPrev} aria-label="Previous amenity" className={roundBtn + ' pointer-events-auto'}><Svg size={20}><path d="M15 18l-6-6 6-6" /></Svg></button>
+        <button type="button" onClick={goNext} aria-label="Next amenity" className={roundBtn + ' pointer-events-auto'}><Svg size={20}><path d="M9 6l6 6-6 6" /></Svg></button>
+      </div>
+
+      {/* Caption on the left, the run of amenities on the right */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col gap-5 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:justify-between short:gap-6 short:pb-3"
+        style={{ textShadow: '0 0.1rem 1rem rgba(10,8,7,0.7)' }}
+      >
+        <div className="min-w-0">
+          <span className="am-fade flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD }}>
+            {pad(index + 1)} <span className="h-px w-7" style={{ background: GOLD }} /> {pad(total)}
+          </span>
+          <h2 className="mt-3 block overflow-hidden pb-1 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream short:text-[1.1rem]">
+            <span className="am-line block">{item.title}</span>
+          </h2>
+          <p className="am-fade mt-1 max-w-[30rem] text-[0.8125rem] leading-[1.7] text-cream/75 short:hidden">{item.description}</p>
         </div>
-        <h2 className="mt-3 block overflow-hidden pb-1.5 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream short:text-[1.1rem]">
-          <span className="am-line block">{item.title}</span>
-        </h2>
-        <p className="am-fade mt-1 max-w-[26rem] text-[0.75rem] leading-[1.75] tracking-[0.02rem] text-cream/75 md:text-[0.8125rem] short:hidden">{item.description}</p>
 
-        <div className="am-bot mt-5 short:mt-2 flex w-full items-center justify-center gap-4 md:mt-6 md:gap-8">
-          <button type="button" onClick={goPrev} aria-label="Previous amenity" className={roundBtn}><Svg size={20}><path d="M15 18l-6-6 6-6" /></Svg></button>
-
-          <div className="flex items-center gap-1.5 md:gap-2" role="tablist" aria-label="Amenities">
-            {AMENITIES.map((a, i) => {
-              const on = i === index
-              return (
-                <button
-                  key={a.title}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  aria-label={a.title}
-                  onClick={() => setIndex(i)}
-                  className="flex h-6 items-center border-none bg-transparent p-0"
-                >
-                  <span className="relative block h-[3px] overflow-hidden rounded-full transition-all duration-700" style={{ width: on ? 'clamp(1.6rem,3vw,2.6rem)' : 'clamp(0.7rem,1.5vw,1.5rem)', background: 'rgba(249,228,212,0.3)' }}>
-                    {on && (
-                      <span
-                        key={index + (full ? 'f' : '')}
-                        className="absolute inset-0 origin-left"
-                        style={{ background: GOLD, animation: full ? 'none' : `amenityFill ${AUTOPLAY_MS}ms linear forwards` }}
-                      />
-                    )}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          <button type="button" onClick={goNext} aria-label="Next amenity" className={roundBtn}><Svg size={20}><path d="M9 6l6 6-6 6" /></Svg></button>
+        <div className="am-bot flex items-center gap-1.5 md:gap-2" role="tablist" aria-label="Amenities">
+          {AMENITIES.map((a, i) => {
+            const on = i === index
+            return (
+              <button
+                key={a.title}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                aria-label={a.title}
+                onClick={() => setIndex(i)}
+                className="flex h-6 items-center border-none bg-transparent p-0"
+              >
+                <span className="relative block h-[3px] overflow-hidden rounded-full transition-all duration-700" style={{ width: on ? 'clamp(1.6rem,3vw,2.6rem)' : 'clamp(0.7rem,1.5vw,1.5rem)', background: 'rgba(239,226,212,0.3)' }}>
+                  {on && (
+                    <span
+                      key={index + (full ? 'f' : '')}
+                      className="absolute inset-0 origin-left"
+                      style={{ background: GOLD, animation: full ? 'none' : `amenityFill ${AUTOPLAY_MS}ms linear forwards` }}
+                    />
+                  )}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* Full screen, bottom-right */}
-      <button
-        type="button"
-        onClick={openFull}
-        aria-label={`View ${item.title} full screen`}
-        title="Full screen (F)"
-        className="lux-btn am-bot absolute bottom-8 right-5 z-20 hidden h-11 w-11 items-center justify-center rounded-full sm:flex md:bottom-12 md:right-12 md:h-14 md:w-14"
-      >
-        <Svg size={20}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></Svg>
-      </button>
-
       {/* Full-screen viewer */}
       {full && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2a0713]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#13100e]">
           <img src={item.image} alt={item.title} className="h-full w-full object-contain" />
           <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-6 py-5 md:px-12 md:py-8 [&_button]:pointer-events-auto">
             <div className="text-[0.6875rem] uppercase tracking-[0.1875rem]" style={{ color: GOLD }}>

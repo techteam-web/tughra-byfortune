@@ -332,7 +332,7 @@ const ViewsPage = ({ onClose, onHome }) => {
       <div
         ref={flashRef}
         className="pointer-events-none absolute inset-0 z-[6]"
-        style={{ opacity: 0, background: 'rgba(255,213,138,0.3)' }}
+        style={{ opacity: 0, background: 'rgba(232,180,143,0.3)' }}
       />
 
       {/* Top-Left: Home + Back, unobtrusive, fades with the rest of the chrome on idle */}
@@ -355,11 +355,11 @@ const ViewsPage = ({ onClose, onHome }) => {
           opacity: 0,
           padding: '0.5625rem 1.25rem',
           borderRadius: '62.4375rem',
-          backgroundColor: 'rgba(14,6,10, 0.78)',
-          border: '1px solid rgba(240,184,102, 0.3)',
+          background: 'linear-gradient(180deg, rgba(44,35,30,0.88) 0%, rgba(20,16,14,0.9) 100%)',
+          border: '1px solid rgba(201,139,98, 0.32)',
           boxShadow: '0 0.5rem 1.75rem rgba(0,0,0,0.4)',
           backdropFilter: 'blur(0.875rem)',
-          color: '#f9e4d4',
+          color: '#efe2d4',
           fontSize: '0.6875rem',
           fontWeight: 600,
           letterSpacing: '0.14em',
@@ -381,15 +381,15 @@ const ViewsPage = ({ onClose, onHome }) => {
             width: '4.75rem',
             padding: '0.875rem 0',
             borderRadius: '1.875rem',
-            backgroundColor: 'rgba(14,6,10, 0.72)',
-            border: '1px solid rgba(240,184,102, 0.25)',
+            background: 'linear-gradient(180deg, rgba(44,35,30,0.88) 0%, rgba(20,16,14,0.9) 100%)',
+            border: '1px solid rgba(201,139,98, 0.32)',
             boxShadow: '0 1rem 3rem rgba(0,0,0,0.45)',
             backdropFilter: 'blur(1.25rem)',
             overflow: 'visible',
           }}
         >
           {/* Segmented time-of-day, stacked */}
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '62.4375rem', padding: '0.1875rem' }}>
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'rgba(201,139,98,0.08)', borderRadius: '62.4375rem', padding: '0.1875rem' }}>
             <div
               aria-hidden="true"
               style={{
@@ -399,8 +399,8 @@ const ViewsPage = ({ onClose, onHome }) => {
                 top: `calc(${TIMES_OF_DAY.indexOf(currentTime) * 33.333}% + 0.1875rem)`,
                 height: 'calc(33.333% - 0.375rem)',
                 borderRadius: '62.4375rem',
-                background: '#f0b866',
-                boxShadow: '0 0.25rem 0.875rem rgba(205, 168, 102, 0.45)',
+                background: '#c98b62',
+                boxShadow: '0 0.25rem 0.875rem rgba(201,139,98, 0.45)',
                 transition: 'top 0.4s cubic-bezier(0.65, 0, 0.35, 1)',
               }}
             />
@@ -419,7 +419,7 @@ const ViewsPage = ({ onClose, onHome }) => {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: isActive ? '#1a1610' : 'rgba(255,213,138,0.65)',
+                    color: isActive ? '#1a1610' : 'rgba(232,180,143,0.65)',
                     transition: 'color 0.35s ease',
                   }}
                 >
@@ -429,7 +429,7 @@ const ViewsPage = ({ onClose, onHome }) => {
             })}
           </div>
 
-          <div style={{ width: '2rem', height: '1px', background: 'rgba(240,184,102, 0.2)' }} />
+          <div style={{ width: '2rem', height: '1px', background: 'rgba(201,139,98, 0.28)' }} />
 
           <button
             onClick={toggleAutoRotate}
@@ -437,9 +437,9 @@ const ViewsPage = ({ onClose, onHome }) => {
             onPointerLeave={handleGlowLeave}
             aria-label={isAutoRotating ? 'Switch to manual view' : 'Auto-rotate'}
             className={`group relative flex items-center justify-center rounded-full border transition-colors duration-300 luxury-btn flex-shrink-0 ${
-              isAutoRotating ? 'border-gold-light/70 bg-black/40' : 'border-white/15 bg-white/[0.03]'
+              isAutoRotating ? 'border-gold-light/70 bg-[#c98b62]/15' : 'border-[#c98b62]/30 bg-[#c98b62]/[0.06]'
             }`}
-            style={{ width: '2.125rem', height: '2.125rem', color: isAutoRotating ? '#ffd58a' : 'rgba(255,213,138,0.7)' }}
+            style={{ width: '2.125rem', height: '2.125rem', color: isAutoRotating ? '#e8b48f' : 'rgba(232,180,143,0.7)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isAutoRotating ? 'animate-spin-slow' : ''}>
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -447,7 +447,7 @@ const ViewsPage = ({ onClose, onHome }) => {
             </svg>
           </button>
 
-          <div style={{ width: '2rem', height: '1px', background: 'rgba(240,184,102, 0.2)' }} />
+          <div style={{ width: '2rem', height: '1px', background: 'rgba(201,139,98, 0.28)' }} />
 
           {/* The elevation slider — one continuous gold-fill track, dragged or
               tapped directly, with every floor number marked beside it so the
@@ -472,8 +472,8 @@ const ViewsPage = ({ onClose, onHome }) => {
                       padding: '0.125rem 0.1875rem',
                       fontSize: isActive ? '0.59375rem' : '0.46875rem',
                       fontWeight: isActive ? 800 : 500,
-                      color: isActive ? '#f9e9c2' : 'rgba(255,213,138,0.4)',
-                      textShadow: isActive ? '0 0 0.5rem rgba(255,213,138,0.8)' : 'none',
+                      color: isActive ? '#f3dcc8' : 'rgba(232,180,143,0.4)',
+                      textShadow: isActive ? '0 0 0.5rem rgba(232,180,143,0.8)' : 'none',
                       whiteSpace: 'nowrap',
                       transition: 'all 0.25s ease',
                     }}
@@ -497,7 +497,7 @@ const ViewsPage = ({ onClose, onHome }) => {
                 flexShrink: 0,
                 height: SLIDER_HEIGHT,
                 borderRadius: '62.4375rem',
-                backgroundColor: 'rgba(255,255,255,0.06)',
+                backgroundColor: 'rgba(201,139,98,0.14)',
                 cursor: 'grab',
                 touchAction: 'none',
               }}
@@ -508,8 +508,8 @@ const ViewsPage = ({ onClose, onHome }) => {
                 style={{
                   height: `${(1 - railFractionFor(currentFloorIdx)) * 100}%`,
                   borderRadius: '62.4375rem',
-                  background: '#ffd58a',
-                  boxShadow: '0 0 1rem rgba(255,213,138,0.55)',
+                  background: '#e8b48f',
+                  boxShadow: '0 0 1rem rgba(232,180,143,0.55)',
                   transition: sliderDraggingRef.current ? 'none' : 'height 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
                 }}
               />
@@ -522,9 +522,9 @@ const ViewsPage = ({ onClose, onHome }) => {
                   height: '1.25rem',
                   borderRadius: '50%',
                   transform: 'translate(-50%, 50%)',
-                  background: '#fdf6e3',
-                  border: '0.125rem solid #ffd58a',
-                  boxShadow: '0 0.125rem 0.625rem rgba(0,0,0,0.4), 0 0 0.75rem rgba(255,213,138,0.7)',
+                  background: '#f6ebe0',
+                  border: '0.125rem solid #e8b48f',
+                  boxShadow: '0 0.125rem 0.625rem rgba(0,0,0,0.4), 0 0 0.75rem rgba(232,180,143,0.7)',
                   transition: sliderDraggingRef.current ? 'none' : 'bottom 0.5s cubic-bezier(0.65, 0, 0.35, 1)',
                 }}
               />
@@ -539,7 +539,7 @@ const ViewsPage = ({ onClose, onHome }) => {
               width: '1.375rem', height: '1.375rem', borderRadius: '50%', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'none', border: 'none',
-              color: currentFloorIdx === FLOOR_DATA.length - 1 ? 'rgba(255,213,138,0.25)' : 'rgba(255,213,138,0.75)',
+              color: currentFloorIdx === FLOOR_DATA.length - 1 ? 'rgba(232,180,143,0.25)' : 'rgba(232,180,143,0.75)',
               cursor: currentFloorIdx === FLOOR_DATA.length - 1 ? 'default' : 'pointer',
             }}
           >

@@ -78,14 +78,14 @@
 .preloader__bar-track {
   width: 10rem;
   height: 1px;
-  background: rgba(249,228,212, 0.15);
+  background: rgba(239,226,212, 0.15);
 }
 
 .preloader__bar-fill {
   width: 0%;
   height: 100%;
   background: #c17f45;
-  box-shadow: 0 0 0.5rem rgba(193, 127, 69, 0.7);
+  box-shadow: 0 0 0.5rem rgba(170,110,74, 0.7);
 }
 
 .preloader__caption {

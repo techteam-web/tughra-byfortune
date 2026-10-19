@@ -12,7 +12,7 @@
   border-radius: inherit;
   padding: 0.15625rem;
 
-  background: rgba(240,184,102, 0.14);
+  background: rgba(201,139,98, 0.14);
 
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -25,8 +25,8 @@
 }
 
 .luxury-arrow {
-  border: 1px solid rgba(240,184,102, 0.45);
-  color: #ffd58a;
+  border: 1px solid rgba(201,139,98, 0.45);
+  color: #e8b48f;
   transition:
     transform 0.35s ease,
     background 0.35s ease;
@@ -34,7 +34,7 @@
 
 .luxury-btn:hover .luxury-arrow {
   transform: translateX(0.1875rem);
-  background: rgba(240,184,102, 0.08);
+  background: rgba(201,139,98, 0.08);
 }
 
 @keyframes spin-slow {
@@ -69,7 +69,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #ffb070 0%, rgba(240, 184, 102, 0.55) 40%, rgba(240, 184, 102, 0) 100%);
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #e0a078 0%, rgba(201,139,98, 0.55) 40%, rgba(201,139,98, 0) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -82,7 +82,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(255, 176, 112, 0.22), rgba(240, 184, 102, 0.06) 60%, transparent 100%);
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(224,160,120, 0.22), rgba(201,139,98, 0.06) 60%, transparent 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -97,9 +97,9 @@
   --mx: 50%;
   --my: 50%;
   isolation: isolate;
-  border: 1px solid rgba(249, 228, 212, 0.32);
-  background: rgba(14, 6, 10, 0.55);
-  color: #f9e4d4;
+  border: 1px solid rgba(201,139,98, 0.32);
+  background: linear-gradient(180deg, rgba(44,35,30, 0.72) 0%, rgba(20,16,14, 0.78) 100%);
+  color: #efe2d4;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   transition: color 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
@@ -110,7 +110,7 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1.5px;
-  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #ffb070 0%, rgba(240, 184, 102, 0.55) 40%, rgba(240, 184, 102, 0) 100%);
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), #e0a078 0%, rgba(201,139,98, 0.55) 40%, rgba(201,139,98, 0) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -123,7 +123,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(255, 176, 112, 0.24), rgba(240, 184, 102, 0.06) 60%, transparent 100%);
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgba(224,160,120, 0.24), rgba(201,139,98, 0.06) 60%, transparent 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -131,8 +131,8 @@
 }
 .lux-btn:hover,
 .lux-btn:focus-visible {
-  color: #ffd58a;
-  border-color: rgba(240, 184, 102, 0.35);
+  color: #e8b48f;
+  border-color: rgba(201,139,98, 0.35);
 }
 .lux-btn:hover::before,
 .lux-btn:hover::after,
@@ -143,12 +143,12 @@
 /* light pages (Floor Plans, Enquiry form) */
 .lux-btn.lux-light {
   background: rgba(255, 250, 244, 0.75);
-  border-color: rgba(71, 13, 33, 0.28);
-  color: #470d21;
+  border-color: rgba(46,34,28, 0.28);
+  color: #1c1714;
 }
 .lux-btn.lux-light:hover {
-  color: #470d21;
-  border-color: rgba(184, 135, 58, 0.5);
+  color: #1c1714;
+  border-color: rgba(170,118,82, 0.5);
 }
 
 /* positioned so the glow layers anchor to it, unless a page already places it absolutely */
@@ -199,7 +199,7 @@
   font-size: clamp(10rem, 19vw, 19rem);
   line-height: 1;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(240, 184, 102, 0.3);
+  -webkit-text-stroke: 1px rgba(201,139,98, 0.3);
   transform: translateY(-56%);
   pointer-events: none;
   animation: mnGhost 1.2s ease both;

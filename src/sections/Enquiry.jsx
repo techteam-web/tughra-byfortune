@@ -12,24 +12,24 @@ import waves from '../assets/decor/enquiry-waves.png'
 const ENQUIRY_ENDPOINT = ''
 
 // The dark pages' palette: black with a warm cast, gold for every fine detail.
-const GOLD = '#f0b866'
-const GOLD_LIGHT = '#ffd58a'
+const GOLD = '#c98b62'
+const GOLD_LIGHT = '#e8b48f'
 const INK = '#14090b'
 const ERR = '#ff9a8a'
-const GOLD_BTN = 'linear-gradient(135deg,#ffd58a,#e0a24e)'
+const GOLD_BTN = 'linear-gradient(135deg,#e8b48f,#b97a52)'
 
 const isName = (v) => v.trim().length >= 2
 const isPhone = (v) => v.replace(/\D/g, '').length >= 7
 
 const input =
-  'mt-1.5 w-full border-0 border-b border-[rgba(249,228,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#f9e4d4] outline-none transition-colors duration-300 placeholder:text-[rgba(249,228,212,0.3)] focus:border-[#f0b866] [&:-webkit-autofill]:[-webkit-text-fill-color:#f9e4d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#2a1219]'
+  'mt-1.5 w-full border-0 border-b border-[rgba(239,226,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#efe2d4] outline-none transition-colors duration-300 placeholder:text-[rgba(239,226,212,0.3)] focus:border-[#c98b62] [&:-webkit-autofill]:[-webkit-text-fill-color:#efe2d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#2a1219]'
 
-const caption = 'flex items-center gap-1.5 text-[0.5625rem] font-medium uppercase tracking-[0.28rem] text-[rgba(249,228,212,0.6)]'
+const caption = 'flex items-center gap-1.5 text-[0.5625rem] font-medium uppercase tracking-[0.28rem] text-[rgba(239,226,212,0.6)]'
 
 function Field({ label, error, children }) {
   return (
     <label className="eq-row group block">
-      <span className={`${caption} transition-colors duration-300 group-focus-within:text-[#f0b866]`}>
+      <span className={`${caption} transition-colors duration-300 group-focus-within:text-[#c98b62]`}>
         {label}
         <span style={{ color: GOLD }}>*</span>
       </span>
@@ -103,7 +103,7 @@ function Enquiry({ onClose }) {
     <section
       ref={rootRef}
       className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream side:h-svh side:flex-row"
-      style={{ background: 'radial-gradient(52rem 40rem at 78% 45%, var(--royal-glow) 0%, rgba(71,13,33,0.2) 50%, transparent 76%), radial-gradient(60rem 40rem at 95% 0%, rgba(240,184,102,0.07) 0%, transparent 62%), radial-gradient(40rem 28rem at 100% 100%, rgba(71,13,33,0.4) 0%, transparent 70%), var(--royal-base)' }}
+      style={{ background: 'radial-gradient(52rem 40rem at 78% 45%, var(--royal-glow) 0%, rgba(46,34,28,0.2) 50%, transparent 76%), radial-gradient(60rem 40rem at 95% 0%, rgba(201,139,98,0.07) 0%, transparent 62%), radial-gradient(40rem 28rem at 100% 100%, rgba(46,34,28,0.4) 0%, transparent 70%), var(--royal-base)' }}
     >
       {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
       <img
@@ -119,7 +119,7 @@ function Enquiry({ onClose }) {
       <div className="eq-media relative z-[2] h-[22rem] w-full shrink-0 sm:h-[26rem] side:absolute side:inset-y-0 side:left-0 side:h-auto side:w-[62%] short:w-[56%]">
         <div className="absolute inset-0 overflow-hidden bg-[#0a0607] [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] side:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
           <img src={tower} alt="Tughra Royale at golden hour" className="eq-photo absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 30%' }} draggable={false} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,4,5,0.9) 0%, rgba(8,4,5,0.45) 28%, rgba(8,4,5,0) 56%), linear-gradient(180deg, rgba(8,4,5,0.55) 0%, rgba(8,4,5,0) 24%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,6,5,0.9) 0%, rgba(8,6,5,0.45) 28%, rgba(8,6,5,0) 56%), linear-gradient(180deg, rgba(8,6,5,0.55) 0%, rgba(8,6,5,0) 24%)' }} />
         </div>
 
         {/* gold double rule along the cut */}
@@ -201,7 +201,7 @@ function Enquiry({ onClose }) {
                 type="submit"
                 disabled={status === 'sending'}
                 className="eq-row group mt-5 short:mt-2 flex w-full items-center justify-between rounded-full px-8 py-4 short:py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.25rem] transition-all duration-300 hover:brightness-110 disabled:opacity-60"
-                style={{ background: GOLD_BTN, color: INK, boxShadow: '0 0.75rem 2rem rgba(240,184,102,0.25)' }}
+                style={{ background: GOLD_BTN, color: INK, boxShadow: '0 0.75rem 2rem rgba(201,139,98,0.25)' }}
               >
                 {status === 'sending' ? 'Sending…' : 'Send enquiry'}
                 <Arrow />
