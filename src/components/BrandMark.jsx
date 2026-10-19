@@ -1,21 +1,32 @@
 import { useEffect, useState } from 'react'
+import { cssRgb } from '../theme/tokens.js'
 
-// Top-left brand lockup: the Tughra logo in white, with a small developer credit beneath. The PNG is brown artwork on a white background, so it is
-// converted once in a canvas: darkness becomes opacity, the colour becomes
-// white, and the empty margin is cropped away.
+// Top-left brand lockup: the Tughra logo, with a small developer credit beneath. The PNG is
+// brown artwork on a white background, so it is converted once in a canvas: darkness becomes
+// opacity, the colour becomes the tone's token, and the empty margin is cropped away.
 const TUGHRA = '/assets/logo/tughra.png'
 
-// tone 'light' = white logo for dark pages, 'dark' = deep brown logo for light pages
-const TINT = { light: [255, 255, 255], dark: [92, 62, 40] }
+// tone 'light' = the home page's logo, frozen as it was; 'gold' = every other page; 'dark' = on cream
+const TONE = {
+  light: { token: '--hero-logo', caption: 'text-hero-cream/80' },
+  gold: { token: '--gold', caption: 'text-gold-pale/80' },
+  dark: { token: '--ink', caption: 'text-ink' },
+}
+
+const SIZE = {
+  hero: 'h-[3.25rem] md:h-[4.25rem] short:h-[2.4rem]',
+  page: 'h-[2.75rem] md:h-[3.6rem] short:h-[2.1rem]',
+}
 
 const cache = {}
 
-function whiteLogo(src, tone = 'light') {
+function tintedLogo(src, tone) {
   const key = src + tone
   if (cache[key]) return cache[key]
   cache[key] = new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
+      const tint = cssRgb(TONE[tone].token)
       const scale = 900 / img.naturalWidth
       const w = Math.round(img.naturalWidth * scale)
       const h = Math.round(img.naturalHeight * scale)
@@ -32,9 +43,9 @@ function whiteLogo(src, tone = 'light') {
           const i = (y * w + x) * 4
           const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
           const a = Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
-          px[i] = TINT[tone][0]
-          px[i + 1] = TINT[tone][1]
-          px[i + 2] = TINT[tone][2]
+          px[i] = tint[0]
+          px[i + 1] = tint[1]
+          px[i + 2] = tint[2]
           px[i + 3] = a
           if (a > 24) {
             if (x < minX) minX = x
@@ -59,12 +70,12 @@ function whiteLogo(src, tone = 'light') {
   return cache[key]
 }
 
-function BrandMark({ tone = 'light' }) {
+function BrandMark({ tone = 'light', size = 'hero', credit = true }) {
   const [logo, setLogo] = useState(null)
 
   useEffect(() => {
     let live = true
-    whiteLogo(TUGHRA, tone).then((l) => live && setLogo(l), () => {})
+    tintedLogo(TUGHRA, tone).then((l) => live && setLogo(l), () => {})
     return () => {
       live = false
     }
@@ -73,13 +84,15 @@ function BrandMark({ tone = 'light' }) {
   return (
     <span className="flex flex-col items-center gap-1">
       <span className="flex items-end">
-        <span className="block h-[3.25rem] md:h-[4.25rem] short:h-[2.4rem]" style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
+        <span className={`block ${SIZE[size]}`} style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
           {logo && <img src={logo.url} alt="Tughra Royale" className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
-      <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${tone === 'dark' ? 'text-[#1c1714]' : 'text-cream/80'} md:text-[0.5625rem] short:hidden`}>
-        An Initiative by Fortune Square
-      </span>
+      {credit && (
+        <span className={`block text-center text-[0.5rem] uppercase tracking-[0.12rem] ${TONE[tone].caption} md:text-[0.5625rem] short:hidden`}>
+          An Initiative by Fortune Square
+        </span>
+      )}
     </span>
   )
 }

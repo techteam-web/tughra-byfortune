@@ -1,0 +1,53 @@
+/* The home page's button, kept exactly as it was (the brief freezes the hero).
+   Only the hero uses .lux-btn; every other page uses the button system in ui.css.
+   App.jsx feeds --mx/--my so the copper glow sits under the cursor. */
+.lux-btn {
+  --mx: 50%;
+  --my: 50%;
+  isolation: isolate;
+  border: 1px solid rgb(var(--hero-copper-rgb) / 0.32);
+  background: linear-gradient(180deg, rgb(var(--hero-panel-a-rgb) / 0.72) 0%, rgb(var(--hero-panel-b-rgb) / 0.78) 100%);
+  color: var(--hero-cream);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: color 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+.lux-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), var(--hero-glow) 0%, rgb(var(--hero-copper-rgb) / 0.55) 40%, rgb(var(--hero-copper-rgb) / 0) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.lux-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), rgb(var(--hero-glow-rgb) / 0.24), rgb(var(--hero-copper-rgb) / 0.06) 60%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+.lux-btn:hover,
+.lux-btn:focus-visible {
+  color: var(--hero-gold-light);
+  border-color: rgb(var(--hero-copper-rgb) / 0.35);
+}
+.lux-btn:hover::before,
+.lux-btn:hover::after,
+.lux-btn:focus-visible::before,
+.lux-btn:focus-visible::after {
+  opacity: 1;
+}
+.lux-btn:where(:not(.absolute, .fixed, .sticky)) {
+  position: relative;
+}

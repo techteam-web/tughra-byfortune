@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
 @import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/ui.css';
+@import './styles/hero.css';
 
 /* Side-by-side layouts: on desktop-width screens, and on phones held sideways. Use as side:… */
 @custom-variant side {
@@ -14,36 +17,35 @@
    Declared after `side` so that short:… overrides side:… on those screens. */
 @custom-variant short (@media (max-height: 520px) and (orientation: landscape));
 
-@theme {
-  --color-bg: #1c1714;
-  --color-gold: #c98b62;
-  --color-gold-light: #e8b48f;
-  --color-cream: #efe2d4;
-  --color-muted: #c9b3a2;
+/* Tailwind reads the tokens; no colour is written here. bg-espresso, border-bronze/30, text-gold-pale … */
+@theme inline {
+  --color-espresso: var(--espresso);
+  --color-cocoa: var(--cocoa);
+  --color-bronze: var(--bronze);
+  --color-bronze-deep: var(--bronze-deep);
+  --color-gold: var(--gold);
+  --color-gold-pale: var(--gold-pale);
+  --color-cream: var(--cream);
+  --color-parchment: var(--parchment);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-alert: var(--alert);
+  --color-hero-cream: var(--hero-cream);
+  --radius-card: var(--radius-card);
+  --radius-tile: var(--radius-tile);
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
-  --bg: #1c1714;
-  --gold: #c98b62;
-  --gold-light: #e8b48f;
-  --cream: #efe2d4;
-  --muted: #c9b3a2;
-
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
-
-  /* The site's ground: warm charcoal-brown, with a soft copper glow set on top of it
-     wherever a page wants one. */
-  --royal-base: linear-gradient(180deg, #1d1815 0%, #13100e 100%);
-  --royal-glow: rgba(120,80,56, 0.5);
 
   font: 16px/1.6 var(--sans);
   color-scheme: dark;
   color: var(--cream);
-  background: var(--bg);
+  background: var(--espresso);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -63,7 +65,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--espresso);
 }
 
 #root {
@@ -94,6 +96,21 @@ h1 {
   margin: 0;
 }
 
+/* Every screen is a full-height view that scrolls inside itself on small screens */
+.app-view {
+  position: fixed;
+  inset: 0;
+  height: 100svh;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--espresso);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--bronze) 45%, transparent) transparent;
+}
+.app-view.is-hero { background: var(--hero-bg); }
+
+/* ---- Home page frame (hero, unchanged) ---- */
 @property --frame-reveal {
   syntax: '<percentage>';
   inherits: false;
@@ -121,33 +138,25 @@ h1 {
     opacity: 1;
   }
 }
-@import "tailwindcss";
 
-/* Custom scrollbar */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 0.25rem;
+  height: 0.25rem;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(201,139,98, 0.35);
+  background: color-mix(in srgb, var(--bronze) 40%, transparent);
   border-radius: 0.625rem;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(201,139,98, 0.65);
+  background: color-mix(in srgb, var(--bronze) 70%, transparent);
 }
+.tr-noscroll { scrollbar-width: none; }
+.tr-noscroll::-webkit-scrollbar { display: none; }
 
-@media (max-width: 768px) {
- #dynamic-panel , #autorotate {
-   display: none !important;
-
-  }
-  #top-controls {
-    left: 0.875rem !important;
-    top: 1.5rem !important;
-  }
-}
 /* Fluid scale for every desktop. The UI is rem-based and was composed at
    1440 x 810 (16px), so on desktop the root size follows whichever of width or
    height is tighter: laptops shrink a little, short windows don't overflow, and

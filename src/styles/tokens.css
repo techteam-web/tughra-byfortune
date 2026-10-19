@@ -1,0 +1,46 @@
+/* ---------------------------------------------------------------------------
+   Tughra Royale - design tokens. The only place colour values are written.
+   Cream is the white, espresso is the black; gold is scarce.
+   Mirrored for canvas/map use in src/theme/tokens.js - keep the two in step.
+--------------------------------------------------------------------------- */
+:root {
+  --espresso: #1C130D;      /* page ground, panels, menu */
+  --cocoa: #2A1C12;         /* raised panels, cards on dark, input fills */
+  --bronze: #B5763C;        /* dividers, icon tiles, frame lines, outlines */
+  --bronze-deep: #8E5A2B;   /* hover/pressed bronze, labels on cream */
+  --gold: #D9AE62;          /* accent: CTAs, active states, logo */
+  --gold-pale: #E9CF9A;     /* tracking labels, hairlines on dark */
+  --cream: #F2E9D8;         /* light cards, body text on dark */
+  --parchment: #E6D9C2;     /* card borders on light, secondary text on dark */
+  --ink: #2A1C12;           /* text on cream */
+  --ink-soft: #665A4D;      /* secondary text on cream (ink at 70%, 5.6:1) */
+  --alert: #E8A48C;         /* form errors on dark (8.8:1 on espresso) */
+  --scrim: rgba(28, 19, 13, 0.8);
+
+  /* shape */
+  --radius-card: 1.125rem;  /* 18px */
+  --radius-tile: 0.75rem;
+  --hairline: 1px;
+
+  /* motion (CSS side - hover and press only; everything else is GSAP) */
+  --dur-micro: 0.28s;
+  --ease-silk: cubic-bezier(0.33, 1, 0.68, 1); /* = power2.out */
+
+  /* safe areas */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+
+  /* -------- Home page (hero): frozen by the brief, exactly as it was -------- */
+  --hero-bg: #1c1714;
+  --hero-cream: #efe2d4;
+  --hero-gold-light: #e8b48f;
+  --hero-glow: #e0a078;
+  --hero-logo: #ffffff;
+  --hero-copper-rgb: 201 139 98;
+  --hero-glow-rgb: 224 160 120;
+  --hero-panel-a-rgb: 44 35 30;
+  --hero-panel-b-rgb: 20 16 14;
+  --bg: var(--hero-bg); /* read by PanoBackground.css */
+}

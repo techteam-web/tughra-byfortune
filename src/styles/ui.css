@@ -1,0 +1,275 @@
+/* ---------------------------------------------------------------------------
+   Shared surfaces and controls. One radius, one hairline, one label style,
+   one button system on every page. Hover and press are CSS (0.28s); every
+   entrance, transition and glide is GSAP (src/motion).
+--------------------------------------------------------------------------- */
+
+@layer components {
+/* tracking label: gold-pale on dark, bronze-deep on cream */
+.tr-label {
+  font-family: var(--sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-pale);
+}
+.on-light .tr-label,
+.tr-label.is-light {
+  color: var(--bronze-deep);
+}
+
+/* hairlines - the brand's signature frame line */
+.tr-hair {
+  display: block;
+  height: var(--hairline);
+  background: color-mix(in srgb, var(--bronze) 45%, transparent);
+  transform-origin: left center;
+}
+.tr-hair.is-pale { background: color-mix(in srgb, var(--gold-pale) 35%, transparent); }
+.tr-hair.is-gold { background: var(--gold); }
+.tr-vhair {
+  display: block;
+  width: var(--hairline);
+  background: color-mix(in srgb, var(--bronze) 40%, transparent);
+  transform-origin: center top;
+}
+
+/* raised panel on espresso: cocoa, a faint top-light, a bronze edge and an inner hairline */
+.tr-panel {
+  position: relative;
+  border-radius: var(--radius-card);
+  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 34%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gold-pale) 6%, var(--cocoa)) 0%, var(--cocoa) 42%);
+}
+.tr-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0.375rem;
+  border-radius: calc(var(--radius-card) - 0.375rem);
+  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 14%, transparent);
+  pointer-events: none;
+}
+.tr-panel.is-flat::before { display: none; }
+
+/* feature card on espresso: cream, parchment edge, ink text */
+.tr-card-light {
+  position: relative;
+  border-radius: var(--radius-card);
+  border: var(--hairline) solid var(--parchment);
+  background: var(--cream);
+  color: var(--ink);
+}
+
+/* corner marks (see ui/Corners.jsx) */
+.tr-corner {
+  position: absolute;
+  width: 0.7rem;
+  height: 0.7rem;
+  pointer-events: none;
+  border-color: color-mix(in srgb, var(--bronze) 75%, transparent);
+  border-style: solid;
+  border-width: 0;
+}
+.tr-corner.tl { top: var(--ci, 0.65rem); left: var(--ci, 0.65rem); border-top-width: 1px; border-left-width: 1px; transform-origin: 0 0; }
+.tr-corner.tr { top: var(--ci, 0.65rem); right: var(--ci, 0.65rem); border-top-width: 1px; border-right-width: 1px; transform-origin: 100% 0; }
+.tr-corner.bl { bottom: var(--ci, 0.65rem); left: var(--ci, 0.65rem); border-bottom-width: 1px; border-left-width: 1px; transform-origin: 0 100%; }
+.tr-corner.br { bottom: var(--ci, 0.65rem); right: var(--ci, 0.65rem); border-bottom-width: 1px; border-right-width: 1px; transform-origin: 100% 100%; }
+.on-light .tr-corner { border-color: color-mix(in srgb, var(--bronze-deep) 60%, transparent); }
+
+/* ---------------- buttons ---------------- */
+.tr-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  min-height: 2.875rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  border: var(--hairline) solid transparent;
+  font-family: var(--sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-micro) var(--ease-silk),
+    background-color var(--dur-micro) var(--ease-silk),
+    border-color var(--dur-micro) var(--ease-silk),
+    transform var(--dur-micro) var(--ease-silk);
+}
+.tr-btn:active { transform: scale(0.98); }
+.tr-btn:disabled { opacity: 0.55; cursor: default; }
+.tr-btn svg { transition: transform var(--dur-micro) var(--ease-silk); }
+.tr-btn:hover svg.tr-arrow { transform: translateX(0.2rem); }
+
+/* the one filled gold element per view */
+.tr-btn--gold { background: var(--gold); color: var(--ink); }
+.tr-btn--gold:hover,
+.tr-btn--gold:focus-visible { background: var(--gold-pale); }
+
+.tr-btn--outline {
+  border-color: color-mix(in srgb, var(--bronze) 65%, transparent);
+  color: var(--cream);
+  background: color-mix(in srgb, var(--espresso) 55%, transparent);
+}
+.tr-btn--outline:hover,
+.tr-btn--outline:focus-visible { border-color: var(--gold); color: var(--gold-pale); }
+
+.on-light .tr-btn--outline { border-color: color-mix(in srgb, var(--bronze-deep) 55%, transparent); color: var(--ink); background: transparent; }
+.on-light .tr-btn--outline:hover { border-color: var(--bronze-deep); color: var(--ink); background: color-mix(in srgb, var(--parchment) 45%, transparent); }
+
+/* ghost: text with a hairline that extends on hover */
+.tr-btn--ghost {
+  min-height: 0;
+  padding: 0.35rem 0;
+  border-radius: 0;
+  color: var(--gold-pale);
+  background: transparent;
+}
+.tr-btn--ghost::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--hairline);
+  background: var(--gold);
+  transform: scaleX(0.3);
+  transform-origin: left center;
+  transition: transform 0.45s var(--ease-silk);
+}
+.tr-btn--ghost:hover::after,
+.tr-btn--ghost:focus-visible::after { transform: scaleX(1); }
+
+/* circular control: outline bronze, gold icon. Back, Close, Home, arrows. */
+.tr-icon-btn {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 999px;
+  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 70%, transparent);
+  background: color-mix(in srgb, var(--espresso) 62%, transparent);
+  color: var(--gold);
+  cursor: pointer;
+  transition:
+    color var(--dur-micro) var(--ease-silk),
+    background-color var(--dur-micro) var(--ease-silk),
+    border-color var(--dur-micro) var(--ease-silk),
+    transform var(--dur-micro) var(--ease-silk);
+}
+.tr-icon-btn.is-sm { height: 2.375rem; width: 2.375rem; }
+.tr-icon-btn:hover,
+.tr-icon-btn:focus-visible { border-color: var(--gold); background: color-mix(in srgb, var(--cocoa) 88%, transparent); color: var(--gold-pale); }
+.tr-icon-btn:active { transform: scale(0.98); }
+.tr-icon-btn.is-active { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--espresso)); }
+.tr-icon-btn:disabled { opacity: 0.35; cursor: default; }
+.tr-icon-btn:disabled:hover { border-color: color-mix(in srgb, var(--bronze) 70%, transparent); background: color-mix(in srgb, var(--espresso) 62%, transparent); color: var(--gold); }
+.tr-icon-btn svg { display: block; }
+
+/* labelled control (Back, Home): caps label beside the circle */
+.tr-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--gold-pale);
+}
+.tr-ctl .tr-label { transition: color var(--dur-micro) var(--ease-silk); }
+.tr-ctl:hover .tr-label { color: var(--gold); }
+.tr-ctl:hover .tr-icon-btn { border-color: var(--gold); background: color-mix(in srgb, var(--cocoa) 88%, transparent); color: var(--gold-pale); }
+.tr-ctl:active .tr-icon-btn { transform: scale(0.98); }
+
+/* ---------------- segmented control ---------------- */
+.tr-seg {
+  position: relative;
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 50%, transparent);
+  background: color-mix(in srgb, var(--espresso) 60%, transparent);
+}
+.tr-seg.is-grid { display: grid; border-radius: 1rem; }
+.tr-seg__ind {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 999px;
+  border: var(--hairline) solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  pointer-events: none;
+}
+.tr-seg.is-grid .tr-seg__ind { border-radius: 0.75rem; }
+.tr-seg__opt {
+  position: relative;
+  z-index: 1;
+  padding: 0.6rem 1.15rem;
+  border: 0;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--parchment) 72%, transparent);
+  cursor: pointer;
+  transition: color var(--dur-micro) var(--ease-silk);
+}
+@media (min-width: 768px) {
+  .tr-seg__opt { padding: 0.65rem 1.5rem; }
+}
+.tr-seg__opt:hover { color: var(--cream); }
+.tr-seg__opt[aria-pressed='true'] { color: var(--gold); }
+.tr-seg.is-light { border-color: color-mix(in srgb, var(--bronze-deep) 38%, transparent); background: transparent; }
+.tr-seg.is-light .tr-seg__ind { border-color: var(--bronze-deep); background: color-mix(in srgb, var(--gold) 30%, transparent); }
+.tr-seg.is-light .tr-seg__opt { color: var(--ink-soft); }
+.tr-seg.is-light .tr-seg__opt:hover,
+.tr-seg.is-light .tr-seg__opt[aria-pressed='true'] { color: var(--ink); }
+
+/* ---------------- forms ---------------- */
+.tr-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.95rem 1.05rem;
+  border-radius: var(--radius-tile);
+  border: var(--hairline) solid var(--bronze-deep);
+  background: var(--cocoa);
+  color: var(--cream);
+  font-family: var(--sans);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--dur-micro) var(--ease-silk), box-shadow var(--dur-micro) var(--ease-silk);
+}
+.tr-input::placeholder { color: color-mix(in srgb, var(--parchment) 42%, transparent); }
+.tr-input:hover { border-color: var(--bronze); }
+.tr-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 24%, transparent); }
+.tr-input[aria-invalid='true'] { border-color: var(--alert); }
+.tr-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--cream);
+  box-shadow: inset 0 0 0 40px var(--cocoa);
+  caret-color: var(--cream);
+}
+
+/* keyboard focus, everywhere */
+.tr-btn:focus-visible,
+.tr-icon-btn:focus-visible,
+.tr-seg__opt:focus-visible,
+.tr-focus:focus-visible {
+  outline: var(--hairline) solid var(--gold);
+  outline-offset: 3px;
+}
+}
