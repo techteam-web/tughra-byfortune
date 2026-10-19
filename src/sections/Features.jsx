@@ -1,68 +1,60 @@
 import { useLayoutEffect, useRef } from 'react'
-import { gsap } from 'gsap'
-import BrandMark from '../components/BrandMark.jsx'
-import BackButton from '../components/BackButton.jsx'
-import { Specks } from '../components/Ornaments.jsx'
-import waves from '../assets/decor/enquiry-waves.png'
-
-const GOLD = '#c98b62'
+import { gsap, fx, PAGE_IN } from '../motion/index.js'
+import { TopBar, BackControl, Corners } from '../ui/controls.jsx'
+import theatre from '../assets/amenities/theater.webp'
 
 // Placeholder page: the content for Features has not been provided yet, so this is the page's
-// frame only, in the site's maroon with gold details, with room for the content to come.
+// frame only - the title, a "coming soon" mark and the picture the menu shows for it.
 function Features({ onClose }) {
   const rootRef = useRef(null)
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.6 })
-      tl.fromTo('.ft-waves', { opacity: 0 }, { opacity: 1, duration: 2 }, 0.2)
-      tl.fromTo('.ft-top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.9 }, 0.3)
-      tl.fromTo('.ft-line', { yPercent: 110 }, { yPercent: 0, duration: 1, ease: 'power4.out' }, 0.5)
-      tl.fromTo('.ft-fade', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.7)
+      const tl = gsap.timeline({ delay: PAGE_IN })
+      tl.add(fx.fade('.tb-anim, .ft-back', { y: -10 }), 0)
+      tl.add(fx.panel('.ft-frame'), 0.1)
+      tl.add(fx.corners('.ft-frame .tr-corner'), 0.4)
+      tl.fromTo('.ft-photo', { scale: 1.04 }, { scale: 1, duration: 2.4, ease: 'power2.out' }, 0.1)
+      tl.add(fx.fade('.ft-label'), 0.35)
+      tl.add(fx.heading('.ft-line'), 0.45)
+      tl.add(fx.line('.ft-hair'), 0.6)
+      tl.add(fx.fade('.ft-fade', { stagger: 0.1 }), 0.7)
     }, rootRef)
     return () => ctx.revert()
   }, [])
 
   return (
-    <section
-      ref={rootRef}
-      className="relative h-svh w-full overflow-hidden text-cream"
-      style={{ background: 'radial-gradient(60rem 38rem at 50% 38%, rgba(120,80,56,0.55) 0%, transparent 72%), radial-gradient(70rem 40rem at 50% 0%, rgba(201,139,98,0.08) 0%, transparent 62%), #1c1714' }}
-    >
-      <img
-        src={waves}
-        alt=""
-        draggable={false}
-        className="ft-waves pointer-events-none absolute -left-[4%] bottom-0 h-[62%] w-auto max-w-none select-none opacity-70 mix-blend-screen"
-        style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)', maskImage: 'radial-gradient(120% 105% at 0% 100%, #000 42%, transparent 82%)' }}
-      />
-      <img
-        src={waves}
-        alt=""
-        draggable={false}
-        className="ft-waves pointer-events-none absolute -right-[4%] bottom-0 h-[62%] w-auto max-w-none -scale-x-100 select-none opacity-70 mix-blend-screen"
-        style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 100% 100%, #000 42%, transparent 82%)', maskImage: 'radial-gradient(120% 105% at 100% 100%, #000 42%, transparent 82%)' }}
-      />
-      <Specks className="z-[1]" />
-
-      <button type="button" onClick={onClose} className="ft-top absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
-        <BrandMark />
-      </button>
-      <div className="ft-top absolute right-5 top-5 z-20 sm:right-8 md:right-12 md:top-9">
-        <BackButton onClick={onClose} />
-      </div>
-
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
-        <span className="ft-fade flex items-center gap-4 text-[0.625rem] uppercase tracking-[0.4rem] text-cream/80">
-          <i className="block h-px w-10" style={{ background: `linear-gradient(90deg, transparent, ${GOLD})` }} />
-          Tughra Royale
-          <i className="block h-px w-10" style={{ background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+    <section ref={rootRef} className="relative flex min-h-svh w-full flex-col bg-espresso text-cream side:h-svh side:overflow-hidden">
+      <TopBar onBrand={onClose}>
+        <span className="ft-back">
+          <BackControl onClick={onClose} />
         </span>
-        <div className="mt-5 overflow-hidden pb-2">
-          <h1 className="ft-line font-serif text-[clamp(2.6rem,5vw,4.6rem)] font-normal uppercase leading-[1.05] tracking-[0.12em] text-cream">Features</h1>
+      </TopBar>
+
+      <div className="flex flex-1 flex-col gap-8 px-5 pb-[max(2rem,var(--safe-b))] pt-[7.25rem] sm:px-8 md:pt-[8.5rem] side:flex-row side:items-stretch side:gap-14 side:px-12 side:pb-10 side:pt-[8.25rem] xl:pl-[4.5rem] short:gap-6 short:px-5 short:pb-3 short:pt-[3.6rem]">
+        {/* the words */}
+        <div className="flex flex-col justify-end side:w-[34%] side:pb-6">
+          <span className="ft-label tr-label flex items-center gap-4">
+            01 · Tughra Royale
+            <i className="tr-hair is-pale block w-12" />
+          </span>
+          <h1 className="mt-5 font-serif text-[clamp(3rem,5.4vw,5.4rem)] font-normal leading-[0.98] text-cream short:mt-2 short:text-[2.4rem]">
+            <span className="ft-line block pb-1">Features</span>
+          </h1>
+          <i className="ft-hair tr-hair mt-7 w-24 short:mt-3" />
+          <span className="ft-fade tr-label mt-7 text-gold short:mt-3">Coming soon</span>
+          <p className="ft-fade mt-3 max-w-[24rem] text-[0.9375rem] leading-[1.75] text-parchment/85 short:text-[0.8125rem]">The details will be added here.</p>
         </div>
-        <i className="ft-fade mt-3 block h-1.5 w-1.5 rotate-45" style={{ background: GOLD }} />
+
+        {/* the picture, in a bronze frame */}
+        <div className="ft-frame relative min-h-[18rem] flex-1 side:min-h-0">
+          <span className="pointer-events-none absolute inset-0 rounded-card border border-bronze/35" aria-hidden="true" />
+          <Corners inset="0.35rem" />
+          <div className="absolute inset-[0.7rem] overflow-hidden rounded-[0.75rem] bg-cocoa">
+            <img src={theatre} alt="" className="ft-photo h-full w-full object-cover" draggable={false} />
+            <div className="pointer-events-none absolute inset-0 bg-espresso/25" />
+          </div>
+        </div>
       </div>
     </section>
   )
