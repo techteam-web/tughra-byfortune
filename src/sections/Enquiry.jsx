@@ -1,54 +1,35 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { gsap } from 'gsap'
-import BrandMark from '../components/BrandMark.jsx'
-import BackButton from '../components/BackButton.jsx'
-import { Specks } from '../components/Ornaments.jsx'
+import { gsap, fx, PAGE_IN } from '../motion/index.js'
+import { TopBar, BackControl } from '../ui/controls.jsx'
+import { IcArrow } from '../ui/icons.jsx'
 import tower from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
-import waves from '../assets/decor/enquiry-waves.png'
 
 // Set to a URL that accepts a JSON POST ({ name, phone }) to deliver enquiries.
 // While empty, the form validates and confirms on screen but the details are
 // NOT sent anywhere.
 const ENQUIRY_ENDPOINT = ''
 
-// The dark pages' palette: black with a warm cast, gold for every fine detail.
-const GOLD = '#c98b62'
-const GOLD_LIGHT = '#e8b48f'
-const INK = '#14090b'
-const ERR = '#ff9a8a'
-const GOLD_BTN = 'linear-gradient(135deg,#e8b48f,#b97a52)'
-
 const isName = (v) => v.trim().length >= 2
 const isPhone = (v) => v.replace(/\D/g, '').length >= 7
 
-const input =
-  'mt-1.5 w-full border-0 border-b border-[rgba(239,226,212,0.22)] bg-transparent px-0 pb-3 pt-1.5 text-[1rem] text-[#efe2d4] outline-none transition-colors duration-300 placeholder:text-[rgba(239,226,212,0.3)] focus:border-[#c98b62] [&:-webkit-autofill]:[-webkit-text-fill-color:#efe2d4] [&:-webkit-autofill]:shadow-[inset_0_0_0_40px_#2a1219]'
-
-const caption = 'flex items-center gap-1.5 text-[0.5625rem] font-medium uppercase tracking-[0.28rem] text-[rgba(239,226,212,0.6)]'
-
-function Field({ label, error, children }) {
+function Field({ id, label, error, children }) {
   return (
-    <label className="eq-row group block">
-      <span className={`${caption} transition-colors duration-300 group-focus-within:text-[#c98b62]`}>
+    <div className="eq-row">
+      <label htmlFor={id} className="tr-label flex items-center gap-1.5">
         {label}
-        <span style={{ color: GOLD }}>*</span>
-      </span>
+        <span className="text-gold" aria-hidden="true">*</span>
+      </label>
       {children}
-      <span className="mt-1.5 block min-h-[0.875rem] text-[0.6875rem] leading-[0.875rem]" style={{ color: ERR }}>{error}</span>
-    </label>
+      <span id={`${id}-err`} className="mt-1.5 block min-h-[1rem] text-[0.75rem] leading-4 text-alert" aria-live="polite">
+        {error}
+      </span>
+    </div>
   )
 }
 
-const Arrow = () => (
-  <svg className="transition-transform duration-300 group-hover:translate-x-1" width="14" height="10" viewBox="0 0 16 12" fill="none" aria-hidden="true">
-    <path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
-// The slanted cut. The photo owns the left 62% of the page on desktop and its right edge runs from
-// the top corner down and in to 82% of its width; on phones the photo sits on top and its bottom
-// edge slants instead. The gold double rule follows the same cut.
-
+// The slanted cut: the photo owns the left 62% of the page on desktop and its right edge runs
+// from the top corner down and in to 82% of its width; on phones the photo sits on top and its
+// bottom edge slants instead. A bronze double rule draws itself along the cut.
 function Enquiry({ onClose }) {
   const rootRef = useRef(null)
   const [values, setValues] = useState({ name: '', phone: '' })
@@ -57,19 +38,28 @@ function Enquiry({ onClose }) {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.6 })
-      tl.fromTo('.eq-media', { xPercent: -6, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 1.4, ease: 'power3.inOut' }, 0)
-      tl.fromTo('.eq-photo', { scale: 1.16 }, { scale: 1, duration: 2.6, ease: 'power2.out' }, 0)
-      tl.fromTo('.eq-waves', { opacity: 0 }, { opacity: 1, duration: 2 }, 0.3)
-      tl.fromTo('.eq-rule', { opacity: 0 }, { opacity: 1, duration: 1.2 }, 0.8)
-      tl.fromTo('.eq-cap', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.1 }, 0.9)
-      tl.fromTo('.eq-line', { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'power4.out' }, 0.5)
-      tl.fromTo('.eq-fade', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.6)
-      tl.fromTo('.eq-row', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08 }, 0.85)
+      const tl = gsap.timeline({ delay: PAGE_IN })
+      tl.add(fx.show('.eq-media', { duration: 1.2 }), 0)
+      tl.fromTo('.eq-photo', { scale: 1.04 }, { scale: 1, duration: 2.6, ease: 'power2.out' }, 0)
+      tl.add(fx.fade('.tb-anim, .eq-back', { y: -10 }), 0.1)
+      tl.add(fx.draw('.eq-rule line', { stagger: 0.15, duration: 1.3 }), 0.4)
+      tl.add(fx.fade('.eq-cap', { stagger: 0.1 }), 0.7)
+      tl.add(fx.fade('.eq-label'), 0.4)
+      tl.add(fx.heading('.eq-line', { stagger: 0.08 }), 0.5)
+      tl.add(fx.fade('.eq-row', { stagger: 0.08 }), 0.75)
     }, rootRef)
     return () => ctx.revert()
   }, [])
+
+  // the thank-you: the ring and the tick draw on
+  useLayoutEffect(() => {
+    if (status !== 'done') return
+    const ctx = gsap.context(() => {
+      fx.draw('.eq-done path, .eq-done circle', { stagger: 0.25, duration: 1 })
+      fx.fade('.eq-done-copy', { stagger: 0.1, delay: 0.4 })
+    }, rootRef)
+    return () => ctx.revert()
+  }, [status])
 
   const set = (k) => (e) => {
     setValues((v) => ({ ...v, [k]: e.target.value }))
@@ -100,111 +90,107 @@ function Enquiry({ onClose }) {
   }
 
   return (
-    <section
-      ref={rootRef}
-      className="relative flex min-h-svh w-full flex-col overflow-hidden text-cream side:h-svh side:flex-row"
-      style={{ background: 'radial-gradient(52rem 40rem at 78% 45%, var(--royal-glow) 0%, rgba(46,34,28,0.2) 50%, transparent 76%), radial-gradient(60rem 40rem at 95% 0%, rgba(201,139,98,0.07) 0%, transparent 62%), radial-gradient(40rem 28rem at 100% 100%, rgba(46,34,28,0.4) 0%, transparent 70%), var(--royal-base)' }}
-    >
-      {/* Black marble with flowing gold lines, mirrored into the right-hand corner */}
-      <img
-        src={waves}
-        alt=""
-        draggable={false}
-        className="eq-waves pointer-events-none absolute -right-[6%] bottom-0 h-[26%] w-auto max-w-none -scale-x-100 select-none opacity-60 mix-blend-screen side:h-[78%] side:opacity-70"
-        style={{ WebkitMaskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)', maskImage: 'radial-gradient(120% 105% at 100% 100%, #000 40%, transparent 80%)' }}
-      />
-      <Specks className="z-[1]" />
-
+    <section ref={rootRef} className="relative flex min-h-svh w-full flex-col bg-espresso text-cream side:h-svh side:flex-row side:overflow-hidden">
       {/* ---------- The photograph, cut on a slant ---------- */}
       <div className="eq-media relative z-[2] h-[22rem] w-full shrink-0 sm:h-[26rem] side:absolute side:inset-y-0 side:left-0 side:h-auto side:w-[62%] short:w-[56%]">
-        <div className="absolute inset-0 overflow-hidden bg-[#0a0607] [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] side:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
+        <div className="absolute inset-0 overflow-hidden bg-cocoa [clip-path:polygon(0_0,100%_0,100%_88%,0_100%)] side:[clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]">
           <img src={tower} alt="Tughra Royale at golden hour" className="eq-photo absolute inset-0 h-full w-full object-cover" style={{ objectPosition: '50% 30%' }} draggable={false} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, rgba(8,6,5,0.9) 0%, rgba(8,6,5,0.45) 28%, rgba(8,6,5,0) 56%), linear-gradient(180deg, rgba(8,6,5,0.55) 0%, rgba(8,6,5,0) 24%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(0deg, var(--espresso) 0%, var(--scrim) 22%, transparent 56%), linear-gradient(180deg, var(--scrim) 0%, transparent 26%)' }} />
         </div>
 
-        {/* gold double rule along the cut */}
-        <svg className="eq-rule pointer-events-none absolute inset-0 hidden h-full w-full side:block" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="100" y1="0" x2="82" y2="100" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-          <line x1="101.6" y1="0" x2="83.6" y2="100" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        {/* bronze double rule along the cut */}
+        <svg className="eq-rule pointer-events-none absolute inset-0 hidden h-full w-full text-bronze side:block" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="100" y1="0" x2="82" y2="100" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <line x1="101.6" y1="0" x2="83.6" y2="100" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         </svg>
-        <svg className="eq-rule pointer-events-none absolute inset-0 h-full w-full side:hidden" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="0" y1="100" x2="100" y2="88" stroke={GOLD} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-          <line x1="0" y1="103.5" x2="100" y2="91.5" stroke={GOLD} strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+        <svg className="eq-rule pointer-events-none absolute inset-0 h-full w-full text-bronze side:hidden" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="0" y1="100" x2="100" y2="88" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          <line x1="0" y1="103.5" x2="100" y2="91.5" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         </svg>
 
         {/* caption, bottom-left of the photograph */}
-        <div className="absolute bottom-0 left-0 px-6 pb-10 sm:px-10 side:pb-12 side:pl-14 xl:pl-[4.5rem]">
-          <span className="eq-cap flex items-center gap-3 text-[0.5625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD_LIGHT }}>
-            <i className="block h-px w-8" style={{ background: GOLD }} />
+        <div className="absolute bottom-0 left-0 px-6 pb-12 sm:px-10 side:pb-12 side:pl-12 xl:pl-[4.5rem] short:pb-4 short:pl-5">
+          <span className="eq-cap tr-label flex items-center gap-3">
+            <i className="tr-hair is-pale block w-8" />
             Tughra Royale
           </span>
-          <p className="eq-cap mt-3 hidden font-serif text-[clamp(1.5rem,2.2vw,2.1rem)] font-normal leading-[1.14] text-cream sm:block">
+          <p className="eq-cap mt-3 hidden font-serif text-[clamp(1.6rem,2.3vw,2.2rem)] font-normal leading-[1.14] text-cream sm:block short:hidden">
             The Emperor&rsquo;s Seal,
             <br />
-            <span style={{ color: GOLD_LIGHT }}>above Mumbai Central.</span>
+            <span className="text-gold-pale">above Mumbai Central.</span>
           </p>
         </div>
       </div>
 
-      {/* Top bar */}
-      <button type="button" onClick={onClose} className="absolute left-5 top-5 z-20 border-none bg-transparent p-0 text-left sm:left-8 md:left-12 md:top-9">
-        <BrandMark />
-      </button>
-      <div className="absolute right-5 top-5 z-20 sm:right-8 md:right-12 md:top-9">
-        <BackButton onClick={onClose} />
-      </div>
+      <TopBar onBrand={onClose} sticky fixed>
+        <span className="eq-back">
+          <BackControl onClick={onClose} />
+        </span>
+      </TopBar>
 
       {/* ---------- The form: just name, phone and send ---------- */}
-      <div className="relative z-10 flex flex-1 items-center px-6 pb-12 pt-10 sm:px-10 side:ml-[62%] side:px-0 side:pb-0 side:pt-0 short:ml-[56%] short:px-5 short:pb-2 short:pt-12">
+      <div className="relative z-10 flex flex-1 items-center px-6 pb-[max(3rem,var(--safe-b))] pt-10 sm:px-10 side:ml-[62%] side:px-0 side:pb-0 side:pt-0 short:ml-[56%] short:px-5 short:pb-2 short:pt-12">
         <div className="mx-auto w-full max-w-[26rem] side:max-w-[24rem] xl:max-w-[26rem] short:max-w-none">
           {status === 'done' ? (
-            <div className="text-center">
-              <svg width="66" height="66" viewBox="0 0 64 64" fill="none" className="mx-auto" aria-hidden="true">
-                <circle cx="32" cy="32" r="29" stroke={GOLD} strokeWidth="1.2" />
-                <path d="M20 33l8 8 16-17" stroke={GOLD_LIGHT} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <div className="eq-done text-center">
+              <svg width="68" height="68" viewBox="0 0 64 64" fill="none" className="mx-auto text-gold" aria-hidden="true">
+                <circle cx="32" cy="32" r="29" stroke="currentColor" strokeOpacity="0.7" strokeWidth="1" />
+                <path d="M20 33l8 8 16-17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <h3 className="mt-6 font-serif text-[2.4rem] font-normal text-cream">Thank you</h3>
-              <p className="mx-auto mt-3 max-w-[20rem] text-[0.8125rem] leading-relaxed text-cream/70">
+              <h3 className="eq-done-copy mt-7 font-serif text-[2.6rem] font-normal leading-none text-cream">Thank you</h3>
+              <p className="eq-done-copy mx-auto mt-4 max-w-[20rem] text-[0.875rem] leading-relaxed text-parchment/85">
                 {ENQUIRY_ENDPOINT ? 'We have your details and will be in touch shortly.' : 'Your details are noted on this screen only. Contact delivery is not connected yet.'}
               </p>
-              <button type="button" onClick={onClose} className="lux-btn group mx-auto mt-8 flex items-center gap-3 rounded-full px-8 py-3.5 text-[0.625rem] font-medium uppercase tracking-[0.22rem]">
+              <button type="button" onClick={onClose} className="eq-done-copy tr-btn tr-btn--outline mx-auto mt-9">
                 Back to menu
-                <Arrow />
+                <IcArrow size={15} className="tr-arrow" />
               </button>
             </div>
           ) : (
-            <form onSubmit={submit} noValidate>
-              <span className="eq-fade flex items-center gap-4 text-[0.625rem] uppercase tracking-[0.4rem] text-cream/80">
-                <i className="block h-px w-10" style={{ background: `linear-gradient(90deg, transparent, ${GOLD})` }} />
+            <form onSubmit={submit} noValidate className="relative">
+              <span className="eq-label tr-label flex items-center gap-4">
                 Enquire
+                <i className="tr-hair block w-10" />
               </span>
-              <div className="mt-4 short:mt-2 overflow-hidden pb-1.5">
-                <h1 className="eq-line font-serif text-[clamp(2.1rem,3.3vw,3.3rem)] font-normal leading-[1.08] text-cream short:text-[1.7rem]">
-                  Begin the
-                  <br />
-                  <span className="italic" style={{ color: GOLD_LIGHT }}>conversation.</span>
-                </h1>
+              <h1 className="mt-4 font-serif text-[clamp(2.2rem,3.3vw,3.3rem)] font-normal leading-[1.08] text-cream short:mt-2 short:text-[1.7rem]">
+                <span className="eq-line block">Begin the</span>
+                <span className="eq-line block text-gold-pale">conversation.</span>
+              </h1>
+
+              <div className="mt-8 space-y-3 short:mt-3 short:space-y-0">
+                <Field id="eq-name" label="Full name" error={errors.name}>
+                  <input
+                    id="eq-name"
+                    className="tr-input"
+                    placeholder="Your name"
+                    value={values.name}
+                    onChange={set('name')}
+                    autoComplete="name"
+                    aria-invalid={!!errors.name}
+                    aria-describedby="eq-name-err"
+                  />
+                </Field>
+                <Field id="eq-phone" label="Phone number" error={errors.phone}>
+                  <input
+                    id="eq-phone"
+                    className="tr-input"
+                    placeholder="+91"
+                    type="tel"
+                    inputMode="tel"
+                    value={values.phone}
+                    onChange={set('phone')}
+                    autoComplete="tel"
+                    aria-invalid={!!errors.phone}
+                    aria-describedby="eq-phone-err"
+                  />
+                </Field>
               </div>
 
-              <div className="mt-8 space-y-4 short:mt-3 short:space-y-1">
-                <Field label="Full name" error={errors.name}>
-                  <input className={input} placeholder="Your name" value={values.name} onChange={set('name')} autoComplete="name" />
-                </Field>
-                <Field label="Phone number" error={errors.phone}>
-                  <input className={input} placeholder="+91" type="tel" value={values.phone} onChange={set('phone')} autoComplete="tel" />
-                </Field>
-              </div>
+              {status === 'failed' && <p className="mt-1 text-[0.75rem] text-alert">Something went wrong. Please try again.</p>}
 
-              {status === 'failed' && <p className="mt-2 text-[0.75rem]" style={{ color: ERR }}>Something went wrong. Please try again.</p>}
-
-              <button
-                type="submit"
-                disabled={status === 'sending'}
-                className="eq-row group mt-5 short:mt-2 flex w-full items-center justify-between rounded-full px-8 py-4 short:py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.25rem] transition-all duration-300 hover:brightness-110 disabled:opacity-60"
-                style={{ background: GOLD_BTN, color: INK, boxShadow: '0 0.75rem 2rem rgba(201,139,98,0.25)' }}
-              >
+              <button type="submit" disabled={status === 'sending'} className="eq-row tr-btn tr-btn--gold mt-4 w-full justify-between short:mt-1">
                 {status === 'sending' ? 'Sending…' : 'Send enquiry'}
-                <Arrow />
+                <IcArrow size={15} className="tr-arrow" />
               </button>
             </form>
           )}
