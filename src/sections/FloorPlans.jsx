@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import BrandMark from '../components/BrandMark.jsx'
-import BackButton from '../components/BackButton.jsx'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { gsap, fx, EASE, PAGE_IN, glideTo } from '../motion/index.js'
+import { TopBar, BackControl } from '../ui/controls.jsx'
 import FloorStage from '../components/FloorStage.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
@@ -10,7 +10,6 @@ const DEFAULT_FLOOR = '_17th'
 
 const TOWER_IMG = '/assets/menu.png'
 const BUILDING_SVG_URL = '/assets/svg/Building.svg'
-const GOLD = '#c98b62'
 
 // Native size of TOWER_IMG - Building.svg's shapes are traced against this
 // exact coordinate space, so the overlay <svg> shares the same viewBox.
@@ -41,6 +40,10 @@ function FloorPlans({ onClose }) {
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
   const [unitId, setUnitId] = useState(UNITS[0].id)
+  const rootRef = useRef(null)
+  const pillRef = useRef(null)
+  const btnRefs = useRef({})
+  const placed = useRef(false)
 
   // Load Building.svg itself and measure each floor shape's real bounding
   // box, rather than keeping a hand-copied duplicate of its path data - any
@@ -91,6 +94,34 @@ function FloorPlans({ onClose }) {
     }
   }, [])
 
+  // Entrance
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ delay: PAGE_IN })
+      tl.add(fx.fade('.tb-anim, .fp-back', { y: -10 }), 0)
+      tl.add(fx.fade('.fp-picker-head', { y: 8 }), 0.15)
+      tl.add(fx.lineY('.fp-rail'), 0.2)
+      tl.add(fx.show('.fp-tower', { duration: 1.2 }), 0.2)
+      tl.add(fx.fade('.fp-tagline', { y: 8 }), 0.7)
+    }, rootRef)
+    return () => ctx.revert()
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!floors.length) return
+    gsap.fromTo(rootRef.current.querySelectorAll('.fp-num'), { opacity: 0 }, { opacity: 1, duration: 0.5, stagger: 0.02, ease: EASE.soft, delay: 0.2 })
+  }, [floors.length])
+
+  // The gold pill glides along the rail to the chosen floor
+  useLayoutEffect(() => {
+    const place = (immediate) => glideTo(pillRef.current, btnRefs.current[selectedFloor], { axis: 'y', size: false, immediate })
+    place(!placed.current)
+    if (btnRefs.current[selectedFloor]) placed.current = true
+    const onResize = () => place(true)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [selectedFloor, floors.length])
+
   const activeFloor = floors.find((f) => f.id === selectedFloor)
   // top of the tower first, as the picker reads: Terrace, 24 down to 1, Ground
   const rank = (f) => (f.num === 'T' ? 1000 : f.num === 'G' ? -1 : parseInt(f.num, 10))
@@ -109,70 +140,69 @@ function FloorPlans({ onClose }) {
   }
 
   return (
-    <section
-      className="relative flex min-h-svh w-full flex-col text-cream lg:h-svh lg:overflow-hidden"
-      style={{ background: 'radial-gradient(38rem 34rem at 30% 62%, rgba(193,110,50,0.2) 0%, rgba(120,80,56,0.12) 45%, transparent 72%), var(--royal-base)' }}
-    >
-      {/* Logo and Back, as on every page */}
-      <div className="relative z-20 flex shrink-0 items-start justify-between px-5 pt-5 sm:px-8 md:px-12 md:pt-9 lg:absolute lg:inset-x-0 lg:top-0">
-        <button type="button" onClick={onClose} className="border-none bg-transparent p-0 text-left">
-          <BrandMark />
-        </button>
-        <BackButton onClick={onClose} />
-      </div>
+    <section ref={rootRef} className="relative flex min-h-svh w-full flex-col bg-espresso text-cream lg:h-svh lg:overflow-hidden">
+      <TopBar onBrand={onClose} sticky className="lg:absolute">
+        <span className="fp-back">
+          <BackControl onClick={onClose} />
+        </span>
+      </TopBar>
 
-      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-8 pt-6 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[11rem_minmax(0,0.85fr)_minmax(0,1.5fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[2.5rem] lg:pt-[8rem] xl:pl-[4.5rem]">
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.75rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-[max(2rem,var(--safe-b))] pt-4 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[10rem_minmax(0,0.8fr)_minmax(0,1.55fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[2.5rem] lg:pt-[8rem] xl:pl-[4.5rem]">
         {/* ---------- Floor picker ---------- */}
         <nav className="flex min-h-0 flex-col justify-center" aria-label="Floor picker">
-          <div className="mb-3 flex items-start gap-2.5 text-[0.5625rem] uppercase leading-[1.5] tracking-[0.25rem] text-cream/70">
-            <span className="mt-[0.45rem] block h-px w-4 shrink-0" style={{ background: GOLD }} />
-            <span>
-              Floor
-              <br />
-              Picker
-            </span>
-          </div>
-          <ul className="relative flex h-[min(56svh,26rem)] flex-col justify-between lg:h-[min(calc(100svh-23rem),30rem)]">
-            {/* the ruler the floors hang on */}
-            <span className="pointer-events-none absolute bottom-1 top-1 left-[2.15rem] w-px bg-[#c98b62]/25" aria-hidden="true" />
+          <span className="fp-picker-head tr-label mb-4 block leading-[1.6]">
+            Floor
+            <br />
+            picker
+          </span>
+          <ul className="relative flex h-[29rem] flex-col justify-between lg:h-[min(calc(100svh-23rem),30rem)]">
+            {/* the rail the floors hang on */}
+            <span className="fp-rail tr-vhair pointer-events-none absolute bottom-0 top-0 left-[2.6rem]" aria-hidden="true" />
+            {/* the chosen floor: a gold pill with ink figures */}
+            <span ref={pillRef} className="pointer-events-none absolute left-0 top-0 h-4 w-[2.4rem] rounded-full bg-gold" style={{ opacity: activeFloor ? 1 : 0 }} aria-hidden="true" />
             {ordered.map((f) => {
               const locked = LOCKED_FLOORS.has(f.id)
               const on = f.id === selectedFloor
               const hot = f.id === hoveredFloor
               return (
-                <li key={f.id} className="relative">
+                <li key={f.id}>
                   <button
+                    ref={(el) => (btnRefs.current[f.id] = el)}
                     type="button"
                     disabled={locked}
                     onClick={() => setSelectedFloor(f.id)}
                     onMouseEnter={() => setHoveredFloor(f.id)}
                     onMouseLeave={() => setHoveredFloor(null)}
                     aria-pressed={on}
-                    aria-label={f.label}
-                    className="relative flex w-[4.25rem] items-center gap-2 rounded-full border bg-transparent py-[0.12rem] pl-2 pr-1 text-left leading-none transition-colors duration-300 disabled:cursor-default"
-                    style={{ borderColor: on ? 'rgba(201,139,98,0.75)' : 'transparent', background: on ? 'rgba(201,139,98,0.12)' : 'transparent' }}
+                    aria-label={locked ? `${f.label} (not available)` : f.label}
+                    className="fp-num tr-focus relative flex h-4 items-center gap-2 rounded-full border-none bg-transparent p-0 text-left leading-none disabled:cursor-default"
                   >
-                    {on && <i className="absolute -left-2.5 block h-1.5 w-1.5 rounded-full" style={{ background: GOLD, boxShadow: '0 0 0.5rem rgba(201,139,98,0.9)' }} />}
-                    <span className={`w-5 text-right text-[0.625rem] tabular-nums transition-colors duration-300 ${on ? 'font-semibold text-[#e8b48f]' : locked ? 'text-cream/20' : hot ? 'text-cream' : 'text-cream/60'}`}>
+                    <span
+                      className={`w-[2.4rem] text-center font-sans text-[0.625rem] tabular-nums tracking-[0.06em] transition-colors duration-300 ${
+                        on ? 'font-semibold text-ink' : locked ? 'text-parchment/25' : hot ? 'text-cream' : 'text-parchment/70'
+                      }`}
+                    >
                       {f.num}
                     </span>
-                    <span className="block h-px w-3" style={{ background: on || hot ? GOLD : 'rgba(201,139,98,0.3)' }} />
+                    <span
+                      className={`block h-px origin-left transition-[transform,background-color] duration-300 ${on || hot ? 'scale-x-100 bg-gold' : 'scale-x-[0.6] bg-bronze/45'}`}
+                      style={{ width: '0.9rem' }}
+                    />
                   </button>
                 </li>
               )
             })}
           </ul>
-          <p className="mt-5 hidden whitespace-nowrap text-[0.5rem] uppercase leading-[1.9] tracking-[0.25rem] text-cream/60 lg:block">
+          <p className="fp-tagline tr-label mt-6 hidden whitespace-nowrap text-[0.5625rem] leading-[1.9] text-gold-pale/70 lg:block">
             A higher
             <br />
             standard of living
-            <span className="mt-3 block h-px w-10" style={{ background: GOLD }} />
+            <span className="tr-hair mt-3 block w-10" />
           </p>
         </nav>
 
         {/* ---------- The tower: tap a floor ---------- */}
-        <div className="relative flex min-h-0 items-center justify-center">
-          <span className="pointer-events-none absolute bottom-[8%] left-1/2 h-[18%] w-[90%] -translate-x-1/2 rounded-[50%]" style={{ background: 'radial-gradient(closest-side, rgba(214,140,95,0.35), transparent)' }} aria-hidden="true" />
+        <div className="fp-tower relative flex min-h-0 items-center justify-center">
           <div className="relative shrink-0" style={{ height: 'min(calc(100svh - 9rem), 44rem)', maxHeight: '100%', aspectRatio: `${CROP.width} / ${CROP.height}` }}>
             <div className="relative h-full w-full select-none overflow-hidden">
               <div style={innerStyle}>
@@ -190,8 +220,9 @@ function FloorPlans({ onClose }) {
                           style: {
                             cursor: 'pointer',
                             pointerEvents: 'all',
-                            transition: 'fill 0.2s ease',
-                            fill: isSelected ? 'rgba(201,139,98,0.42)' : isHovered ? 'rgba(201,139,98,0.26)' : 'rgba(201,139,98,0.01)',
+                            transition: 'fill-opacity 0.3s ease',
+                            fill: 'var(--gold)',
+                            fillOpacity: isSelected ? 0.45 : isHovered ? 0.24 : 0.01,
                           },
                         }
                     return floor.type === 'path' ? <path key={floor.id} d={floor.d} {...shapeProps} /> : <polygon key={floor.id} points={floor.points} {...shapeProps} />
@@ -203,7 +234,7 @@ function FloorPlans({ onClose }) {
         </div>
 
         {/* ---------- The residence on the chosen floor ---------- */}
-        {activeFloor && <FloorStage key={activeFloor.id + unitId} floor={activeFloor} unitId={unitId} setUnitId={setUnitId} />}
+        {activeFloor && <FloorStage floor={activeFloor} unitId={unitId} setUnitId={setUnitId} />}
       </div>
     </section>
   )

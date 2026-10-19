@@ -1,170 +1,174 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { gsap } from 'gsap'
-
+import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
+import { Segmented, Corners, IconButton } from '../ui/controls.jsx'
+import { IcArea, IcSea, IcBed, IcLayers, IcLiving, IcView, IcUnit, IcCompass, IcKey, IcArrow, IcClose } from '../ui/icons.jsx'
 import { UNITS } from './floorUnits.js'
 
 const TBC = 'To be confirmed'
-const GOLD = '#a8724e'
-const INK = '#2a1a14'
-
-const Ico = ({ children, size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    {children}
-  </svg>
-)
+const UNIT_OPTIONS = UNITS.map((u) => ({ value: u.id, label: u.label }))
 
 const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Terrace' : `Floor ${parseInt(f.num, 10)}`)
 
-// Right-hand column: the residence card for the chosen floor and unit, and the strip of facts beneath it.
-// Keyed by floor and unit in the parent, so the entrance plays on every change.
+// Right-hand column: the residence card for the chosen floor and unit (cream, as in the
+// "Floor 17" creative), and the strip of facts beneath it. The card stays mounted; when the
+// floor or unit changes its contents cross-fade.
 function FloorStage({ floor, unitId, setUnitId }) {
   const [zoom, setZoom] = useState(false)
   const rootRef = useRef(null)
+  const zoomRef = useRef(null)
+  const mounted = useRef(false)
   const unit = UNITS.find((u) => u.id === unitId)
 
+  // First arrival
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo('.fs-line', { yPercent: 110 }, { yPercent: 0, duration: 0.9, ease: 'power4.out' }, 0)
-      tl.fromTo('.fs-rise', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.06 }, 0.15)
-      tl.fromTo('.fs-plan', { clipPath: 'inset(0 100% 0 0 round 0.75rem)' }, { clipPath: 'inset(0 0% 0 0 round 0.75rem)', duration: 1, ease: 'power3.inOut' }, 0.1)
+      const tl = gsap.timeline({ delay: PAGE_IN + 0.2 })
+      tl.add(fx.panel('.fs-card'), 0)
+      tl.add(fx.corners('.fs-card .tr-corner'), 0.3)
+      tl.add(fx.heading('.fs-title'), 0.2)
+      tl.add(fx.fade('.fs-rise', { stagger: 0.06 }), 0.3)
+      tl.add(fx.fade('.fs-facts', { y: 12 }), 0.55)
     }, rootRef)
     return () => ctx.revert()
   }, [])
 
+  // Floor or unit changed: the words and the plan cross-fade in place
+  useLayoutEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true
+      return
+    }
+    const ctx = gsap.context(() => {
+      fx.heading('.fs-title', { duration: 0.6 })
+      gsap.fromTo('.fs-swap', { opacity: 0.15, y: 4 }, { opacity: 1, y: 0, duration: REDUCED ? 0.2 : 0.5, ease: EASE.soft, stagger: 0.03, overwrite: 'auto' })
+      gsap.fromTo('.fs-plan img', { opacity: 0 }, { opacity: 1, duration: REDUCED ? 0.2 : 0.7, ease: EASE.move, overwrite: 'auto' })
+    }, rootRef)
+    return () => ctx.revert()
+  }, [floor.id, unitId])
+
+  const closeZoom = useCallback(() => gsap.to(zoomRef.current, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.4, ease: EASE.soft, onComplete: () => setZoom(false) }), [])
+
   useEffect(() => {
     if (!zoom) return
-    const onKey = (e) => e.key === 'Escape' && setZoom(false)
+    const onKey = (e) => e.key === 'Escape' && closeZoom()
     window.addEventListener('keydown', onKey)
+    gsap.fromTo(zoomRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: REDUCED ? 0.15 : 0.5, ease: EASE.soft })
+    gsap.fromTo(zoomRef.current.querySelector('.fz-frame'), { opacity: 0, scale: 0.985 }, { opacity: 1, scale: 1, duration: REDUCED ? 0.15 : 0.7, ease: EASE.soft, delay: 0.1 })
     return () => window.removeEventListener('keydown', onKey)
-  }, [zoom])
+  }, [zoom, closeZoom])
 
   const specs = [
-    [<path key="a" d="M4 9V4h5M4 4l6 6M20 15v5h-5M20 20l-6-6M20 4v5M4 20v-5" />, 'Approx. area', unit.carpetArea ?? TBC, unit.carpetArea == null],
-    [<path key="b" d="M2 16c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0M2 11c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0" />, 'View', 'City + Sea', false],
-    [<path key="c" d="M4 12V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3M3 12h18v5H3zM5 17v2M19 17v2" />, 'Configuration', `${unit.bedrooms} Bedrooms`, false],
-    [<path key="d" d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5" />, 'Status', 'Choose a floor on the tower to see its residence.', false],
+    [IcArea, 'Approx. area', unit.carpetArea ?? TBC, unit.carpetArea == null],
+    [IcSea, 'View', 'City + Sea', false],
+    [IcBed, 'Configuration', `${unit.bedrooms} Bedrooms`, false],
+    [IcLayers, 'Status', 'Choose a floor on the tower to see its residence.', false],
   ]
 
   const highlights = [
-    [<path key="h1" d="M4 12V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3M3 12h18v5H3z" />, 'Ensuite bedrooms', 'Every bedroom with its own bath.'],
-    [<path key="h2" d="M3 20V9l9-5 9 5v11M9 20v-6h6v6" />, 'Spacious living and dining', 'Open, generous rooms for modern living.'],
-    [<><circle key="h3a" cx="12" cy="12" r="4" /><path key="h3b" d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>, 'Panoramic views', 'Over the city skyline and the sea.'],
+    [IcBed, 'Ensuite bedrooms', 'Every bedroom with its own bath.'],
+    [IcLiving, 'Spacious living and dining', 'Open, generous rooms for modern living.'],
+    [IcView, 'Panoramic views', 'Over the city skyline and the sea.'],
   ]
 
   const facts = [
-    [<path key="f1" d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />, 'Unit', `Signature ${unit.label} residence`],
-    [<><circle key="f2a" cx="12" cy="12" r="9" /><path key="f2b" d="M15.5 8.5l-2 5-5 2 2-5z" /></>, 'Facing', TBC],
-    [<path key="f3" d="M2 16c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0M2 11c1.5 1.3 3 1.3 4.5 0s3-1.3 4.5 0 3 1.3 4.5 0 3-1.3 4.5 0" />, 'Views', 'City skyline & the sea'],
-    [<circle key="f4" cx="12" cy="12" r="8" />, 'Availability', 'Enquire to check availability'],
+    [IcUnit, 'Unit', `Signature ${unit.label} residence`],
+    [IcCompass, 'Facing', TBC],
+    [IcSea, 'Views', 'City skyline & the sea'],
+    [IcKey, 'Availability', 'Enquire to check availability'],
   ]
 
   return (
     <div ref={rootRef} className="col-span-2 flex min-h-0 min-w-0 flex-col gap-4 lg:col-span-1 lg:justify-center">
       {/* ---------- The residence card ---------- */}
-      <div
-        className="relative min-w-0 rounded-[1.25rem] p-5 text-[#2a1a14] sm:p-7"
-        style={{ background: 'linear-gradient(160deg, #f8eee2 0%, #efe0cd 100%)', border: '1px solid rgba(201,139,98,0.55)', boxShadow: '0 2rem 4rem rgba(0,0,0,0.5)' }}
-      >
+      <div className="fs-card tr-card-light on-light min-w-0 p-5 sm:p-7">
+        <Corners />
         {/* header: the floor, and the residence type */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <span className="fs-rise flex items-center gap-3 text-[0.5625rem] font-medium uppercase tracking-[0.3rem] text-[#6b5a3a]">
-              Residence <i className="block h-px w-8" style={{ background: GOLD }} />
+            <span className="fs-rise tr-label flex items-center gap-3">
+              Residence <i className="block h-px w-8 bg-bronze-deep/60" />
             </span>
-            <div className="overflow-hidden pb-1">
-              <h2 className="fs-line mt-1 font-serif text-[clamp(2.4rem,4vw,3.6rem)] font-medium leading-none" style={{ color: INK }}>
-                {floorTitle(floor)}
-              </h2>
-            </div>
-            <p className="fs-rise mt-1.5 text-[0.6875rem] uppercase tracking-[0.3rem] text-[#3d2c22]">Signature {unit.label} residence</p>
+            <h2 className="mt-2 font-serif text-[clamp(2.4rem,3.8vw,3.5rem)] font-medium leading-none text-ink">
+              <span className="fs-title block pb-1">{floorTitle(floor)}</span>
+            </h2>
+            <p className="fs-rise fs-swap mt-2 font-sans text-[0.6875rem] uppercase tracking-[0.22em] text-ink-soft">Signature {unit.label} residence</p>
           </div>
-
-          {/* the unit types */}
-          <div className="fs-rise flex items-center gap-1 rounded-full border border-[#a8724e]/30 bg-white/40 p-1">
-            {UNITS.map((u) => {
-              const on = u.id === unitId
-              return (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => setUnitId(u.id)}
-                  aria-pressed={on}
-                  className="rounded-full border-none px-3.5 py-2 text-[0.625rem] font-medium uppercase tracking-[0.15rem] transition-all duration-500"
-                  style={{ background: on ? '#1d1012' : 'transparent', color: on ? '#e8b48f' : '#4a3f30' }}
-                >
-                  {u.label}
-                </button>
-              )
-            })}
+          <div className="fs-rise">
+            <Segmented options={UNIT_OPTIONS} value={unitId} onChange={setUnitId} label="Residence type" light />
           </div>
         </div>
 
-        {/* the specs */}
-        <dl className="fs-rise mt-5 grid grid-cols-2 overflow-hidden rounded-xl border border-[#a8724e]/25 bg-white/35 md:grid-cols-4">
-          {specs.map(([icon, label, value, muted], i) => (
-            <div key={label} className={`px-4 py-3.5 ${i % 2 ? 'border-l border-[#a8724e]/20' : ''} ${i > 1 ? 'border-t border-[#a8724e]/20 md:border-t-0' : ''} ${i === 2 ? 'md:border-l md:border-[#a8724e]/20' : ''}`}>
-              <span className="text-[#8f5f40]"><Ico size={18}>{icon}</Ico></span>
-              <dt className="mt-2 text-[0.5rem] font-medium uppercase tracking-[0.22rem] text-[#6b5a3a]">{label}</dt>
-              <dd className={`mt-1 font-serif leading-snug ${i === 3 ? 'text-[0.8125rem] text-[#6b5a3a]' : 'text-[1.125rem]'} ${muted ? 'text-[#2a1a14]/45' : ''}`}>{value}</dd>
+        {/* the four specs */}
+        <dl className="fs-rise mt-6 grid grid-cols-2 overflow-hidden rounded-tile border border-parchment md:grid-cols-4">
+          {specs.map(([Ic, label, value, muted], i) => (
+            <div
+              key={label}
+              className={`px-4 py-4 ${i % 2 ? 'border-l border-parchment' : ''} ${i > 1 ? 'border-t border-parchment md:border-t-0' : ''} ${i === 2 ? 'md:border-l md:border-parchment' : ''}`}
+            >
+              <span className="block text-bronze-deep">
+                <Ic size={19} />
+              </span>
+              <dt className="mt-2.5 font-sans text-[0.5625rem] font-medium uppercase tracking-[0.22em] text-bronze-deep">{label}</dt>
+              <dd className={`fs-swap mt-1 font-serif leading-snug ${i === 3 ? 'text-[0.875rem]' : 'text-[1.2rem]'} ${i === 3 || muted ? 'text-ink-soft' : 'text-ink'}`}>{value}</dd>
             </div>
           ))}
         </dl>
 
         {/* the plan, and what makes the residence */}
-        <div className="mt-5 grid gap-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <button
             type="button"
             onClick={() => setZoom(true)}
             aria-label={`View the ${unit.label} plan larger`}
-            className="fs-plan group relative aspect-[3/2] min-w-0 overflow-hidden rounded-xl border-none p-0"
-            style={{ background: '#bdb2a8' }}
+            className="fs-rise fs-plan tr-focus group relative min-w-0 rounded-tile border border-parchment bg-parchment/40 p-1.5"
           >
-            <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" draggable={false} />
+            <span className="block aspect-[3/2] overflow-hidden rounded-[0.55rem]">
+              <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
+            </span>
           </button>
 
-          <div className="flex min-w-0 flex-col justify-between gap-4">
+          <div className="flex min-w-0 flex-col justify-between gap-5">
             <div>
-              <span className="fs-rise flex items-center gap-3 text-[0.5625rem] font-medium uppercase tracking-[0.3rem] text-[#3d2c22]">
-                Residence highlights <i className="block h-px w-8" style={{ background: GOLD }} />
+              <span className="fs-rise tr-label flex items-center gap-3">
+                Residence highlights <i className="block h-px w-8 bg-bronze-deep/60" />
               </span>
               <ul className="mt-4 space-y-3.5">
-                {highlights.map(([icon, main, sub]) => (
-                  <li key={main} className="fs-rise flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#fff1d9]" style={{ background: 'linear-gradient(145deg,#b07a3c,#7a4a24)' }}>
-                      <Ico size={17}>{icon}</Ico>
+                {highlights.map(([Ic, main, sub]) => (
+                  <li key={main} className="fs-rise flex items-center gap-3.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tile border border-bronze/40 bg-bronze/10 text-bronze-deep">
+                      <Ic size={18} />
                     </span>
                     <span className="min-w-0 leading-tight">
-                      <span className="block font-serif text-[1rem]" style={{ color: INK }}>{main}</span>
-                      <span className="mt-0.5 block text-[0.6875rem] text-[#6b5a3a]">{sub}</span>
+                      <span className="block font-serif text-[1.05rem] text-ink">{main}</span>
+                      <span className="mt-0.5 block text-[0.75rem] text-ink-soft">{sub}</span>
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setZoom(true)}
-              className="fs-rise group flex items-center justify-between gap-3 self-start rounded-full px-7 py-3.5 text-[0.625rem] font-medium uppercase tracking-[0.22rem] text-[#efe2d4] shadow-[0_0.75rem_1.5rem_rgba(18,15,13,0.35)] transition-colors duration-300 hover:text-[#e8b48f]"
-              style={{ background: 'linear-gradient(180deg,#2a1519,#13100e)' }}
-            >
+            <button type="button" onClick={() => setZoom(true)} className="fs-rise tr-btn tr-btn--gold self-start">
               View floor plan
-              <svg className="transition-transform duration-300 group-hover:translate-x-1" width="16" height="11" viewBox="0 0 16 12" fill="none" aria-hidden="true"><path d="M1 6h13M9 1l5 5-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <IcArrow size={15} className="tr-arrow" />
             </button>
           </div>
         </div>
       </div>
 
       {/* ---------- The facts strip ---------- */}
-      <dl className="fs-rise grid grid-cols-2 rounded-[1.25rem] border border-[#c98b62]/30 md:grid-cols-4" style={{ background: 'linear-gradient(180deg, rgba(44,35,30,0.55) 0%, rgba(20,16,14,0.7) 100%)' }}>
-        {facts.map(([icon, label, value], i) => (
-          <div key={label} className={`flex items-start gap-3 px-5 py-4 ${i ? 'md:border-l md:border-[#c98b62]/20' : ''} ${i % 2 ? 'border-l border-[#c98b62]/20' : ''} ${i > 1 ? 'border-t border-[#c98b62]/20 md:border-t-0' : ''}`}>
-            <span className="mt-0.5 text-[#c98b62]"><Ico size={20}>{icon}</Ico></span>
+      <dl className="fs-facts tr-panel is-flat grid grid-cols-2 md:grid-cols-4">
+        {facts.map(([Ic, label, value], i) => (
+          <div
+            key={label}
+            className={`flex items-start gap-3 px-5 py-4 ${i ? 'md:border-l md:border-bronze/20' : ''} ${i % 2 ? 'border-l border-bronze/20' : ''} ${i > 1 ? 'border-t border-bronze/20 md:border-t-0' : ''}`}
+          >
+            <span className="mt-0.5 text-bronze">
+              <Ic size={19} />
+            </span>
             <span className="min-w-0">
-              <dt className="text-[0.5rem] font-medium uppercase tracking-[0.22rem] text-cream/60">{label}</dt>
-              <dd className={`mt-1 font-serif text-[0.875rem] leading-snug ${value === TBC ? 'text-cream/45' : 'text-cream'}`}>{value}</dd>
+              <dt className="tr-label text-[0.5625rem]">{label}</dt>
+              <dd className={`fs-swap mt-1 font-serif text-[0.95rem] leading-snug ${value === TBC ? 'text-parchment/60' : 'text-cream'}`}>{value}</dd>
             </span>
           </div>
         ))}
@@ -173,21 +177,26 @@ function FloorStage({ floor, unitId, setUnitId }) {
       {/* Larger view - portalled to <body> so nothing on the page can overlap it */}
       {zoom &&
         createPortal(
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pt-20 sm:p-10 sm:pt-24" style={{ background: 'rgba(14,11,10,0.94)' }} onClick={() => setZoom(false)}>
-            <button
-              type="button"
-              onClick={() => setZoom(false)}
-              aria-label="Close"
-              className="lux-btn absolute right-5 top-5 z-10 flex items-center gap-2.5 rounded-full px-5 py-2.5 text-[0.625rem] uppercase tracking-[0.25rem] sm:right-8 sm:top-8"
-            >
-              <Ico size={14}><path d="M6 6l12 12M18 6L6 18" /></Ico>
-              Close
-            </button>
-            <div className="relative h-full w-full max-w-[80rem] overflow-hidden rounded-2xl border border-[#c98b62]/40" style={{ background: '#bdb2a8' }} onClick={(e) => e.stopPropagation()}>
-              <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full object-contain" draggable={false} />
+          <div
+            ref={zoomRef}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--scrim)] p-4 pt-20 sm:p-10 sm:pt-24"
+            style={{ visibility: 'hidden' }}
+            onClick={closeZoom}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${unit.label} plan`}
+          >
+            <div className="absolute right-5 top-[max(1.25rem,var(--safe-t))] z-10 flex items-center gap-3 sm:right-8 sm:top-8">
+              <span className="tr-label hidden sm:inline">{unit.label} plan</span>
+              <IconButton label="Close" onClick={closeZoom}>
+                <IcClose size={17} />
+              </IconButton>
+            </div>
+            <div className="fz-frame relative h-full w-full max-w-[80rem] rounded-card border border-parchment bg-cream p-2" onClick={(e) => e.stopPropagation()}>
+              <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full rounded-[0.75rem] object-contain" draggable={false} />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   )
