@@ -1,9 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { gsap } from 'gsap'
-import BrandMark from '../components/BrandMark.jsx'
-import BackButton from '../components/BackButton.jsx'
-import './Menu.css'
-import './Showcase.css'
+import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
+import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
+import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose } from '../ui/icons.jsx'
 
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
 import extGolden from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
@@ -22,14 +20,12 @@ import intPodium from '../assets/amenities/podium-cam-01.webp'
 import intPool from '../assets/amenities/swimming-pool.webp'
 import intTheatre from '../assets/amenities/theater.webp'
 
-// Add more entries to either list as renders come in - the tabs, the ticks
+// Add more entries to either list as renders come in - the tabs, the strip
 // and the counter all size themselves to the data.
-// Every render is shown whole, in the same gold frame. Full screen fills the page with the render instead.
 const CATEGORIES = [
   {
     id: 'exterior',
     label: 'Exterior',
-    caption: 'Render',
     slides: [
       { src: extDay, title: 'Tughra by Day', subtitle: 'A landmark in full light' },
       { src: extGolden, title: 'Golden Hour', subtitle: 'The facade catches the last sun' },
@@ -41,7 +37,6 @@ const CATEGORIES = [
   {
     id: 'amenities',
     label: 'Amenities',
-    caption: 'Render',
     slides: [
       { src: intPool, title: 'Swimming Pool', subtitle: 'Laps above the city' },
       { src: intGym1, title: 'Fitness Centre', subtitle: 'Train with a view' },
@@ -58,86 +53,90 @@ const CATEGORIES = [
 ]
 
 const pad = (n) => String(n).padStart(2, '0')
-const GOLD = '#c98b62'
+const TABS = CATEGORIES.map((c, i) => ({ value: i, label: c.label }))
 
-// Full screen shows the whole render in a fine frame. Space it keeps clear: the top-right buttons above, the arrows at the sides.
-const frameMargins = (w, h) => (h < 520 && w > h ? { top: 56, bottom: 20, side: 64 } : w < 768 ? { top: 84, bottom: 40, side: 16 } : { top: 96, bottom: 48, side: 96 })
-const ExpandIcon = ({ on }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d={on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
-  </svg>
-)
-const Chevron = ({ dir, size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d={dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 6l6 6-6 6'} />
-  </svg>
-)
-
-const ctrlClass = 'lux-btn flex h-10 w-10 items-center justify-center rounded-full md:h-11 md:w-11'
+// Picture-only view: the whole render, in a fine frame, clear of the controls around it.
+const frameMargins = (w, h) => (h < 520 && w > h ? { top: 64, bottom: 24, side: 72 } : w < 768 ? { top: 96, bottom: 48, side: 16 } : { top: 112, bottom: 56, side: 112 })
 
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  // full: the render fills the whole page, edge to edge (and the browser goes full screen). Otherwise every render sits in the gold frame.
-  const [full, setFull] = useState(false)
-  // each render's own shape (known once it has loaded), the window's shape, and any per-render choice to frame or fill
+  const [full, setFull] = useState(false) // picture only (in the app; never leaves browser full screen)
+  const [grid, setGrid] = useState(false)
   const [aspects, setAspects] = useState({})
   const [vp, setVp] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
-  const [idle, setIdle] = useState(false)
   const sectionRef = useRef(null)
-  const tabRefs = useRef([])
-  const [pill, setPill] = useState({ x: 0, w: 0 })
-  const tabSmRefs = useRef([])
-  const [pillSm, setPillSm] = useState({ x: 0, w: 0 })
+  const stripRef = useRef(null)
+  const gridRef = useRef(null)
   const touchX = useRef(0)
   const wheelAt = useRef(0)
+  const firstShow = useRef(true)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
   const total = slides.length
   const slide = slides[idx]
+  const key = `${cat}-${idx}`
 
   // Entrance
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-      tl.fromTo(sectionRef.current, { opacity: 0 }, { opacity: 1, duration: 0.8 })
-      tl.fromTo('.g-chrome', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.4)
+      const tl = gsap.timeline({ delay: PAGE_IN })
+      tl.add(fx.show('.gv-stage', { duration: 1.1 }), 0)
+      tl.add(fx.fade('.tb-anim', { y: -10 }), 0.15)
+      tl.add(fx.fade('.g-chrome', { stagger: 0.08 }), 0.3)
     }, sectionRef)
     return () => ctx.revert()
   }, [])
 
-  // The title and copy rise on every change
+  // The chosen render crossfades in and drifts 3% over seven seconds
+  useLayoutEffect(() => {
+    const root = sectionRef.current
+    const on = root.querySelector(`[data-slide="${key}"]`)
+    root.querySelectorAll('[data-slide]').forEach((el) => {
+      if (el !== on) gsap.to(el, { opacity: 0, duration: REDUCED ? 0.2 : 1, ease: EASE.move, overwrite: 'auto' })
+    })
+    if (!on) return
+    gsap.to(on, { opacity: 1, duration: firstShow.current ? 0 : REDUCED ? 0.2 : 1, ease: EASE.move, overwrite: 'auto' })
+    firstShow.current = false
+    const img = on.querySelector('.gv-img')
+    if (img && !REDUCED) gsap.fromTo(img, { scale: 1 }, { scale: 1.03, duration: 7.5, ease: 'power1.out', overwrite: 'auto' })
+  }, [key])
+
+  // Caption: title wipes up, the subtitle arrives late
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo('.g-line', { yPercent: 115 }, { yPercent: 0, duration: 0.9, ease: 'power4.out' })
-      gsap.fromTo('.g-fade', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, delay: 0.25, ease: 'power3.out' })
+      fx.heading('.g-title', { delay: 0.1 })
+      fx.fade('.g-count', { y: 6, duration: 0.5 })
+      fx.fade('.g-sub', { delay: 0.45, duration: 0.7 })
     }, sectionRef)
     return () => ctx.revert()
-  }, [cat, idx])
+  }, [key])
 
-  // The picture drifts against the pointer, as if the room goes on past the edges
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const gx = gsap.quickTo('.gv-stage', 'x', { duration: 1.6, ease: 'power3.out' })
-      const gy = gsap.quickTo('.gv-stage', 'y', { duration: 1.6, ease: 'power3.out' })
-      const onMove = (e) => {
-        gx((0.5 - e.clientX / window.innerWidth) * 36)
-        gy((0.5 - e.clientY / window.innerHeight) * 24)
-      }
-      window.addEventListener('mousemove', onMove)
-      return () => window.removeEventListener('mousemove', onMove)
-    }, sectionRef)
-    return () => ctx.revert()
-  }, [])
+  // Keep the current thumbnail in view
+  useEffect(() => {
+    const strip = stripRef.current
+    const chip = strip?.querySelector('[aria-current="true"]')
+    if (!chip) return
+    const target = chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2
+    gsap.to(strip, { scrollLeft: Math.max(0, target), duration: REDUCED ? 0 : 0.6, ease: EASE.soft, overwrite: 'auto' })
+  }, [key])
 
-  // The interface steps back when nothing has moved for a few seconds
+  // The controls step back when nothing has moved for a few seconds
   useEffect(() => {
     let t
+    let idle = false
+    const ui = () => sectionRef.current?.querySelectorAll('.gv-ui')
+    const setIdle = (v) => {
+      if (v === idle) return
+      idle = v
+      sectionRef.current?.classList.toggle('cursor-none', v)
+      gsap.to(ui(), { autoAlpha: v ? 0 : 1, duration: v ? 0.8 : 0.4, ease: EASE.soft, overwrite: 'auto' })
+    }
     const wake = () => {
       setIdle(false)
       clearTimeout(t)
-      t = setTimeout(() => setIdle(true), 3800)
+      t = setTimeout(() => setIdle(true), 4000)
     }
     wake()
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart']
@@ -154,13 +153,16 @@ function Gallery({ onClose }) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  // Warm the cache for the big renders so switching feels instant.
+  useEffect(() => {
+    const t = setTimeout(() => CATEGORIES.forEach((c) => c.slides.forEach((x) => { new Image().src = x.src })), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
   const noteAspect = (src, img) => {
     if (!img.naturalWidth) return
     setAspects((a) => (a[src] ? a : { ...a, [src]: { w: img.naturalWidth, h: img.naturalHeight } }))
   }
-  // Normally the render fills the page, as on Amenities; full screen shows it whole.
-  const isFramed = () => full
-  // The framed picture: as large as fits between the margins, keeping its own shape, plus its mat.
   const frameBox = (src) => {
     const a = aspects[src]
     if (!a) return null
@@ -170,19 +172,6 @@ function Gallery({ onClose }) {
     return { w: Math.round(a.w * k + mat * 2), h: Math.round(a.h * k + mat * 2), dy: Math.round((m.top - m.bottom) / 2) }
   }
 
-  // The tab pill slides to the active tab
-  useLayoutEffect(() => {
-    const place = () => {
-      const el = tabRefs.current[cat]
-      if (el) setPill({ x: el.offsetLeft, w: el.offsetWidth })
-      const sm = tabSmRefs.current[cat]
-      if (sm) setPillSm({ x: sm.offsetLeft, w: sm.offsetWidth })
-    }
-    place()
-    window.addEventListener('resize', place)
-    return () => window.removeEventListener('resize', place)
-  }, [cat])
-
   const switchCategory = (c) => {
     if (c === cat) return
     setCat(c)
@@ -190,158 +179,230 @@ function Gallery({ onClose }) {
   }
   const step = (d) => total > 1 && setIdx((i) => (i + d + total) % total)
 
-  // Full screen: the whole render, uncropped, with nothing else on screen; the browser goes full screen too (where it allows).
-  const toggleFs = () => {
-    if (full) {
-      setFull(false)
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    } else {
-      setFull(true)
-      document.documentElement.requestFullscreen?.().catch(() => {})
+  // Grid overview: opens over the viewer; a tile returns to the viewer on that render
+  const openGrid = () => setGrid(true)
+  const closeGrid = (to) => {
+    const done = () => {
+      if (to) {
+        setCat(to[0])
+        setIdx(to[1])
+      }
+      setGrid(false)
     }
+    if (REDUCED) return done()
+    gsap.to(gridRef.current, { autoAlpha: 0, duration: 0.45, ease: EASE.soft, onComplete: done })
   }
 
-  useEffect(() => {
-    // leaving browser full screen (Esc) returns to the frame
-    const onChange = () => {
-      if (!document.fullscreenElement) setFull(false)
-    }
-    document.addEventListener('fullscreenchange', onChange)
-    return () => {
-      document.removeEventListener('fullscreenchange', onChange)
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    }
-  }, [])
-
-  // Warm the cache for the big renders so switching feels instant.
-  useEffect(() => {
-    const t = setTimeout(() => CATEGORIES.forEach((c) => c.slides.forEach((x) => { new Image().src = x.src })), 1200)
-    return () => clearTimeout(t)
-  }, [])
+  useLayoutEffect(() => {
+    if (!grid) return
+    const ctx = gsap.context(() => {
+      fx.show(gridRef.current, { duration: 0.6 })
+      fx.fade('.gg-head', { stagger: 0.08, delay: 0.1 })
+      fx.line('.gg-hair', { delay: 0.2, stagger: 0.1 })
+      revealOnScroll('.gg-tile', { scroller: gridRef.current, stagger: 0.07 })
+    }, gridRef)
+    return () => ctx.revert()
+  }, [grid])
 
   useEffect(() => {
     const onKey = (e) => {
+      if (grid) {
+        if (e.key === 'Escape') closeGrid()
+        return
+      }
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
-      if (e.key === 'f' || e.key === 'F') toggleFs()
+      if (e.key === 'f' || e.key === 'F') setFull((v) => !v)
+      if (e.key === 'Escape') setFull(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   })
+
+  const box = full ? frameBox(slide.src) : null
 
   return (
     <section
       ref={sectionRef}
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
+        if (grid) return
         const dx = e.changedTouches[0].clientX - touchX.current
         if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1)
       }}
       onWheel={(e) => {
+        if (grid) return
         const now = Date.now()
         if (Math.abs(e.deltaY) < 20 || now - wheelAt.current < 900) return
         wheelAt.current = now
         step(e.deltaY > 0 ? 1 : -1)
       }}
-      className={`gx-page ${idle ? 'is-idle' : ''} ${full ? 'is-full' : ''}`}
+      className="relative h-svh w-full overflow-hidden bg-espresso text-cream"
     >
-      {/* Every render is stacked, only one is lit. Normally it fills the page; full screen shows it whole, framed, over a blurred, shaded copy of itself */}
-      <div className="gv-stage" aria-live="polite">
+      {/* Every render stacked; only the current one is lit */}
+      <div className="gv-stage absolute inset-0" aria-live="polite">
         {CATEGORIES.flatMap((c, ci) =>
           c.slides.map((s, i) => {
-            const framed = isFramed()
-            const box = framed ? frameBox(s.src) : null
+            const on = ci === cat && i === idx
             return (
-              <div key={c.id + i} className={`gv-slide ${ci === cat && i === idx ? 'is-on' : ''} ${framed ? 'is-framed' : ''}`}>
-                {/* the render, edge to edge; blurred and shaded into a backdrop in full screen */}
-                <img className="gv-bg" src={s.src} alt={ci === cat && i === idx ? s.title : ''} draggable={false} onLoad={(e) => noteAspect(s.src, e.currentTarget)} />
-                {/* full screen: the whole render in a fine gold frame */}
-                {box && (
-                  <div className="gv-frame" style={{ width: box.w, height: box.h, '--fy': `${box.dy}px` }}>
-                    <img src={s.src} alt="" aria-hidden="true" draggable={false} />
-                  </div>
-                )}
+              <div key={c.id + i} data-slide={`${ci}-${i}`} className="absolute inset-0 overflow-hidden" style={{ opacity: 0 }}>
+                <img
+                  className={`gv-img absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${full ? 'opacity-0' : 'opacity-100'}`}
+                  src={s.src}
+                  alt={on ? s.title : ''}
+                  draggable={false}
+                  onLoad={(e) => noteAspect(s.src, e.currentTarget)}
+                />
               </div>
             )
-          })
+          }),
         )}
       </div>
-      <div className="gv-scrim" />
 
-      {/* Logo, tabs, full screen, Back */}
-      <div className="gv-ui gv-ui--top">
-        <header className="g-chrome relative flex items-start justify-between gap-3 px-5 pt-5 sm:px-8 md:px-12 md:pt-9 short:pt-3">
-          <button type="button" onClick={onClose} className="g-hide-wide border-none bg-transparent p-0 text-left">
-            <BrandMark />
-          </button>
-          <div className="g-hide-wide mt-1 hidden lg:block short:block">
-            <div className="gl-tabs" role="tablist" aria-label="Collections">
-              <span className="gl-pill" style={{ width: pill.w, transform: `translateX(${pill.x}px)` }} />
-              {CATEGORIES.map((c, ci) => (
-                <button key={c.id} ref={(el) => (tabRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 md:gap-3">
-            <button type="button" onClick={toggleFs} aria-label={full ? 'Exit full screen' : 'Full screen'} title={full ? 'Exit full screen (F)' : 'Full screen: the whole render (F)'} aria-pressed={full} className={ctrlClass + (full ? ' is-active' : '')}>
-              <ExpandIcon on={full} />
-            </button>
-            <BackButton onClick={onClose} />
-          </div>
-        </header>
-
-        {/* Tabs for small screens */}
-        <div className="g-chrome g-hide-wide relative flex justify-center px-5 pt-4 lg:hidden short:hidden">
-          <div className="gl-tabs" role="tablist" aria-label="Collections">
-            <span className="gl-pill" style={{ width: pillSm.w, transform: `translateX(${pillSm.x}px)` }} />
-            {CATEGORIES.map((c, ci) => (
-              <button key={c.id} ref={(el) => (tabSmRefs.current[ci] = el)} type="button" onClick={() => switchCategory(ci)} aria-pressed={ci === cat} className="gl-tab">
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Side arrows */}
-      {total > 1 && (
-        <div className="gv-ui pointer-events-none flex items-center justify-between px-4 md:px-8" style={{ top: '50%', transform: 'translateY(-50%)' }}>
-          <button type="button" onClick={() => step(-1)} aria-label="Previous render" className={ctrlClass + ' pointer-events-auto'}><Chevron dir="left" /></button>
-          <button type="button" onClick={() => step(1)} aria-label="Next render" className={ctrlClass + ' pointer-events-auto'}><Chevron dir="right" /></button>
+      {/* Picture only: the whole render in a fine bronze frame on espresso */}
+      {full && box && (
+        <div
+          className="absolute left-1/2 top-1/2 z-[1] border border-bronze/55 bg-cocoa p-2"
+          style={{ width: box.w, height: box.h, transform: `translate(-50%, calc(-50% + ${box.dy}px))` }}
+        >
+          <img src={slide.src} alt={slide.title} className="h-full w-full object-contain" draggable={false} />
         </div>
       )}
 
-      {/* Caption on the left, every render in the collection on the right */}
-      <div className="gv-ui gv-ui--bottom">
-        <footer className="g-chrome relative flex flex-col gap-5 px-5 pb-6 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:justify-between short:gap-6 short:px-5 short:pb-3">
-          <div className="min-w-0">
-            <span className="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.35rem]" style={{ color: GOLD }}>
-              {pad(idx + 1)} <span className="h-px w-7" style={{ background: GOLD }} /> {pad(total)}
+      {/* just enough shade for the words to sit on the picture */}
+      <div
+        className={`pointer-events-none absolute inset-0 z-[2] transition-opacity duration-500 ${full ? 'opacity-0' : 'opacity-100'}`}
+        style={{ background: 'linear-gradient(180deg, var(--scrim) 0%, transparent 34%), linear-gradient(0deg, var(--espresso) 0%, var(--scrim) 18%, transparent 52%)' }}
+      />
+
+      {/* ---------- Top: logo, collections, grid, picture only, back ---------- */}
+      <div className="gv-ui">
+        <TopBar onBrand={onClose}>
+          <div className="g-chrome flex items-center gap-2.5 md:gap-3">
+            <div className={`mr-3 hidden transition-opacity duration-500 lg:block short:block ${full ? 'pointer-events-none opacity-0' : ''}`}>
+              <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
+            </div>
+            <IconButton label="All renders" onClick={openGrid} className={`transition-opacity duration-500 ${full ? 'pointer-events-none opacity-0' : ''}`}>
+              <IcGrid size={18} />
+            </IconButton>
+            <IconButton label={full ? 'Show captions' : 'Picture only (F)'} onClick={() => setFull((v) => !v)} active={full}>
+              {full ? <IcCollapse size={18} /> : <IcExpand size={18} />}
+            </IconButton>
+            <span className="ml-1">
+              <BackControl onClick={onClose} />
             </span>
-            <h2 className="mt-3 overflow-hidden pb-1 font-serif text-[clamp(1.375rem,2.2vw,2rem)] font-medium uppercase leading-[1.15] tracking-[0.18rem] text-cream short:text-[1.1rem]">
-              <span className="g-line block truncate">{slide.title}</span>
+          </div>
+        </TopBar>
+
+        {/* collections, on narrow screens */}
+        <div className="g-chrome absolute inset-x-0 top-[6.25rem] z-20 md:top-[7.5rem] lg:hidden short:hidden">
+          <div className={`flex justify-center px-5 transition-opacity duration-500 ${full ? 'pointer-events-none opacity-0' : ''}`}>
+            <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
+          </div>
+        </div>
+      </div>
+
+      {/* ---------- Arrows ---------- */}
+      {total > 1 && (
+        <div className="gv-ui pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between px-3 md:px-8">
+          <IconButton label="Previous render" onClick={() => step(-1)} className="pointer-events-auto">
+            <IcPrev size={18} />
+          </IconButton>
+          <IconButton label="Next render" onClick={() => step(1)} className="pointer-events-auto">
+            <IcNext size={18} />
+          </IconButton>
+        </div>
+      )}
+
+      {/* ---------- Caption and the thumbnail strip ---------- */}
+      <div className="gv-ui absolute inset-x-0 bottom-0 z-20">
+        <div className={`transition-opacity duration-500 ${full ? 'pointer-events-none opacity-0' : ''}`}>
+        <footer className="g-chrome flex flex-col gap-5 px-5 pb-[max(1.5rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:gap-6 short:pb-3">
+          <div className="min-w-0 md:max-w-[34rem]">
+            <span className="g-count tr-label flex items-center gap-3">
+              <span className="text-gold">{pad(idx + 1)}</span>
+              <i className="tr-hair block w-8 bg-bronze" />
+              <span className="text-parchment/70">{pad(total)}</span>
+              <span className="ml-2 text-gold-pale/70">{category.label}</span>
+            </span>
+            <h2 className="mt-3 font-serif text-[clamp(1.9rem,2.8vw,2.75rem)] font-normal leading-[1.08] text-cream short:mt-1 short:text-[1.35rem]">
+              <span className="g-title block truncate pb-1">{slide.title}</span>
             </h2>
-            <p className="g-fade mt-1 truncate text-[0.8125rem] leading-[1.7] text-cream/75 short:hidden">{slide.subtitle}</p>
+            <p className="g-sub mt-1 truncate text-[0.875rem] tracking-[0.02em] text-gold-pale/90 short:hidden">{slide.subtitle}</p>
           </div>
 
-          {/* the run of renders, marked as on Amenities */}
-          <div className="flex items-center gap-1.5 md:gap-2" role="tablist" aria-label={`${category.label} renders`}>
+          <div ref={stripRef} className="tr-noscroll -mx-1 flex max-w-full gap-2 overflow-x-auto px-1 py-1 md:max-w-[min(46rem,55vw)]" role="tablist" aria-label={`${category.label} renders`}>
             {slides.map((sl, i) => {
               const on = i === idx
               return (
-                <button key={sl.src} type="button" role="tab" aria-selected={on} aria-label={sl.title} onClick={() => setIdx(i)} className="flex h-6 items-center border-none bg-transparent p-0">
-                  <span
-                    className="block h-[3px] rounded-full transition-all duration-700"
-                    style={{ width: on ? 'clamp(1.6rem,3vw,2.6rem)' : 'clamp(0.7rem,1.5vw,1.5rem)', background: on ? GOLD : 'rgba(239,226,212,0.3)' }}
-                  />
+                <button
+                  key={sl.src}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  aria-current={on}
+                  aria-label={sl.title}
+                  onClick={() => setIdx(i)}
+                  className={`tr-focus relative h-[3.1rem] w-[4.6rem] shrink-0 overflow-hidden rounded-[0.55rem] border p-0 transition-[opacity,border-color] duration-300 md:h-[3.6rem] md:w-[5.4rem] short:h-[2.4rem] short:w-[3.6rem] ${on ? 'border-gold opacity-100' : 'border-bronze/35 opacity-55 hover:opacity-90'}`}
+                >
+                  <img src={sl.src} alt="" className="h-full w-full object-cover" draggable={false} />
                 </button>
               )
             })}
           </div>
         </footer>
+        </div>
       </div>
+
+      {/* ---------- Grid overview ---------- */}
+      {grid && (
+        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-espresso" role="dialog" aria-modal="true" aria-label="All renders">
+          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-espresso px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] sm:px-8 md:px-12 md:pt-9">
+            <div>
+              <span className="gg-head tr-label block">Gallery</span>
+              <h2 className="gg-head mt-2 font-serif text-[clamp(2rem,3vw,3rem)] font-normal leading-none text-cream">Every render</h2>
+            </div>
+            <IconButton label="Close" onClick={() => closeGrid()}>
+              <IcClose size={17} />
+            </IconButton>
+            <i className="gg-hair tr-hair absolute inset-x-5 bottom-0 sm:inset-x-8 md:inset-x-12" />
+          </div>
+
+          <div className="px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:px-8 md:px-12">
+            {CATEGORIES.map((c, ci) => (
+              <section key={c.id} className="mb-12">
+                <div className="mb-5 flex items-center gap-4">
+                  <span className="tr-label">{c.label}</span>
+                  <i className="gg-hair tr-hair flex-1" />
+                  <span className="tr-label text-gold-pale/60">{pad(c.slides.length)}</span>
+                </div>
+                {/* editorial grid; the 1px gaps are the bronze hairline gutters */}
+                <div className="grid grid-cols-1 gap-px overflow-hidden rounded-card border border-bronze/25 bg-bronze/25 sm:grid-cols-2 lg:grid-cols-3">
+                  {c.slides.map((s, i) => (
+                    <button
+                      key={s.src}
+                      type="button"
+                      onClick={() => closeGrid([ci, i])}
+                      className={`gg-tile tr-focus group flex flex-col bg-espresso p-3 text-left md:p-4 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}
+                    >
+                      <span className={`block w-full overflow-hidden rounded-[0.6rem] ${i === 0 ? 'aspect-[4/3] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}>
+                        <img src={s.src} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
+                      </span>
+                      <span className="mt-3 flex items-baseline gap-3 px-1">
+                        <span className="tr-label text-gold-pale/70">{pad(i + 1)}</span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-serif text-[1.2rem] leading-tight text-cream transition-colors duration-300 group-hover:text-gold-pale">{s.title}</span>
+                          <span className="mt-0.5 block truncate text-[0.75rem] text-parchment/65">{s.subtitle}</span>
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
