@@ -9,9 +9,9 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background: var(--ribbon-main-gold);
+  background: var(--pin, var(--ribbon-main-gold));
   border: 2px solid var(--espresso);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ribbon-main-gold) 70%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pin, var(--ribbon-main-gold)) 70%, transparent);
   transition: transform 0.4s var(--ease-silk), background-color 0.3s var(--ease-silk);
 }
 .loc-pin span {
@@ -37,13 +37,13 @@
 .loc-mk:hover .loc-pin { transform: scale(1.25); }
 .loc-mk:hover .loc-pin span,
 .loc-mk.is-on .loc-pin span { opacity: 1; transform: translate(-50%, 0); }
-.loc-mk.is-on .loc-pin { transform: scale(1.35); background: var(--ribbon-champagne); }
+.loc-mk.is-on .loc-pin { transform: scale(1.35); }
 .loc-mk.is-on .loc-pin::after {
   content: '';
   position: absolute;
   inset: -0.3rem;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--ribbon-champagne) 60%, transparent);
+  border: 1px solid var(--pin, var(--ribbon-champagne));
 }
 
 /* ---- The project tower, standing on a bronze footprint ---- */
@@ -57,7 +57,7 @@
 .loc-tower img {
   position: relative;
   z-index: 1;
-  height: clamp(6.5rem, 17svh, 10rem);
+  height: clamp(11rem, 34svh, 20rem);
   width: auto;
 }
 .loc-tower .base {

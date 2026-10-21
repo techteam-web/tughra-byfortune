@@ -270,8 +270,18 @@ function applyDepth(map) {
 }
 
 const ROUTE_SRC = 'route'
-const ROUTE_GLOW = alpha(T.bronze, 0.6)
-const ROUTE_CORE = T.goldPale
+const ALL_SRC = 'routes-all'
+
+// each category has its own colour, for its pins and its routes
+const CAT_COLORS = {
+  connectivity: '#F2B45A',
+  healthcare: '#E8766A',
+  landmarks: '#7FC8B2',
+  hospitality: '#C99AE6',
+  business: '#78B0EE',
+  education: '#A9D874',
+}
+const colorOf = (key) => CAT_COLORS[key] || T.goldPale
 const ROUTE_OFF = alpha(T.goldPale, 0)
 // The route is revealed by masking a line-gradient (cheap) rather than re-sending
 // the geometry every frame (which re-parses and re-tiles it).
@@ -279,10 +289,28 @@ function routeGradient(p, color) {
   const edge = Math.min(Math.max(p, 0.0001), 0.9999)
   return ['interpolate', ['linear'], ['line-progress'], 0, color, edge, color, Math.min(edge + 0.0001, 1), ROUTE_OFF, 1, ROUTE_OFF]
 }
-function setRouteProgress(map, p) {
+function setRouteProgress(map, p, color = T.goldPale) {
   if (!map.getLayer('route-line')) return
-  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, ROUTE_GLOW))
-  map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, ROUTE_CORE))
+  map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, alpha(color, 0.6)))
+  map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, color))
+}
+
+// road route from the project to a place (an arc when offline or rate-limited), cached per place
+const routeCache = new globalThis.Map()
+function fetchRoute(place, signal) {
+  if (routeCache.has(place.id)) return routeCache.get(place.id)
+  const t = setTimeout(() => signal?.abort?.(), 7000)
+  const pr = fetch(`https://router.project-osrm.org/route/v1/driving/${PROJECT.join(',')};${place.at.join(',')}?overview=full&geometries=geojson`)
+    .then((r) => r.json())
+    .then((json) => {
+      const coords = json.routes?.[0]?.geometry?.coordinates
+      if (!coords || coords.length < 2) throw new Error('no route')
+      return coords
+    })
+    .catch(() => arcBetween(PROJECT, place.at))
+    .finally(() => clearTimeout(t))
+  routeCache.set(place.id, pr)
+  return pr
 }
 const EMPTY = { type: 'FeatureCollection', features: [] }
 
@@ -327,20 +355,23 @@ function Location({ onClose }) {
     map.on('load', () => {
       applyBrandTheme(map)
       applyDepth(map)
+      map.addSource(ALL_SRC, { type: 'geojson', data: EMPTY })
+      map.addLayer({ id: 'all-glow', type: 'line', source: ALL_SRC, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': 9, 'line-blur': 6, 'line-opacity': 0.45, 'line-color': ['get', 'color'] } })
+      map.addLayer({ id: 'all-line', type: 'line', source: ALL_SRC, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': 2.6, 'line-color': ['get', 'color'] } })
       map.addSource(ROUTE_SRC, { type: 'geojson', data: EMPTY, lineMetrics: true })
       map.addLayer({
         id: 'route-glow',
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 12, 'line-blur': 8, 'line-gradient': routeGradient(0, ROUTE_GLOW) },
+        paint: { 'line-width': 12, 'line-blur': 8, 'line-gradient': routeGradient(0, alpha(T.goldPale, 0.6)) },
       })
       map.addLayer({
         id: 'route-line',
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 3.5, 'line-gradient': routeGradient(0, ROUTE_CORE) },
+        paint: { 'line-width': 3.5, 'line-gradient': routeGradient(0, T.goldPale) },
       })
       setReady(true)
       // Arrival: a slow drop from a flat overview into the tilted view.
@@ -374,7 +405,7 @@ function Location({ onClose }) {
     const tower = document.createElement('div')
     tower.className = 'loc-tower-mk'
     tower.innerHTML = '<div class="loc-tower"><span class="base"></span><img alt="" src="/assets/img/menu_crop.png" draggable="false" /></div>'
-    new Marker({ element: tower, anchor: 'bottom' }).setLngLat(PROJECT).addTo(map)
+    new Marker({ element: tower, anchor: 'bottom', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat(PROJECT).addTo(map)
 
     // The section mounts inside the page transition, so the container can still be
     // settling its final size when MapLibre first measures it — keep it in sync.
@@ -400,6 +431,7 @@ function Location({ onClose }) {
     for (const p of current.places) {
       const el = document.createElement('div')
       el.className = 'loc-mk'
+      el.style.setProperty('--pin', colorOf(category))
       const pin = document.createElement('div')
       pin.className = 'loc-pin'
       const label = document.createElement('span')
@@ -417,7 +449,7 @@ function Location({ onClose }) {
       for (const m of placed) m.remove()
       markers.clear()
     }
-  }, [ready, current])
+  }, [ready, current, category])
 
   // --- Selection: highlight, fetch the road route, then drive the camera along it ---
   useEffect(() => {
@@ -427,7 +459,8 @@ function Location({ onClose }) {
     for (const [id, el] of markersRef.current) el.classList.toggle('is-on', id === selected)
     const source = map.getSource(ROUTE_SRC)
     source?.setData(EMPTY)
-    setRouteProgress(map, 0)
+    setRouteProgress(map, 0, colorOf(category))
+    if (selectedPlace) map.getSource(ALL_SRC)?.setData(EMPTY)
     if (!selectedPlace) return
 
     const orbit = orbitRef.current
@@ -490,7 +523,7 @@ function Location({ onClose }) {
       const frame = (now) => {
         if (cancelled) return
         const t = Math.min((now - started) / duration, 1)
-        setRouteProgress(map, 0.65 * t + 0.35 * (0.5 - Math.cos(Math.PI * t) / 2))
+        setRouteProgress(map, 0.65 * t + 0.35 * (0.5 - Math.cos(Math.PI * t) / 2), colorOf(category))
         if (t < 1) drawRef.current = requestAnimationFrame(frame)
       }
       drawRef.current = requestAnimationFrame(frame)
@@ -502,6 +535,7 @@ function Location({ onClose }) {
       controller.abort()
       cancelAnimationFrame(drawRef.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, selected, selectedPlace])
 
   // Top bar first; the panel arrives once the map has loaded and the camera is settling
@@ -537,20 +571,36 @@ function Location({ onClose }) {
     return () => ctx.revert()
   }, [category, panelOn])
 
-  const overview = () => {
+  const overview = async () => {
     const map = mapRef.current
     if (!map) return
     setSelected(null)
     orbitRef.current.paused = true
-    map.easeTo({ ...OVERVIEW, duration: REDUCED ? 0 : 2200 })
-    map.once('moveend', () => {
-      orbitRef.current.paused = REDUCED
+    const color = colorOf(category)
+    const lines = await Promise.all(current.places.map((pl) => fetchRoute(pl).then((coords) => ({ coords, id: pl.id }))))
+    if (!mapRef.current || mapRef.current !== map) return
+    map.getSource(ROUTE_SRC)?.setData(EMPTY)
+    map.getSource(ALL_SRC)?.setData({
+      type: 'FeatureCollection',
+      features: lines.map((l) => ({ type: 'Feature', properties: { color }, geometry: { type: 'LineString', coordinates: l.coords } })),
     })
+    const pts = [PROJECT, ...lines.flatMap((l) => l.coords)]
+    const xs = pts.map((c) => c[0])
+    const ys = pts.map((c) => c[1])
+    const desktop = window.innerWidth >= 768
+    map.fitBounds(
+      [
+        [Math.min(...xs), Math.min(...ys)],
+        [Math.max(...xs), Math.max(...ys)],
+      ],
+      { padding: desktop ? { top: 110, bottom: 90, left: 440, right: 90 } : { top: 100, bottom: Math.round(window.innerHeight * 0.48), left: 30, right: 30 }, pitch: 45, bearing: 0, duration: REDUCED ? 0 : 2600, essential: true },
+    )
   }
 
   const pickCategory = (key) => {
     setCategory(key)
     setSelected(null)
+    mapRef.current?.getSource(ALL_SRC)?.setData(EMPTY)
   }
 
   return (
@@ -615,10 +665,11 @@ function Location({ onClose }) {
         </ul>
       </aside>
 
-      {selected && (
+      {panelOn && (
         <button
           type="button"
           onClick={overview}
+          style={{ borderColor: colorOf(category) }}
           onPointerMove={glowAt}
           className="tr-btn tr-btn--outline mn-glow absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
         >
