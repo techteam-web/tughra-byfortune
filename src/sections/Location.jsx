@@ -631,7 +631,7 @@ function Location({ onClose }) {
 
       {/* Location table */}
       <aside
-        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-auto md:left-8 md:top-1/2 md:max-h-[70svh] md:w-[23rem] md:-translate-y-1/2 md:p-6 side:left-[2.9rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[16rem] short:translate-y-0 short:p-3"
+        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-0 md:left-8 md:top-0 md:my-auto md:h-fit md:max-h-[70svh] md:w-[23rem] md:p-6 side:left-[2.9rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:my-0 short:h-auto short:max-h-none short:w-[16rem] short:p-3"
       >
         <span className="loc-rise flex items-center gap-4 short:hidden">
           <span className="tr-num">05</span>
