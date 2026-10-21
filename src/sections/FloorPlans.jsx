@@ -263,7 +263,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
             </div>
           )}
 
-          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 20rem), 30rem)', maxHeight: '72%', width: '100%' }}>
+          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
             {/* ---- the tower, on the same torn white sheet, with its floors as clickable switches ---- */}
             <div
               className="fp2-tower-layer absolute"
