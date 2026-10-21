@@ -64,6 +64,7 @@
   --safe-l: env(safe-area-inset-left, 0px);
 
   /* -------- Home page (hero): frozen by the brief, exactly as it was -------- */
+  --hero-serif: 'Cormorant Garamond', Georgia, serif; /* the rest of the site moved to --serif below; the hero keeps its own */
   --hero-bg: #1c1714;
   --hero-cream: #efe2d4;
   --hero-gold-light: #e8b48f;

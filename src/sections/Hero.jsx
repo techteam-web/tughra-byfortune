@@ -15,7 +15,10 @@ function Copy({ mode, onExplore }) {
   
   return (
     <div className="flex flex-col items-center px-6 text-center portrait:-translate-y-[14svh] short:-translate-y-[2svh]">
-      <h1 style={{ marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', ...hideText }} className="hr-depth font-serif text-[clamp(2.6rem,5.2vw,5.6rem)] font-medium uppercase leading-[1.04] tracking-[0.03em] max-md:portrait:text-[clamp(2rem,9.4vw,3.2rem)] short:text-[clamp(1.6rem,5.4vh,2.6rem)]">
+      <h1
+        style={{ marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', fontFamily: 'var(--hero-serif)', ...hideText }}
+        className="hr-depth text-[clamp(2.6rem,5.2vw,5.6rem)] font-medium uppercase leading-[1.04] tracking-[0.03em] max-md:portrait:text-[clamp(2rem,9.4vw,3.2rem)] short:text-[clamp(1.6rem,5.4vh,2.6rem)]"
+      >
         <span className="block overflow-hidden px-2 pb-3">
           <span className="hr-line hr-copper inline-block">A World</span>
         </span>

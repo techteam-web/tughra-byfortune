@@ -18,11 +18,19 @@ const MENU_ITEMS = [
   { num: '07', key: 'enquiry', name: 'Enquire' },
 ]
 
+// The quiet line at the foot of the column: the building in three facts the rest of the
+// site already states (floor count, unit mix, address), so nothing here is invented.
+const FOOT_FACTS = [
+  ['Floors', '24'],
+  ['Residences', '4 · 5 · 6 BHK'],
+  ['Address', 'Mumbai Central'],
+]
+
 function Menu({ onClose, onSelect }) {
   const [active, setActive] = useState(-1)
   const rootRef = useRef(null)
 
-  // the seal, then the numbers, their dashes and the names in turn
+  // the seal, then the numbers, their dashes and the names in turn, then the foot
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
@@ -31,6 +39,8 @@ function Menu({ onClose, onSelect }) {
       tl.add(fx.fade('.mn-num', { y: 8, stagger: 0.07, duration: 0.5 }), 0.85)
       tl.add(fx.line('.mn-dash', { stagger: 0.07, duration: 0.6 }), 0.9)
       tl.add(fx.fade('.mn-name', { y: 12, stagger: 0.07 }), 0.95)
+      tl.add(fx.line('.mn-foot-hair'), 1.15)
+      tl.add(fx.fade('.mn-foot-rise', { y: 10, stagger: 0.08 }), 1.25)
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -52,42 +62,61 @@ function Menu({ onClose, onSelect }) {
             {/* phones and tablets: the tower shows through here */}
             <div className="min-h-6 flex-1 side:hidden" />
 
-            <ul className="flex shrink-0 flex-col gap-1 side:flex-1 side:justify-center short:gap-0" onMouseLeave={() => setActive(-1)}>
-              {MENU_ITEMS.map((m, i) => {
-                const on = i === active
-                return (
-                  <li key={m.key}>
-                    {/* small entries with the golden hover: border and fill light up around the cursor */}
-                    <button
-                      type="button"
-                      onClick={() => onSelect?.(m.key)}
-                      onMouseEnter={() => setActive(i)}
-                      onFocus={() => setActive(i)}
-                      onBlur={() => setActive(-1)}
-                      onPointerMove={glowAt}
-                      className={`mn-glow tr-focus flex w-full max-w-[20rem] touch-manipulation items-center rounded-lg border-none bg-transparent py-[0.7rem] pl-3 pr-2.5 text-left side:py-[clamp(0.5rem,1.35svh,0.85rem)] short:py-[0.22rem] ${on ? 'is-on' : ''}`}
-                    >
-                      <span className="mn-num tr-num w-8 shrink-0 short:w-7">{m.num}</span>
-                      <span
-                        className={`mn-dash block h-px w-4 shrink-0 origin-left bg-gold-pale/45 transition-[scale,background-color] duration-500 ${on ? 'scale-x-[1.6] bg-[var(--ribbon-champagne)]' : ''}`}
-                        aria-hidden="true"
-                      />
-                      <span
-                        className={`mn-name ml-6 min-w-0 flex-1 font-sans text-[0.8125rem] font-normal uppercase leading-tight tracking-[0.2em] transition-colors duration-300 sm:text-[0.875rem] short:ml-4 short:text-[0.6875rem] ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream'}`}
+            {/* the list sits centred in the space between the seal and the foot */}
+            <div className="side:flex side:flex-1 side:items-center">
+              <ul className="flex w-full shrink-0 flex-col gap-1 short:gap-0" onMouseLeave={() => setActive(-1)}>
+                {MENU_ITEMS.map((m, i) => {
+                  const on = i === active
+                  return (
+                    <li key={m.key}>
+                      {/* small entries with the golden hover: border and fill light up around the cursor */}
+                      <button
+                        type="button"
+                        onClick={() => onSelect?.(m.key)}
+                        onMouseEnter={() => setActive(i)}
+                        onFocus={() => setActive(i)}
+                        onBlur={() => setActive(-1)}
+                        onPointerMove={glowAt}
+                        className={`mn-glow tr-focus flex w-full max-w-[20rem] touch-manipulation items-center rounded-lg border-none bg-transparent py-[0.7rem] pl-3 pr-2.5 text-left side:py-[clamp(0.5rem,1.35svh,0.85rem)] short:py-[0.22rem] ${on ? 'is-on' : ''}`}
                       >
-                        {m.name}
-                      </span>
-                      <span
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--ribbon-main-gold)_70%,transparent)] text-[var(--ribbon-champagne)] transition-[opacity,translate] duration-500 short:h-5 short:w-5 ${on ? 'translate-x-0 opacity-100' : '-translate-x-1.5 opacity-0'}`}
-                        aria-hidden="true"
-                      >
-                        <IcArrow size={11} />
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+                        <span className="mn-num tr-num w-8 shrink-0 short:w-7">{m.num}</span>
+                        <span
+                          className={`mn-dash block h-px w-4 shrink-0 origin-left bg-gold-pale/45 transition-[scale,background-color] duration-500 ${on ? 'scale-x-[1.6] bg-[var(--ribbon-champagne)]' : ''}`}
+                          aria-hidden="true"
+                        />
+                        <span
+                          className={`mn-name ml-6 min-w-0 flex-1 font-sans text-[0.8125rem] font-normal uppercase leading-tight tracking-[0.2em] transition-colors duration-300 sm:text-[0.875rem] short:ml-4 short:text-[0.6875rem] ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream'}`}
+                        >
+                          {m.name}
+                        </span>
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--ribbon-main-gold)_70%,transparent)] text-[var(--ribbon-champagne)] transition-[opacity,translate] duration-500 short:h-5 short:w-5 ${on ? 'translate-x-0 opacity-100' : '-translate-x-1.5 opacity-0'}`}
+                          aria-hidden="true"
+                        >
+                          <IcArrow size={11} />
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            {/* the foot of the column: the brand line, in the display face, and the building in three facts */}
+            <div className="mn-foot shrink-0 pt-5 side:pt-0 short:hidden">
+              <i className="mn-foot-hair tr-hair block w-full max-w-[19rem]" aria-hidden="true" />
+              <p className="mn-foot-rise mt-4 max-w-[18rem] font-serif text-[0.9375rem] italic leading-snug text-cream/75 side:text-base">
+                A higher perspective — city, sea, opportunity.
+              </p>
+              <dl className="mn-foot-rise mt-5 flex items-stretch">
+                {FOOT_FACTS.map(([k, v], i) => (
+                  <div key={k} className={`whitespace-nowrap ${i ? 'ml-5 border-l border-[color-mix(in_srgb,var(--ribbon-main-gold)_24%,transparent)] pl-5' : ''}`}>
+                    <dt className="tr-num text-[0.5625rem]">{k}</dt>
+                    <dd className="mt-1 font-sans text-[0.8125rem] uppercase tracking-[0.06em] text-cream/90">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </nav>
         }
       >
