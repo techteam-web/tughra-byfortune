@@ -68,7 +68,6 @@ function Menu({ onClose, onSelect }) {
       tl.add(fx.fade('.mn-num', { y: 8, stagger: 0.07, duration: 0.5 }), 0.85)
       tl.add(fx.line('.mn-dash', { stagger: 0.07, duration: 0.6 }), 0.9)
       tl.add(fx.fade('.mn-name', { y: 12, stagger: 0.07 }), 0.95)
-      tl.add(fx.fade('.mn-cta', { y: 10 }), 1.45)
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -167,19 +166,6 @@ function Menu({ onClose, onSelect }) {
             )
           })}
         </ul>
-
-        {/* the one action: square corners, a fine gold border, the same golden hover */}
-        <div className="mn-cta mt-6 shrink-0 side:mt-0 short:hidden">
-          <button
-            type="button"
-            onClick={() => onSelect?.('enquiry')}
-            onPointerMove={glowAt}
-            className="mn-glow tr-focus group inline-flex touch-manipulation items-center gap-4 border border-gold/70 bg-transparent px-7 py-[0.7rem] font-sans text-[max(0.6875rem,10px)] font-normal uppercase tracking-[0.22em] text-cream transition-colors duration-300 hover:border-gold hover:text-[var(--ribbon-champagne)] active:scale-[0.98]"
-          >
-            Enquire now
-            <IcArrow size={15} className="text-gold transition-transform duration-300 group-hover:translate-x-1" />
-          </button>
-        </div>
       </nav>
     </section>
   )
