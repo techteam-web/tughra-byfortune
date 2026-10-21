@@ -331,19 +331,15 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
           </div>
         </div>
 
-        {/* ---------- Right: the layout table ---------- */}
-        <aside className="fp2-aside-r min-w-0">
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="fp2-swap font-serif text-[1.4rem] leading-tight text-[var(--ink)]">
-              {unit.label}
-              <br />
-              Flat Layout
-            </h2>
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-[var(--ink)]/15 text-[var(--bronze-deep)]">
-              <IcPlan size={18} />
-            </span>
-          </div>
-          <dl className="mt-6 divide-y divide-[var(--ink)]/10 border-t border-[var(--ink)]/10">
+        {/* ---------- Right: the layout table, stretched to match the tower/plan card's height ---------- */}
+        <aside className="fp2-aside-r flex min-w-0 flex-col lg:self-stretch">
+          <h2 className="fp2-swap font-serif text-[1.4rem] leading-tight text-[var(--ink)]">
+            {unit.label}
+            <br />
+            Flat Layout
+          </h2>
+          <span className="mt-5 block h-px w-full bg-[var(--ink)]/15" aria-hidden="true" />
+          <dl className="mt-2 flex flex-1 flex-col justify-between divide-y divide-[var(--ink)]/10">
             {specRows.map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between gap-4 py-2.5">
                 <dt className="font-sans text-[0.8rem] text-[var(--ink-soft)]">{label}</dt>
