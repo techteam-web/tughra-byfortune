@@ -17,6 +17,28 @@
   --alert: #E8A48C;         /* form errors on dark (8.8:1 on espresso) */
   --scrim: rgba(28, 19, 13, 0.8);
 
+  /* Menu glass ribbon (GlassRibbon.jsx): the client's four ribbon colours; change them here only. */
+  --ribbon-deep-bronze: #8C4D2C;
+  --ribbon-main-gold: #E4AA7A;
+  --ribbon-champagne: #FFE0A8;
+  --ribbon-highlight: #FFF2D6;
+
+  /* what each part of the ribbon is drawn in */
+  --ribbon-core: var(--ribbon-highlight);        /* bright core of the straight run */
+  --ribbon-edge-in: var(--ribbon-main-gold);     /* inner edge */
+  --ribbon-edge-out: var(--ribbon-champagne);    /* outer edge */
+  --ribbon-glass: var(--ribbon-main-gold);       /* the glass between the edges */
+  --ribbon-amber: var(--ribbon-main-gold);       /* the ribbon lower down, where it warms */
+  --ribbon-face: var(--ribbon-champagne);        /* the bright face where it turns */
+  --ribbon-ember: color-mix(in srgb, var(--ribbon-main-gold) 70%, var(--ribbon-deep-bronze)); /* the sweep */
+  --ribbon-copper: var(--ribbon-deep-bronze);    /* far edge of the face */
+  --ribbon-glow: var(--ribbon-main-gold);        /* halo around the lines */
+
+  /* Menu panel: smoky glass, see-through (opacity top to bottom) */
+  --menu-panel-top: 0.5;
+  --menu-panel-mid: 0.6;
+  --menu-panel-low: 0.72;
+
   /* shape */
   --radius-card: 1.125rem;  /* 18px */
   --radius-tile: 0.75rem;
