@@ -1,8 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
-import { BackControl, IconButton, Lockup } from '../ui/controls.jsx'
-import RibbonStage from '../components/RibbonStage.jsx'
-import { CORNER } from '../ui/layout.js'
+import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
 import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose } from '../ui/icons.jsx'
 import { glowAt } from '../ui/glow.js'
 
@@ -60,17 +58,21 @@ const pad = (n) => String(n).padStart(2, '0')
 const FLAT = CATEGORIES.flatMap((c, ci) => c.slides.map((s, i) => ({ ...s, ci, i })))
 const OFFSETS = CATEGORIES.map((c, ci) => CATEGORIES.slice(0, ci).reduce((n, x) => n + x.slides.length, 0))
 const SRCS = FLAT.map((s) => s.src)
+const TABS = CATEGORIES.map((c, i) => ({ value: i, label: c.label }))
 
+// An immersive viewer: the render fills the screen; a slim glass dock, the caption and a gold
+// timeline are the only things on it, and even they step back when nothing moves.
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  const [full, setFull] = useState(false) // picture only: the panel and ribbon step aside
+  const [full, setFull] = useState(false) // picture only: everything steps aside
   const [grid, setGrid] = useState(false)
   const rootRef = useRef(null)
   const stripRef = useRef(null)
   const gridRef = useRef(null)
   const touchX = useRef(0)
   const wheelAt = useRef(0)
+  const firstShow = useRef(true)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
@@ -79,16 +81,36 @@ function Gallery({ onClose }) {
   const flat = OFFSETS[cat] + idx
   const key = `${cat}-${idx}`
 
-  // the panel's words and controls arrive after the stage
+  // arrival
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
-      tl.add(fx.fade('.g-top', { y: -10 }), 0.4)
-      tl.add(fx.fade('.g-seal', { y: 10 }), 0.6)
-      tl.add(fx.fade('.g-rise', { stagger: 0.08 }), 0.85)
+      tl.add(fx.show('.gv-stage', { duration: 1.2 }), 0)
+      tl.add(fx.fade('.tb-anim', { y: -10 }), 0.3)
+      tl.add(fx.fade('.g-chrome', { y: 12, stagger: 0.08 }), 0.5)
+      tl.add(fx.line('.g-timeline'), 0.8)
     }, rootRef)
     return () => ctx.revert()
   }, [])
+
+  // the chosen render crossfades in and drifts 3% while it is shown
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    const on = root.querySelector(`[data-slide="${flat}"]`)
+    root.querySelectorAll('[data-slide]').forEach((el) => {
+      if (el !== on) gsap.to(el, { opacity: 0, duration: REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
+    })
+    if (!on) return
+    gsap.to(on, { opacity: 1, duration: firstShow.current ? 0 : REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
+    firstShow.current = false
+    const img = on.querySelector('img')
+    if (img && !REDUCED) gsap.fromTo(img, { scale: 1 }, { scale: 1.04, duration: 9, ease: 'power1.out', overwrite: 'auto' })
+  }, [flat])
+
+  // the gold timeline marks where you are in the collection
+  useLayoutEffect(() => {
+    gsap.to('.g-progress', { scaleX: (idx + 1) / total, duration: REDUCED ? 0 : 0.8, ease: EASE.enter, overwrite: 'auto' })
+  }, [idx, total, cat])
 
   // the title wipes up on every change; the subtitle arrives late
   useLayoutEffect(() => {
@@ -108,6 +130,30 @@ function Gallery({ onClose }) {
     const target = chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2
     gsap.to(strip, { scrollLeft: Math.max(0, target), duration: REDUCED ? 0 : 0.6, ease: EASE.soft, overwrite: 'auto' })
   }, [key])
+
+  // the interface steps back when nothing has moved for a few seconds
+  useEffect(() => {
+    let t
+    let idle = false
+    const setIdle = (v) => {
+      if (v === idle) return
+      idle = v
+      rootRef.current?.classList.toggle('cursor-none', v)
+      gsap.to(rootRef.current?.querySelectorAll('.gv-ui'), { autoAlpha: v ? 0 : 1, duration: v ? 0.9 : 0.4, ease: EASE.soft, overwrite: 'auto' })
+    }
+    const wake = () => {
+      setIdle(false)
+      clearTimeout(t)
+      t = setTimeout(() => setIdle(true), 4500)
+    }
+    wake()
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart']
+    events.forEach((e) => window.addEventListener(e, wake, { passive: true }))
+    return () => {
+      clearTimeout(t)
+      events.forEach((e) => window.removeEventListener(e, wake))
+    }
+  }, [])
 
   // warm the cache for the big renders so switching feels instant
   useEffect(() => {
@@ -161,9 +207,12 @@ function Gallery({ onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   })
 
+  const hide = full ? 'pointer-events-none opacity-0' : ''
+
   return (
     <div
       ref={rootRef}
+      className="relative h-svh w-full overflow-hidden bg-espresso text-cream"
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         if (grid) return
@@ -178,106 +227,118 @@ function Gallery({ onClose }) {
         step(e.deltaY > 0 ? 1 : -1)
       }}
     >
-      <RibbonStage
-        slides={SRCS}
-        active={flat}
-        bare={full}
-        label="Gallery"
-        photo="object-center"
-        panel={
-          <>
-            <button type="button" onClick={onClose} aria-label="Back to menu" className="g-seal tr-focus shrink-0 self-start border-none bg-transparent p-0">
-              <Lockup compact />
-            </button>
+      {/* every render stacked, edge to edge; only the current one is lit */}
+      <div className="gv-stage absolute inset-0" aria-live="polite">
+        {FLAT.map((s, i) => (
+          <div key={s.src} data-slide={i} className="absolute inset-0 overflow-hidden" style={{ opacity: 0 }}>
+            <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+          </div>
+        ))}
+      </div>
 
-            <div className="flex flex-1 flex-col justify-end side:justify-center">
-              <span className="g-rise flex items-center gap-4">
-                <span className="tr-num">02</span>
-                <span className="tr-dash" />
-                <span className="tr-label">Gallery</span>
-              </span>
+      {/* shade where the words sit: a smoky gradient with a faint grain */}
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${full ? 'opacity-0' : ''}`}
+        style={{
+          backgroundImage:
+            'var(--grain), linear-gradient(180deg, color-mix(in srgb, var(--espresso) 70%, transparent) 0%, transparent 26%), linear-gradient(0deg, color-mix(in srgb, var(--espresso) 92%, transparent) 0%, color-mix(in srgb, var(--espresso) 55%, transparent) 24%, transparent 55%)',
+        }}
+      />
 
-              {/* the collections, as menu entries */}
-              <div className="g-rise mt-5 flex flex-col gap-1" role="group" aria-label="Collections">
-                {CATEGORIES.map((c, ci) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => switchCategory(ci)}
-                    onPointerMove={glowAt}
-                    aria-pressed={ci === cat}
-                    className={`mn-glow tr-focus flex w-full max-w-[20rem] touch-manipulation items-center rounded-lg border-none bg-transparent py-[0.6rem] pl-3 pr-2.5 text-left ${ci === cat ? 'is-on' : ''}`}
-                  >
-                    <span className="tr-num w-8 shrink-0">{pad(ci + 1)}</span>
-                    <span className={`tr-dash mr-6 transition-colors duration-500 ${ci === cat ? 'bg-[var(--ribbon-champagne)]' : ''}`} />
-                    <span className={`flex-1 font-sans text-[0.8125rem] uppercase tracking-[0.2em] transition-colors duration-300 ${ci === cat ? 'text-[var(--ribbon-champagne)]' : 'text-cream'}`}>{c.label}</span>
-                    <span className="tr-num">{pad(c.slides.length)}</span>
-                  </button>
-                ))}
-              </div>
-
-              <i className="g-rise tr-hair mt-6 w-40 short:hidden" />
-
-              <div className="mt-6 min-w-0 short:mt-2">
-                <span className="g-count flex items-center gap-4">
-                  <span className="tr-num text-[var(--ribbon-champagne)]">{pad(idx + 1)}</span>
-                  <span className="tr-dash" />
-                  <span className="tr-num">{pad(total)}</span>
-                </span>
-                <h2 className="tr-display mt-3 text-[clamp(1.8rem,2.4vw,2.5rem)] short:text-[1.3rem]">
-                  <span className="g-title block pb-1">{slide.title}</span>
-                </h2>
-                <p className="g-sub tr-label mt-2 text-cream/75 short:hidden">{slide.subtitle}</p>
-              </div>
+      {/* ---------- Top: seal, collections, round controls ---------- */}
+      <div className="gv-ui">
+        <div className={`transition-opacity duration-500 ${hide}`}>
+        <TopBar onBrand={onClose} compact>
+          <div className="g-chrome flex items-center gap-3">
+            <div className="mr-2 hidden lg:block short:block">
+              <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
-
-            {/* arrows and the thumbnail strip */}
-            <div className="g-rise shrink-0">
-              <div className="mb-3 flex items-center gap-3">
-                <IconButton label="Previous render" onClick={() => step(-1)} small>
-                  <IcPrev size={16} />
-                </IconButton>
-                <IconButton label="Next render" onClick={() => step(1)} small>
-                  <IcNext size={16} />
-                </IconButton>
-              </div>
-              <div ref={stripRef} className="tr-noscroll -mx-1 flex max-w-full gap-2 overflow-x-auto px-1 py-1" role="tablist" aria-label={`${category.label} renders`}>
-                {slides.map((sl, i) => {
-                  const on = i === idx
-                  return (
-                    <button
-                      key={sl.src}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      aria-current={on}
-                      aria-label={sl.title}
-                      onClick={() => setIdx(i)}
-                      onPointerMove={glowAt}
-                      className={`mn-glow tr-focus relative h-[2.7rem] w-[4rem] shrink-0 touch-manipulation rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 short:h-[2.1rem] short:w-[3.1rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-60 hover:opacity-100'}`}
-                    >
-                      <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </>
-        }
-      >
-        {/* round controls, top right over the photograph */}
-        <div className={`g-top ${CORNER}`}>
-          {!full && (
             <IconButton label="All renders" onClick={() => setGrid(true)}>
               <IcGrid size={18} />
             </IconButton>
-          )}
-          <IconButton label={full ? 'Show details (Esc)' : 'Picture only (F)'} onClick={() => setFull((v) => !v)} active={full}>
-            {full ? <IcCollapse size={18} /> : <IcExpand size={18} />}
-          </IconButton>
-          <BackControl onClick={onClose} />
+            <IconButton label="Picture only (F)" onClick={() => setFull(true)}>
+              <IcExpand size={18} />
+            </IconButton>
+            <BackControl onClick={onClose} />
+          </div>
+        </TopBar>
+        <div className="g-chrome absolute inset-x-0 top-[6.25rem] z-20 flex justify-center px-5 lg:hidden short:hidden">
+          <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
         </div>
-      </RibbonStage>
+        </div>
+      </div>
+
+      {/* picture only: one small way back */}
+      {full && (
+        <div className="gv-ui absolute right-3 top-[max(1rem,var(--safe-t))] z-30 sm:right-6 side:right-[2.8rem] side:top-[2.7rem]">
+          <IconButton label="Show details (Esc)" onClick={() => setFull(false)} active>
+            <IcCollapse size={18} />
+          </IconButton>
+        </div>
+      )}
+
+      {/* side arrows */}
+      {total > 1 && (
+        <div className="gv-ui pointer-events-none absolute inset-x-0 top-1/2 z-20 -translate-y-1/2 px-3 sm:px-6 side:px-[2.8rem]">
+          <div className={`flex items-center justify-between transition-opacity duration-500 ${hide}`}>
+          <IconButton label="Previous render" onClick={() => step(-1)} className="pointer-events-auto">
+            <IcPrev size={18} />
+          </IconButton>
+          <IconButton label="Next render" onClick={() => step(1)} className="pointer-events-auto">
+            <IcNext size={18} />
+          </IconButton>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Foot: caption left, glass dock right, a gold timeline along the edge ---------- */}
+      <div className="gv-ui absolute inset-x-0 bottom-0 z-20">
+        <div className={`transition-opacity duration-500 ${hide}`}>
+        <div className="flex flex-col gap-5 px-5 pb-[max(1.4rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 side:px-[2.9rem] side:pb-[3.2rem] short:flex-row short:items-end short:gap-6 short:pb-4">
+          <div className="g-chrome min-w-0 md:max-w-[36rem]">
+            <span className="g-count flex items-center gap-4">
+              <span className="tr-num text-[var(--ribbon-champagne)]">{pad(idx + 1)}</span>
+              <span className="tr-dash" />
+              <span className="tr-num">{pad(total)}</span>
+              <span className="tr-label ml-2">{category.label}</span>
+            </span>
+            <h2 className="tr-display mt-4 text-[clamp(2.1rem,3.6vw,3.6rem)] short:mt-1 short:text-[1.4rem]">
+              <span className="g-title block truncate pb-1">{slide.title}</span>
+            </h2>
+            <p className="g-sub tr-label mt-2 text-cream/75 short:hidden">{slide.subtitle}</p>
+          </div>
+
+          {/* the dock: every render in the collection, in smoky glass */}
+          <div className="g-chrome tr-panel shrink-0 rounded-[0.9rem] p-2 md:max-w-[min(30rem,46vw)] short:max-w-[40vw]">
+            <div ref={stripRef} className="tr-noscroll flex gap-2 overflow-x-auto" role="tablist" aria-label={`${category.label} renders`}>
+              {slides.map((sl, i) => {
+                const on = i === idx
+                return (
+                  <button
+                    key={sl.src}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    aria-current={on}
+                    aria-label={sl.title}
+                    onClick={() => setIdx(i)}
+                    onPointerMove={glowAt}
+                    className={`mn-glow tr-focus relative h-[3rem] w-[4.4rem] shrink-0 touch-manipulation rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 short:h-[2.2rem] short:w-[3.2rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-60 hover:opacity-100'}`}
+                  >
+                    <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* the gold timeline */}
+        <div className="g-timeline relative h-px w-full bg-cream/20">
+          <span className="g-progress absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,var(--ribbon-deep-bronze),var(--ribbon-main-gold),var(--ribbon-champagne))] shadow-[0_0_0.8rem_var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
+        </div>
+        </div>
+      </div>
 
       {/* ---------- Grid overview ---------- */}
       {grid && (
