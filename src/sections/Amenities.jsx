@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
-import { TopBar, BackControl, IconButton } from '../ui/controls.jsx'
+import { BackControl, IconButton, Lockup } from '../ui/controls.jsx'
+import RibbonStage from '../components/RibbonStage.jsx'
+import { CORNER } from '../ui/layout.js'
 import { glowAt } from '../ui/glow.js'
 import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose, IcPool, IcGym, IcStudio, IcBanquet, IcHall, IcTheatre, IcChess, IcPaddle, IcLeaf, IcDeck } from '../ui/icons.jsx'
 import poolImg from '../assets/amenities/swimming-pool.webp'
@@ -31,6 +33,7 @@ const AMENITIES = [
 
 const AUTOPLAY = 7 // seconds per amenity
 const pad = (n) => String(n).padStart(2, '0')
+const IMAGES = AMENITIES.map((a) => a.image)
 
 function IconTile({ Icon, size = 'md' }) {
   const box = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12'
@@ -43,59 +46,44 @@ function IconTile({ Icon, size = 'md' }) {
 
 function Amenities({ onClose }) {
   const [index, setIndex] = useState(0)
-  const [full, setFull] = useState(false) // picture only, in the app
+  const [full, setFull] = useState(false) // picture only: the panel and ribbon step aside
   const [grid, setGrid] = useState(false)
-  const sectionRef = useRef(null)
+  const rootRef = useRef(null)
   const gridRef = useRef(null)
-  const progRef = useRef(null)
   const touchX = useRef(0)
-  const firstShow = useRef(true)
   const total = AMENITIES.length
   const item = AMENITIES[index]
 
   const goNext = useCallback(() => setIndex((i) => (i + 1) % total), [total])
   const goPrev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total])
 
-  // Entrance
+  // the panel's words and controls arrive after the stage
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
-      tl.add(fx.show('.am-stage', { duration: 1.1 }), 0)
-      tl.add(fx.fade('.tb-anim', { y: -10 }), 0.15)
-      tl.add(fx.fade('.am-chrome', { stagger: 0.08 }), 0.3)
-      tl.add(fx.panel('.am-card'), 0.45)
-      tl.add(fx.corners('.am-card .tr-corner'), 0.7)
-    }, sectionRef)
+      tl.add(fx.fade('.am-top', { y: -10 }), 0.4)
+      tl.add(fx.fade('.am-seal', { y: 10 }), 0.6)
+      tl.add(fx.fade('.am-num', { y: 8, stagger: 0.05, duration: 0.5 }), 0.85)
+      tl.add(fx.fade('.am-name', { y: 10, stagger: 0.05 }), 0.95)
+      tl.add(fx.fade('.am-foot', { y: 10 }), 1.3)
+    }, rootRef)
     return () => ctx.revert()
   }, [])
 
-  // The chosen photograph crossfades in and drifts 3% while it is shown
-  useLayoutEffect(() => {
-    const root = sectionRef.current
-    const on = root.querySelector(`[data-am="${index}"]`)
-    root.querySelectorAll('[data-am]').forEach((el) => {
-      if (el !== on) gsap.to(el, { opacity: 0, duration: REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
-    })
-    gsap.to(on, { opacity: 1, duration: firstShow.current ? 0 : REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
-    firstShow.current = false
-    if (!REDUCED) gsap.fromTo(on.querySelector('img'), { scale: 1 }, { scale: 1.03, duration: AUTOPLAY + 1, ease: 'power1.out', overwrite: 'auto' })
-  }, [index])
-
-  // The card's words change with a soft wipe; the line arrives late
+  // the caption changes with a soft wipe; the line arrives late
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       fx.heading('.am-title', { delay: 0.1 })
-      fx.fade('.am-count', { y: 6, duration: 0.5 })
       fx.fade('.am-icon', { y: 6, duration: 0.5, delay: 0.05 })
       fx.fade('.am-desc', { delay: 0.35, duration: 0.7 })
-    }, sectionRef)
+    }, rootRef)
     return () => ctx.revert()
   }, [index])
 
-  // Autoplay: the active progress line draws over seven seconds, then the next amenity comes in.
+  // Autoplay: a gold line draws over seven seconds, then the next amenity comes in.
   // Paused while the picture-only view or the grid is open.
   useEffect(() => {
-    const line = progRef.current?.querySelector(`[data-prog="${index}"]`)
+    const line = rootRef.current?.querySelector('[data-prog]')
     if (!line) return
     if (full || grid) {
       gsap.set(line, { scaleX: 1 })
@@ -114,6 +102,17 @@ function Amenities({ onClose }) {
     gsap.to(gridRef.current, { autoAlpha: 0, duration: 0.45, ease: EASE.soft, onComplete: done })
   }
 
+  useLayoutEffect(() => {
+    if (!grid) return
+    const ctx = gsap.context(() => {
+      fx.show(gridRef.current, { duration: 0.6 })
+      fx.fade('.ag-head', { stagger: 0.08, delay: 0.1 })
+      fx.line('.ag-hair', { delay: 0.2 })
+      revealOnScroll('.ag-card', { scroller: gridRef.current, stagger: 0.07 })
+    }, gridRef)
+    return () => ctx.revert()
+  }, [grid])
+
   useEffect(() => {
     const onKey = (e) => {
       if (grid) {
@@ -129,120 +128,109 @@ function Amenities({ onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  useLayoutEffect(() => {
-    if (!grid) return
-    const ctx = gsap.context(() => {
-      fx.show(gridRef.current, { duration: 0.6 })
-      fx.fade('.ag-head', { stagger: 0.08, delay: 0.1 })
-      fx.line('.ag-hair', { delay: 0.2 })
-      revealOnScroll('.ag-card', { scroller: gridRef.current, stagger: 0.07 })
-    }, gridRef)
-    return () => ctx.revert()
-  }, [grid])
-
-  const hide = full ? 'pointer-events-none opacity-0' : ''
-
   return (
-    <section
-      ref={sectionRef}
+    <div
+      ref={rootRef}
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         if (grid) return
         const dx = e.changedTouches[0].clientX - touchX.current
         if (Math.abs(dx) > 50) (dx < 0 ? goNext : goPrev)()
       }}
-      className="relative h-svh w-full overflow-hidden bg-espresso text-cream"
     >
-      {/* The photograph is the page: every amenity stacked, the chosen one crossfades in */}
-      <div className="am-stage absolute inset-0">
-        {AMENITIES.map((a, i) => (
-          <div key={a.title} data-am={i} className="absolute inset-0 overflow-hidden" style={{ opacity: 0 }}>
-            <img src={a.image} alt={i === index ? a.title : ''} className={`absolute inset-0 h-full w-full transition-[opacity] duration-500 ${full ? 'object-contain' : 'object-cover'}`} draggable={false} />
-          </div>
-        ))}
-      </div>
+      <RibbonStage
+        slides={IMAGES}
+        active={index}
+        bare={full}
+        label="Amenities"
+        photo="object-center"
+        panel={
+          <>
+            <button type="button" onClick={onClose} aria-label="Back to menu" className="am-seal tr-focus shrink-0 self-start border-none bg-transparent p-0">
+              <Lockup compact />
+            </button>
 
-      {/* espresso at the top for the logo, and at the foot for the card */}
-      <div
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${full ? 'opacity-0' : ''}`}
-        style={{ background: 'linear-gradient(180deg, var(--scrim) 0%, transparent 34%), linear-gradient(0deg, var(--espresso) 0%, var(--scrim) 16%, transparent 48%)' }}
-      />
-
-      <TopBar onBrand={onClose} compact>
-        <div className="am-chrome flex items-center gap-2.5 md:gap-3">
-          <IconButton label="All amenities" onClick={() => setGrid(true)} className={`transition-opacity duration-500 ${hide}`}>
-            <IcGrid size={18} />
-          </IconButton>
-          <IconButton label={full ? 'Show details' : 'Picture only (F)'} onClick={() => setFull((v) => !v)} active={full}>
-            {full ? <IcCollapse size={18} /> : <IcExpand size={18} />}
-          </IconButton>
-          <span className="ml-1">
-            <BackControl onClick={onClose} />
-          </span>
-        </div>
-      </TopBar>
-
-      {/* Arrows */}
-      <div className="am-chrome pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between px-3 md:px-8">
-        <IconButton label="Previous amenity" onClick={goPrev} className="pointer-events-auto">
-          <IcPrev size={18} />
-        </IconButton>
-        <IconButton label="Next amenity" onClick={goNext} className="pointer-events-auto">
-          <IcNext size={18} />
-        </IconButton>
-      </div>
-
-      {/* The card on the left, the run of amenities on the right */}
-      <div className="absolute inset-x-0 bottom-0 z-10">
-        <div className={`flex flex-col gap-4 px-4 pb-[max(1rem,var(--safe-b))] transition-opacity duration-500 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:gap-5 short:pb-3 ${hide}`}>
-          <article className="am-card tr-panel w-full p-5 md:w-[27rem] md:p-6 short:w-[22rem] short:p-3.5">
-            <div className="flex items-start gap-4">
-              <span className="am-icon block">
-                <IconTile Icon={item.Icon} />
+            <div className="flex min-h-0 flex-1 flex-col justify-end side:justify-center">
+              <span className="am-num flex items-center gap-4">
+                <span className="tr-num">03</span>
+                <span className="tr-dash" />
+                <span className="tr-label">Amenities</span>
               </span>
-              <div className="min-w-0 flex-1">
-                <span className="am-count flex items-center gap-4">
+
+              {/* wide screens: the ten amenities as menu entries with the golden hover */}
+              <ul className="mt-4 hidden flex-col gap-px side:flex short:mt-1">
+                {AMENITIES.map((a, i) => {
+                  const on = i === index
+                  return (
+                    <li key={a.title}>
+                      <button
+                        type="button"
+                        onClick={() => setIndex(i)}
+                        onPointerMove={glowAt}
+                        aria-pressed={on}
+                        className={`mn-glow tr-focus flex w-full max-w-[20rem] touch-manipulation items-center rounded-lg border-none bg-transparent py-[clamp(0.3rem,0.9svh,0.55rem)] pl-3 pr-2.5 text-left short:py-[0.12rem] ${on ? 'is-on' : ''}`}
+                      >
+                        <span className="am-num tr-num w-8 shrink-0">{pad(i + 1)}</span>
+                        <span className={`tr-dash mr-6 transition-[width,background-color] duration-500 ${on ? 'w-6 bg-[var(--ribbon-champagne)]' : ''}`} />
+                        <span className={`am-name min-w-0 flex-1 truncate font-sans text-[0.75rem] uppercase tracking-[0.18em] transition-colors duration-300 short:text-[0.625rem] ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream'}`}>{a.title}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {/* the chosen amenity */}
+              <div className="mt-5 min-w-0 side:mt-6 short:mt-1">
+                <div className="flex items-center gap-4">
+                  <span className="am-icon block short:hidden">
+                    <IconTile Icon={item.Icon} />
+                  </span>
+                  <h2 className="tr-display min-w-0 text-[clamp(1.6rem,2.1vw,2.1rem)] short:text-[1.05rem]">
+                    <span className="am-title block truncate pb-0.5">{item.title}</span>
+                  </h2>
+                </div>
+                <p className="am-desc mt-3 max-w-[22rem] text-[0.875rem] leading-[1.7] text-cream/80 short:hidden">{item.description}</p>
+              </div>
+            </div>
+
+            {/* arrows, the count, and the autoplay line */}
+            <div className="am-foot mt-4 shrink-0 side:mt-0">
+              <div className="flex items-center gap-3">
+                <IconButton label="Previous amenity" onClick={goPrev} small>
+                  <IcPrev size={16} />
+                </IconButton>
+                <IconButton label="Next amenity" onClick={goNext} small>
+                  <IcNext size={16} />
+                </IconButton>
+                <span className="ml-2 flex items-center gap-3">
                   <span className="tr-num text-[var(--ribbon-champagne)]">{pad(index + 1)}</span>
                   <span className="tr-dash" />
                   <span className="tr-num">{pad(total)}</span>
                 </span>
-                <h2 className="tr-display mt-2.5 text-[clamp(1.6rem,2.2vw,2.15rem)] short:text-[1.2rem]">
-                  <span className="am-title block truncate pb-0.5">{item.title}</span>
-                </h2>
               </div>
+              <span className="mt-4 block h-px w-full max-w-[20rem] bg-cream/25 short:mt-2">
+                <span data-prog className="block h-full origin-left bg-[var(--ribbon-champagne)]" />
+              </span>
             </div>
-            <p className="am-desc mt-3 text-[0.875rem] leading-[1.7] text-cream/80 short:hidden">{item.description}</p>
-          </article>
-
-          <div ref={progRef} className="am-chrome flex items-center gap-1.5 self-center md:gap-2 md:self-end md:pb-2" role="tablist" aria-label="Amenities">
-            {AMENITIES.map((a, i) => {
-              const on = i === index
-              return (
-                <button
-                  key={a.title}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  aria-label={a.title}
-                  onClick={() => setIndex(i)}
-                  className="tr-focus flex h-7 items-center border-none bg-transparent p-0"
-                >
-                  <span
-                    className="relative block h-px overflow-hidden bg-cream/30 transition-[width] duration-700"
-                    style={{ width: on ? 'clamp(1.8rem,3.2vw,2.8rem)' : 'clamp(0.75rem,1.4vw,1.4rem)' }}
-                  >
-                    {on && <span data-prog={i} className="absolute inset-0 origin-left bg-[var(--ribbon-champagne)]" />}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+          </>
+        }
+      >
+        <div className={`am-top ${CORNER}`}>
+          {!full && (
+            <IconButton label="All amenities" onClick={() => setGrid(true)}>
+              <IcGrid size={18} />
+            </IconButton>
+          )}
+          <IconButton label={full ? 'Show details (Esc)' : 'Picture only (F)'} onClick={() => setFull((v) => !v)} active={full}>
+            {full ? <IcCollapse size={18} /> : <IcExpand size={18} />}
+          </IconButton>
+          <BackControl onClick={onClose} />
         </div>
-      </div>
+      </RibbonStage>
 
       {/* ---------- Every amenity, as cards ---------- */}
       {grid && (
-        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-[color-mix(in_srgb,var(--espresso)_74%,transparent)] backdrop-blur-xl" style={{ backgroundImage: 'var(--grain)' }} role="dialog" aria-modal="true" aria-label="All amenities">
+        <div ref={gridRef} className="fixed inset-0 z-[60] overflow-y-auto bg-[color-mix(in_srgb,var(--espresso)_74%,transparent)] backdrop-blur-xl" style={{ backgroundImage: 'var(--grain)' }} role="dialog" aria-modal="true" aria-label="All amenities">
           <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-[color-mix(in_srgb,var(--espresso)_70%,transparent)] px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] backdrop-blur-md sm:px-8 side:px-[2.9rem] side:pt-[2.7rem]">
             <div>
               <span className="ag-head flex items-center gap-4">
@@ -284,7 +272,7 @@ function Amenities({ onClose }) {
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }
 

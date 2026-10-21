@@ -18,7 +18,7 @@ export const RIBBON_RX = '[--rx:86vw] sm:[--rx:76vw] side:[--rx:max(23rem,28.6vw
 export const PANEL_PAD =
   'px-6 pb-[max(1.5rem,var(--safe-b))] pt-[max(1.5rem,var(--safe-t))] sm:px-10 side:pb-[6.8svh] side:pl-[2.9rem] side:pr-6 side:pt-[3.4rem] short:pb-3 short:pl-6 short:pt-3'
 
-export default function RibbonStage({ image, frame = '', photo = '', panel, children, panelClass = '', className = '', label }) {
+export default function RibbonStage({ image, slides, active = 0, bare = false, frame = '', photo = '', panel, children, panelClass = '', className = '', label }) {
   const rootRef = useRef(null)
   const ribbonRef = useRef(null)
   const [clip, setClip] = useState(null)
@@ -53,36 +53,50 @@ export default function RibbonStage({ image, frame = '', photo = '', panel, chil
     return () => ctx.revert()
   }, [])
 
-  const img = (extra, eager) => (
-    <img
-      src={image}
-      alt=""
-      draggable={false}
-      fetchPriority={eager ? 'high' : undefined}
-      className={`rs-photo absolute inset-0 h-full w-full object-cover ${photo} ${extra}`}
-    />
-  )
+  // with several photographs: the chosen one crossfades in and drifts 3% while it is shown
+  const first = useRef(true)
+  useLayoutEffect(() => {
+    if (!slides) return
+    const root = rootRef.current
+    const dur = first.current ? 0 : REDUCED ? 0.2 : 1.1
+    first.current = false
+    root.querySelectorAll('[data-rs]').forEach((el) => {
+      gsap.to(el, { opacity: Number(el.dataset.rs) === active ? 1 : 0, duration: dur, ease: EASE.move, overwrite: 'auto' })
+    })
+    if (!REDUCED) root.querySelectorAll(`.rs-sharp[data-rs="${active}"] img`).forEach((el) => gsap.fromTo(el, { scale: 1 }, { scale: 1.03, duration: 8, ease: 'power1.out', overwrite: 'auto' }))
+  }, [slides, active])
+
+  const img = (extra, eager, cls) =>
+    slides ? (
+      slides.map((src, i) => (
+        <div key={src} data-rs={i} className={`${cls} absolute inset-0`} style={{ opacity: i === active ? 1 : 0 }}>
+          <img src={src} alt="" draggable={false} className={`absolute inset-0 h-full w-full object-cover ${photo} ${extra}`} />
+        </div>
+      ))
+    ) : (
+      <img src={image} alt="" draggable={false} fetchPriority={eager ? 'high' : undefined} className={`rs-photo absolute inset-0 h-full w-full object-cover ${photo} ${extra}`} />
+    )
 
   return (
     <section ref={rootRef} aria-label={label} className={`relative h-svh w-full overflow-hidden bg-espresso text-cream ${RIBBON_RX} ${className}`}>
       <div className="rs-bg absolute inset-0" aria-hidden="true">
-        <div className={`absolute inset-0 ${frame}`}>{img('', true)}</div>
+        <div className={`absolute inset-0 ${frame}`}>{img('', true, 'rs-sharp')}</div>
         {clip && (
-          <div className="absolute inset-0 hidden side:block" style={{ clipPath: `path('${clip}')` }}>
-            <div className={`absolute inset-0 ${frame}`}>{img('blur-[8px]')}</div>
+          <div className={`absolute inset-0 hidden transition-opacity duration-700 side:block ${bare ? 'opacity-0' : ''}`} style={{ clipPath: `path('${clip}')` }}>
+            <div className={`absolute inset-0 ${frame}`}>{img('blur-[8px]', false, 'rs-frost')}</div>
           </div>
         )}
       </div>
 
       <GlassRibbon
         ref={ribbonRef}
-        className="absolute top-0 z-10 h-full [--panel-fill:url(#gr-fill-v)] side:[--panel-fill:url(#gr-fill-side)]"
+        className={`absolute top-0 z-10 h-full transition-opacity duration-700 [--panel-fill:url(#gr-fill-v)] side:[--panel-fill:url(#gr-fill-side)] ${bare ? 'opacity-0' : ''}`}
         style={{ left: 'calc(var(--rx) - 100svh * 82 / 900)' }}
       />
 
       {children}
 
-      <div className={`absolute inset-y-0 left-0 z-20 flex flex-col ${PANEL_PAD} ${panelClass}`} style={{ width: 'calc(var(--rx) - 0.75rem)' }}>
+      <div className={`absolute inset-y-0 left-0 z-20 flex flex-col transition-opacity duration-700 ${PANEL_PAD} ${panelClass} ${bare ? 'pointer-events-none opacity-0' : ''}`} style={{ width: 'calc(var(--rx) - 0.75rem)' }}>
         {panel}
       </div>
     </section>
