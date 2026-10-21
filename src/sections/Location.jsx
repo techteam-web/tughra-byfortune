@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
+import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, BackControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
 import { T, alpha, mix } from '../theme/tokens.js'
@@ -552,6 +552,31 @@ function Location({ onClose }) {
     return () => ctx.revert()
   }, [])
 
+  // A soft flyover while the camera settles into its tilt: a few clouds drift
+  // past at different speeds, and the menu's own line for this place sweeps
+  // across twice, once each direction. Decorative only - skipped entirely
+  // under reduced motion.
+  useLayoutEffect(() => {
+    if (REDUCED) return
+    const ctx = gsap.context(() => {
+      gsap.set('.loc-fly', { opacity: 0 })
+      const tl = gsap.timeline({ delay: PAGE_IN + 0.3 })
+      tl.to('.loc-cloud', { opacity: 0.85, duration: 1.4 }, 0)
+      tl.fromTo('.loc-cloud--a', { x: '-35vw' }, { x: '135vw', duration: 11, ease: 'none' }, 0)
+      tl.fromTo('.loc-cloud--b', { x: '135vw' }, { x: '-35vw', duration: 13, ease: 'none' }, 0.6)
+      tl.to('.loc-cloud', { opacity: 0, duration: 2.2 }, 7.5)
+
+      const sweep = { keyframes: [
+        { x: '-8vw', opacity: 1, duration: 0.55 },
+        { x: '8vw', opacity: 1, duration: 1 },
+        { x: '55vw', opacity: 0, duration: 0.55 },
+      ], ease: EASE.move }
+      tl.fromTo('.loc-fly-1', { x: '-55vw', opacity: 0 }, sweep, 0.7)
+      tl.fromTo('.loc-fly-2', { x: '-55vw', opacity: 0 }, sweep, 3.4)
+    }, rootRef)
+    return () => ctx.revert()
+  }, [])
+
   useEffect(() => {
     const t = setTimeout(() => setLate(true), 4000)
     return () => clearTimeout(t)
@@ -622,6 +647,21 @@ function Location({ onClose }) {
         className="pointer-events-none absolute inset-0"
         style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
       />
+
+      {/* a soft flyover as the camera settles: clouds drift by, and the menu's own
+          line for this place sweeps across twice */}
+      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden" aria-hidden="true">
+        <span className="loc-cloud loc-cloud--a" style={{ top: '9%', width: '20rem', height: '6.5rem' }} />
+        <span className="loc-cloud loc-cloud--b" style={{ top: '19%', width: '28rem', height: '8.5rem' }} />
+        <span className="loc-cloud loc-cloud--a" style={{ top: '14%', width: '15rem', height: '5rem' }} />
+        <span className="loc-cloud loc-cloud--b" style={{ top: '29%', width: '18rem', height: '6rem' }} />
+        <span className="loc-fly loc-fly-1 font-serif" style={{ top: '16%' }}>
+          A higher perspective
+        </span>
+        <span className="loc-fly loc-fly-2 font-serif" style={{ top: '24%' }}>
+          City, sea, opportunity
+        </span>
+      </div>
 
       <TopBar onBrand={onClose}>
         <span className="loc-back">
