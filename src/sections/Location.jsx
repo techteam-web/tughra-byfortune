@@ -350,7 +350,13 @@ function Location({ onClose }) {
       attributionControl: false,
     })
     mapRef.current = map
-    map.addControl(new NavigationControl({ visualizePitch: true }), 'bottom-right')
+    // zoom is locked: the guest can turn and tilt the map, but not zoom it
+    map.scrollZoom.disable()
+    map.doubleClickZoom.disable()
+    map.boxZoom.disable()
+    map.touchZoomRotate.disable()
+    map.keyboard.disable()
+    map.addControl(new NavigationControl({ visualizePitch: true, showZoom: false }), 'bottom-right')
 
     map.on('load', () => {
       applyBrandTheme(map)
