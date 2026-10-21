@@ -34,6 +34,15 @@
   --ribbon-copper: var(--ribbon-deep-bronze);    /* far edge of the face */
   --ribbon-glow: var(--ribbon-main-gold);        /* halo around the lines */
 
+  /* the ribbon's gold as a line, and its warm edge for glass surfaces */
+  --gold-line: linear-gradient(90deg, var(--ribbon-champagne) 0%, var(--ribbon-main-gold) 45%, color-mix(in srgb, var(--ribbon-main-gold) 0%, transparent) 100%);
+  --gold-edge: linear-gradient(155deg, color-mix(in srgb, var(--ribbon-champagne) 70%, transparent) 0%, color-mix(in srgb, var(--ribbon-main-gold) 28%, transparent) 38%, color-mix(in srgb, var(--ribbon-main-gold) 10%, transparent) 70%, color-mix(in srgb, var(--ribbon-deep-bronze) 35%, transparent) 100%);
+  /* film grain laid over glass and dark grounds (rich texture, very faint) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 0.9  0 0 0 0 0.75  0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* dark round control, as on the menu */
+  --circle-fill: color-mix(in srgb, color-mix(in srgb, var(--espresso) 78%, var(--cream)) 90%, transparent);
+  --circle-ink: color-mix(in srgb, var(--gold) 50%, var(--gold-pale));
+
   /* Menu panel: smoky glass, see-through (opacity top to bottom) */
   --menu-panel-top: 0.5;
   --menu-panel-mid: 0.6;

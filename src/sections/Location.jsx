@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
-import { TopBar, BackControl, Segmented, Corners } from '../ui/controls.jsx'
+import { TopBar, BackControl, Segmented } from '../ui/controls.jsx'
+import { glowAt } from '../ui/glow.js'
 import { T, alpha, mix } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
 import './Location.css'
@@ -574,11 +575,14 @@ function Location({ onClose }) {
 
       {/* Location table */}
       <aside
-        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-auto md:left-12 md:top-1/2 md:max-h-[70svh] md:w-[23rem] md:-translate-y-1/2 md:p-6 xl:left-[4.5rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[16rem] short:translate-y-0 short:p-3"
+        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-auto md:left-8 md:top-1/2 md:max-h-[70svh] md:w-[23rem] md:-translate-y-1/2 md:p-6 side:left-[2.9rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:max-h-none short:w-[16rem] short:translate-y-0 short:p-3"
       >
-        <Corners />
-        <span className="loc-rise tr-label block short:hidden">Neighborhood · Mumbai Central</span>
-        <h2 className="loc-rise mt-2 font-serif text-[1.6rem] font-normal leading-none text-cream md:text-[2rem] short:mt-0 short:text-[1.15rem]">Location Highlights</h2>
+        <span className="loc-rise flex items-center gap-4 short:hidden">
+          <span className="tr-num">05</span>
+          <span className="tr-dash" />
+          <span className="tr-label">Mumbai Central</span>
+        </span>
+        <h2 className="loc-rise tr-display mt-3 text-[1.6rem] leading-none md:text-[2.1rem] short:mt-0 short:text-[1.15rem]">Location Highlights</h2>
         <i className="loc-hair tr-hair mt-4 short:mt-2" />
 
         <div className="loc-rise mt-4 hidden md:block short:mt-2">
@@ -588,23 +592,22 @@ function Location({ onClose }) {
           <Segmented options={TABS} value={category} onChange={pickCategory} label="Categories" />
         </div>
 
-        <ul className="loc-list mt-3 min-h-0 flex-1 overflow-y-auto">
-          {current.places.map((p) => {
+        <ul className="loc-list -mx-1.5 mt-3 min-h-0 flex-1 overflow-y-auto px-1.5">
+          {current.places.map((p, i) => {
             const on = p.id === selected
             return (
               <li key={p.id} className="loc-row">
+                {/* menu-style rows with the golden hover */}
                 <button
                   type="button"
                   aria-pressed={on}
-                  className={`tr-focus group relative flex w-full items-center justify-between gap-4 border-0 border-b border-bronze/15 bg-transparent py-3 pl-4 pr-1 text-left text-[0.875rem] transition-colors duration-300 short:py-1.5 short:text-[0.75rem] ${on ? 'text-gold-pale' : 'text-cream hover:text-gold-pale'}`}
+                  onPointerMove={glowAt}
+                  className={`mn-glow tr-focus group flex w-full touch-manipulation items-center gap-3 rounded-lg border-none bg-transparent px-2.5 py-2.5 text-left font-sans text-[0.75rem] uppercase tracking-[0.14em] transition-colors duration-300 short:py-1 short:text-[0.6875rem] ${on ? 'is-on text-[var(--ribbon-champagne)]' : 'text-cream hover:text-[var(--ribbon-champagne)]'}`}
                   onClick={() => setSelected((s) => (s === p.id ? null : p.id))}
                 >
-                  <span
-                    className={`absolute left-0 top-1/2 h-4 w-px -translate-y-1/2 origin-center bg-gold transition-transform duration-500 ${on ? 'scale-y-100' : 'scale-y-0'}`}
-                    aria-hidden="true"
-                  />
-                  <span>{p.name}</span>
-                  <span className="shrink-0 font-sans text-[0.75rem] tabular-nums tracking-[0.04em] text-gold-pale/80">{p.km.toFixed(1)} km</span>
+                  <span className="tr-num w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                  <span className="shrink-0 tabular-nums tracking-[0.06em] text-[color-mix(in_srgb,var(--ribbon-champagne)_80%,transparent)]">{p.km.toFixed(1)} km</span>
                 </button>
               </li>
             )
@@ -616,7 +619,8 @@ function Location({ onClose }) {
         <button
           type="button"
           onClick={overview}
-          className="tr-btn tr-btn--outline absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
+          onPointerMove={glowAt}
+          className="tr-btn tr-btn--outline mn-glow absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
         >
           Overview
         </button>

@@ -1,18 +1,20 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { gsap, glideTo, EASE, REDUCED } from '../motion/index.js'
 import BrandMark from '../components/BrandMark.jsx'
-import { IcBack, IcHome } from './icons.jsx'
+import { IcBack, IcDiamond } from './icons.jsx'
+import { glowAt } from './glow.js'
 
-// Circular control: outline bronze, gold icon.
+// Round control, as on the menu: a dark circle with a gold icon and the golden hover.
 export function IconButton({ label, onClick, children, active, small, className = '', ...rest }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      onPointerMove={glowAt}
       aria-label={label}
       title={label}
       aria-pressed={active === undefined ? undefined : active}
-      className={`tr-icon-btn ${small ? 'is-sm' : ''} ${active ? 'is-active' : ''} ${className}`}
+      className={`tr-icon-btn mn-glow touch-manipulation ${small ? 'is-sm' : ''} ${active ? 'is-active' : ''} ${className}`}
       {...rest}
     >
       {children}
@@ -20,34 +22,30 @@ export function IconButton({ label, onClick, children, active, small, className 
   )
 }
 
-// Circle with a caps label beside it. Used for Back and Home on every page.
-export function LabelledControl({ label, onClick, icon, hideLabelOnPhone = true, className = '' }) {
+// Back to the menu, and Home: the same dark circles the menu uses.
+export const BackControl = ({ onClick, label = 'Back' }) => (
+  <IconButton label={label} onClick={onClick}>
+    <IcBack size={17} />
+  </IconButton>
+)
+export const HomeControl = ({ onClick }) => (
+  <IconButton label="Home" onClick={onClick}>
+    <IcDiamond size={13} strokeWidth={1.6} />
+  </IconButton>
+)
+
+// The seal and the name, side by side, as on the menu.
+export function Lockup({ className = '', compact = false }) {
   return (
-    <button type="button" onClick={onClick} aria-label={label} className={`tr-ctl tr-focus ${className}`}>
-      <span className={`tr-label ${hideLabelOnPhone ? 'hidden sm:inline' : ''}`}>{label}</span>
-      <span className="tr-icon-btn">{icon}</span>
-    </button>
+    <span className={`flex items-center gap-4 ${className}`}>
+      <BrandMark tone="pale" size="seal" credit={false} seal />
+      <span className={`font-sans text-[1.05rem] font-normal uppercase leading-none tracking-[0.1em] text-cream side:text-[1.15rem] short:text-[0.85rem] ${compact ? 'hidden sm:inline' : ''}`}>Tughra Royale</span>
+    </span>
   )
 }
 
-export const BackControl = ({ onClick, label = 'Back' }) => <LabelledControl label={label} onClick={onClick} icon={<IcBack size={17} />} />
-export const HomeControl = ({ onClick }) => <LabelledControl label="Home" onClick={onClick} icon={<IcHome size={16} />} />
-
-// Bronze corner marks, like the frame lines in the brand creatives.
-export function Corners({ inset, className = '' }) {
-  const style = inset ? { '--ci': inset } : undefined
-  return (
-    <>
-      {['tl', 'tr', 'bl', 'br'].map((c) => (
-        <span key={c} className={`tr-corner ${c} ${className}`} style={style} aria-hidden="true" />
-      ))}
-    </>
-  )
-}
-
-// Segmented control: outline bronze, the active option ringed in gold; the ring glides between options.
-export function Segmented({ options, value, onChange, label, light = false, grid = 0, className = '' }) {
-  const rootRef = useRef(null)
+// Segmented control: glass, the active option lit in gold; the light glides between options.
+export function Segmented({ options, value, onChange, label, grid = 0, className = '' }) {
   const indRef = useRef(null)
   const optRefs = useRef([])
   const first = useRef(true)
@@ -65,23 +63,10 @@ export function Segmented({ options, value, onChange, label, light = false, grid
   }, [index, options.length])
 
   return (
-    <div
-      ref={rootRef}
-      role="group"
-      aria-label={label}
-      className={`tr-seg ${light ? 'is-light' : ''} ${grid ? 'is-grid' : ''} ${className}`}
-      style={grid ? { gridTemplateColumns: `repeat(${grid}, minmax(0, 1fr))` } : undefined}
-    >
+    <div role="group" aria-label={label} className={`tr-seg ${grid ? 'is-grid' : ''} ${className}`} style={grid ? { gridTemplateColumns: `repeat(${grid}, minmax(0, 1fr))` } : undefined}>
       <span ref={indRef} className="tr-seg__ind" aria-hidden="true" />
       {options.map((o, i) => (
-        <button
-          key={o.value}
-          ref={(el) => (optRefs.current[i] = el)}
-          type="button"
-          className="tr-seg__opt"
-          aria-pressed={o.value === value}
-          onClick={() => onChange(o.value)}
-        >
+        <button key={o.value} ref={(el) => (optRefs.current[i] = el)} type="button" className="tr-seg__opt touch-manipulation" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
           {o.label}
         </button>
       ))}
@@ -89,9 +74,9 @@ export function Segmented({ options, value, onChange, label, light = false, grid
   )
 }
 
-// Top bar shared by every page: gold logo left (returns to the menu), actions right.
-// On screens that scroll it turns from transparent to espresso with a bronze hairline.
-export function TopBar({ onBrand, children, aside, sticky = false, fixed = false, className = '', brandLabel = 'Back to menu' }) {
+// Top bar shared by every page: the lockup left (returns to the menu), round controls right.
+// On screens that scroll it turns to smoky glass with a gold hairline.
+export function TopBar({ onBrand, children, aside, sticky = false, fixed = false, compact = false, className = '', brandLabel = 'Back to menu' }) {
   const barRef = useRef(null)
   const bgRef = useRef(null)
 
@@ -114,16 +99,16 @@ export function TopBar({ onBrand, children, aside, sticky = false, fixed = false
   return (
     <header
       ref={barRef}
-      className={`${fixed ? 'fixed' : sticky ? 'sticky' : 'absolute'} isolate inset-x-0 top-0 z-30 flex items-start justify-between gap-4 px-5 pb-3 pt-[max(1.25rem,var(--safe-t))] sm:px-8 md:px-12 md:pt-9 short:pt-3 ${className}`}
+      className={`${fixed ? 'fixed' : sticky ? 'sticky' : 'absolute'} isolate inset-x-0 top-0 z-30 flex items-center justify-between gap-4 px-5 pb-3 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3 ${className}`}
     >
       {sticky && (
-        <span ref={bgRef} className="pointer-events-none absolute inset-0 -z-10 bg-espresso opacity-0" aria-hidden="true">
+        <span ref={bgRef} className="tr-panel pointer-events-none absolute inset-0 -z-10 rounded-none opacity-0 before:hidden" aria-hidden="true">
           <span className="tr-hair absolute inset-x-0 bottom-0" />
         </span>
       )}
       <div className="tb-anim flex min-w-0 items-center gap-5">
         <button type="button" onClick={onBrand} aria-label={brandLabel} className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
-          <BrandMark tone="gold" size="page" />
+          <Lockup compact={compact} />
         </button>
         {aside}
       </div>

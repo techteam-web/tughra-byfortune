@@ -253,17 +253,17 @@ const ViewsPage = ({ onClose, onHome }) => {
       {/* "Now viewing" — appears only when the scene changes */}
       <div
         ref={toastRef}
-        className="tr-label pointer-events-none absolute left-1/2 top-[max(6.5rem,calc(var(--safe-t)+5.5rem))] z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-bronze/40 bg-cocoa px-5 py-2.5 opacity-0 md:top-10 short:top-3"
+        className="tr-label pointer-events-none absolute left-1/2 top-[max(6.5rem,calc(var(--safe-t)+5.5rem))] z-20 -translate-x-1/2 whitespace-nowrap rounded-lg tr-panel px-5 py-2.5 opacity-0 md:top-10 short:top-3"
         aria-live="polite"
       />
 
       {/* Right-centre dock: time of day, auto-rotate, and the elevation slider */}
       <div className="pointer-events-none absolute right-[max(1rem,var(--safe-r))] top-1/2 z-20 -translate-y-1/2 md:right-6">
         <div className="v-chrome short:origin-right short:scale-[0.72]">
-          <div className="v-dock tr-panel is-flat pointer-events-auto flex w-[4.5rem] flex-col items-center gap-3 py-4 short:py-3">
+          <div className="v-dock tr-panel pointer-events-auto flex w-[4.5rem] flex-col items-center gap-3 py-4 short:py-3">
             {/* time of day: a vertical segmented control, the gold ring glides */}
-            <div className="v-dock-item relative flex flex-col rounded-full border border-bronze/45 p-[3px]" role="group" aria-label="Time of day">
-              <span ref={timeIndRef} className="pointer-events-none absolute left-[3px] top-[3px] h-9 w-9 rounded-full border border-gold bg-gold/12" aria-hidden="true" />
+            <div className="v-dock-item relative flex flex-col rounded-full border border-[color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)] p-[3px]" role="group" aria-label="Time of day">
+              <span ref={timeIndRef} className="pointer-events-none absolute left-[3px] top-[3px] h-9 w-9 rounded-full border border-[var(--ribbon-champagne)] bg-[color-mix(in_srgb,var(--ribbon-main-gold)_20%,transparent)] shadow-[0_0_0.9rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]" aria-hidden="true" />
               {TIMES.map(({ key, label, Icon }) => {
                 const on = currentTime === key
                 return (
@@ -274,7 +274,7 @@ const ViewsPage = ({ onClose, onHome }) => {
                     aria-label={label}
                     aria-pressed={on}
                     title={label}
-                    className={`tr-focus relative flex h-9 w-9 items-center justify-center rounded-full border-none bg-transparent transition-colors duration-300 ${on ? 'text-gold' : 'text-parchment/60 hover:text-cream'}`}
+                    className={`tr-focus relative flex h-9 w-9 items-center justify-center rounded-full border-none bg-transparent transition-colors duration-300 ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream/60 hover:text-cream'}`}
                   >
                     <Icon size={16} />
                   </button>
@@ -309,7 +309,7 @@ const ViewsPage = ({ onClose, onHome }) => {
                       onClick={() => switchSceneSynced(currentTime, idx)}
                       aria-label={`${floor.label}, ${floor.height}`}
                       className={`absolute right-0 translate-y-1/2 border-none bg-transparent px-0.5 py-px font-sans leading-none tabular-nums transition-colors duration-300 ${
-                        on ? 'text-[0.5625rem] font-semibold text-gold-pale' : 'text-[0.4375rem] text-parchment/45 hover:text-cream'
+                        on ? 'text-[0.5625rem] font-semibold text-[var(--ribbon-champagne)]' : 'text-[0.4375rem] text-cream/45 hover:text-cream'
                       }`}
                       style={{ bottom: `${(1 - railFractionFor(idx)) * 100}%` }}
                     >
@@ -341,11 +341,11 @@ const ViewsPage = ({ onClose, onHome }) => {
                 style={{ height: SLIDER_HEIGHT }}
               >
                 {/* the track */}
-                <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-bronze/45" />
+                <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]" />
                 {/* bronze fill: height mirrors the floor's real elevation */}
-                <span ref={fillRef} className="pointer-events-none absolute bottom-0 left-1/2 h-full w-[2px] -translate-x-1/2 bg-bronze" />
+                <span ref={fillRef} className="pointer-events-none absolute bottom-0 left-1/2 h-full w-[2px] -translate-x-1/2 bg-[linear-gradient(0deg,var(--ribbon-deep-bronze),var(--ribbon-main-gold),var(--ribbon-champagne))]" />
                 {/* the thumb: a gold-pale ring */}
-                <span ref={thumbRef} className="pointer-events-none absolute bottom-full left-1/2 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full border border-gold-pale bg-espresso" />
+                <span ref={thumbRef} className="pointer-events-none absolute bottom-full left-1/2 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full border border-[var(--ribbon-champagne)] bg-espresso shadow-[0_0_0.7rem_color-mix(in_srgb,var(--ribbon-main-gold)_55%,transparent)]" />
               </div>
             </div>
 

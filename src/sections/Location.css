@@ -1,6 +1,6 @@
 /* Neighbourhood map — pins, the tower marker and MapLibre's own controls, in the brand's tokens. */
 
-.loc-list { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--bronze) 40%, transparent) transparent; }
+.loc-list { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ribbon-main-gold) 40%, transparent) transparent; }
 
 /* ---- Map pins: bronze, the chosen one gold; no pulsing ---- */
 .loc-mk { width: 0.75rem; height: 0.75rem; cursor: pointer; }
@@ -9,9 +9,9 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background: var(--bronze);
+  background: var(--ribbon-main-gold);
   border: 2px solid var(--espresso);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bronze) 70%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ribbon-main-gold) 70%, transparent);
   transition: transform 0.4s var(--ease-silk), background-color 0.3s var(--ease-silk);
 }
 .loc-pin span {
@@ -21,8 +21,10 @@
   transform: translate(-50%, 0.35rem);
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--bronze) 50%, transparent);
-  background: var(--cocoa);
+  border: 1px solid color-mix(in srgb, var(--ribbon-main-gold) 50%, transparent);
+  background: color-mix(in srgb, var(--espresso) 80%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: var(--cream);
   font-family: var(--sans);
   font-size: 0.6875rem;
@@ -35,13 +37,13 @@
 .loc-mk:hover .loc-pin { transform: scale(1.25); }
 .loc-mk:hover .loc-pin span,
 .loc-mk.is-on .loc-pin span { opacity: 1; transform: translate(-50%, 0); }
-.loc-mk.is-on .loc-pin { transform: scale(1.35); background: var(--gold); }
+.loc-mk.is-on .loc-pin { transform: scale(1.35); background: var(--ribbon-champagne); }
 .loc-mk.is-on .loc-pin::after {
   content: '';
   position: absolute;
   inset: -0.3rem;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ribbon-champagne) 60%, transparent);
 }
 
 /* ---- The project tower, standing on a bronze footprint ---- */
@@ -66,24 +68,24 @@
   height: 1.2rem;
   margin-left: -2.25rem;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent);
-  background: color-mix(in srgb, var(--bronze) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ribbon-champagne) 70%, transparent);
+  background: color-mix(in srgb, var(--ribbon-main-gold) 22%, transparent);
 }
 .loc-tower .base::after {
   content: '';
   position: absolute;
   inset: -0.45rem -0.9rem;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--bronze) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ribbon-main-gold) 35%, transparent);
 }
 
-/* ---- MapLibre's zoom / compass buttons, as bronze-outline controls ---- */
+/* ---- MapLibre's zoom / compass buttons, as the menu's dark round controls ---- */
 .loc-stage .maplibregl-ctrl-bottom-right { right: max(0.75rem, var(--safe-r)); bottom: max(0.75rem, var(--safe-b)); }
 .loc-stage .maplibregl-ctrl-group {
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--bronze) 70%, transparent);
-  background: color-mix(in srgb, var(--espresso) 80%, transparent);
+  border: 0;
+  background: var(--circle-fill);
   box-shadow: none;
 }
 .loc-stage .maplibregl-ctrl-group button {
@@ -91,7 +93,7 @@
   height: 2.375rem;
   background-color: transparent;
 }
-.loc-stage .maplibregl-ctrl-group button + button { border-top: 1px solid color-mix(in srgb, var(--bronze) 30%, transparent); }
+.loc-stage .maplibregl-ctrl-group button + button { border-top: 1px solid color-mix(in srgb, var(--ribbon-main-gold) 30%, transparent); }
 .loc-stage .maplibregl-ctrl-group button:not(:disabled):hover { background-color: var(--cocoa); }
 /* the built-in icons are dark sprites; this turns them a pale gold */
 .loc-stage .maplibregl-ctrl-icon { filter: invert(1) sepia(0.55) saturate(1.6) hue-rotate(-12deg) brightness(0.95); opacity: 0.9; }

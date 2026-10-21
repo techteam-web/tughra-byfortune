@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
-import { TopBar, BackControl, IconButton, Corners } from '../ui/controls.jsx'
+import { TopBar, BackControl, IconButton } from '../ui/controls.jsx'
+import { glowAt } from '../ui/glow.js'
 import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose, IcPool, IcGym, IcStudio, IcBanquet, IcHall, IcTheatre, IcChess, IcPaddle, IcLeaf, IcDeck } from '../ui/icons.jsx'
 import poolImg from '../assets/amenities/swimming-pool.webp'
 import gym1Img from '../assets/amenities/gym-cam01.webp'
@@ -34,7 +35,7 @@ const pad = (n) => String(n).padStart(2, '0')
 function IconTile({ Icon, size = 'md' }) {
   const box = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12'
   return (
-    <span className={`flex ${box} shrink-0 items-center justify-center rounded-tile border border-bronze/50 bg-bronze/12 text-gold-pale`}>
+    <span className={`tr-tile ${box}`}>
       <Icon size={size === 'sm' ? 18 : 21} />
     </span>
   )
@@ -167,7 +168,7 @@ function Amenities({ onClose }) {
         style={{ background: 'linear-gradient(180deg, var(--scrim) 0%, transparent 34%), linear-gradient(0deg, var(--espresso) 0%, var(--scrim) 16%, transparent 48%)' }}
       />
 
-      <TopBar onBrand={onClose}>
+      <TopBar onBrand={onClose} compact>
         <div className="am-chrome flex items-center gap-2.5 md:gap-3">
           <IconButton label="All amenities" onClick={() => setGrid(true)} className={`transition-opacity duration-500 ${hide}`}>
             <IcGrid size={18} />
@@ -195,23 +196,22 @@ function Amenities({ onClose }) {
       <div className="absolute inset-x-0 bottom-0 z-10">
         <div className={`flex flex-col gap-4 px-4 pb-[max(1rem,var(--safe-b))] transition-opacity duration-500 sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:gap-5 short:pb-3 ${hide}`}>
           <article className="am-card tr-panel w-full p-5 md:w-[27rem] md:p-6 short:w-[22rem] short:p-3.5">
-            <Corners />
             <div className="flex items-start gap-4">
               <span className="am-icon block">
                 <IconTile Icon={item.Icon} />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="am-count tr-label flex items-center gap-3">
-                  <span className="text-gold">{pad(index + 1)}</span>
-                  <i className="tr-hair block w-7 bg-bronze" />
-                  <span className="text-parchment/70">{pad(total)}</span>
+                <span className="am-count flex items-center gap-4">
+                  <span className="tr-num text-[var(--ribbon-champagne)]">{pad(index + 1)}</span>
+                  <span className="tr-dash" />
+                  <span className="tr-num">{pad(total)}</span>
                 </span>
-                <h2 className="mt-2 font-serif text-[clamp(1.6rem,2.2vw,2.15rem)] font-normal leading-[1.1] text-cream short:text-[1.2rem]">
+                <h2 className="tr-display mt-2.5 text-[clamp(1.6rem,2.2vw,2.15rem)] short:text-[1.2rem]">
                   <span className="am-title block truncate pb-0.5">{item.title}</span>
                 </h2>
               </div>
             </div>
-            <p className="am-desc mt-3 text-[0.875rem] leading-[1.7] text-parchment short:hidden">{item.description}</p>
+            <p className="am-desc mt-3 text-[0.875rem] leading-[1.7] text-cream/80 short:hidden">{item.description}</p>
           </article>
 
           <div ref={progRef} className="am-chrome flex items-center gap-1.5 self-center md:gap-2 md:self-end md:pb-2" role="tablist" aria-label="Amenities">
@@ -228,10 +228,10 @@ function Amenities({ onClose }) {
                   className="tr-focus flex h-7 items-center border-none bg-transparent p-0"
                 >
                   <span
-                    className="relative block h-px overflow-hidden bg-parchment/30 transition-[width] duration-700"
+                    className="relative block h-px overflow-hidden bg-cream/30 transition-[width] duration-700"
                     style={{ width: on ? 'clamp(1.8rem,3.2vw,2.8rem)' : 'clamp(0.75rem,1.4vw,1.4rem)' }}
                   >
-                    {on && <span data-prog={i} className="absolute inset-0 origin-left bg-gold" />}
+                    {on && <span data-prog={i} className="absolute inset-0 origin-left bg-[var(--ribbon-champagne)]" />}
                   </span>
                 </button>
               )
@@ -242,36 +242,41 @@ function Amenities({ onClose }) {
 
       {/* ---------- Every amenity, as cards ---------- */}
       {grid && (
-        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-espresso" role="dialog" aria-modal="true" aria-label="All amenities">
-          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-espresso px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] sm:px-8 md:px-12 md:pt-9">
+        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-[color-mix(in_srgb,var(--espresso)_74%,transparent)] backdrop-blur-xl" style={{ backgroundImage: 'var(--grain)' }} role="dialog" aria-modal="true" aria-label="All amenities">
+          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-[color-mix(in_srgb,var(--espresso)_70%,transparent)] px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] backdrop-blur-md sm:px-8 side:px-[2.9rem] side:pt-[2.7rem]">
             <div>
-              <span className="ag-head tr-label block">Amenities</span>
-              <h2 className="ag-head mt-2 font-serif text-[clamp(2rem,3vw,3rem)] font-normal leading-none text-cream">Refined luxury</h2>
+              <span className="ag-head flex items-center gap-4">
+                <span className="tr-num">03</span>
+                <span className="tr-dash" />
+                <span className="tr-label">Amenities</span>
+              </span>
+              <h2 className="ag-head tr-display mt-3 text-[clamp(2rem,3vw,3rem)]">Refined luxury</h2>
             </div>
             <IconButton label="Close" onClick={() => closeGrid()}>
               <IcClose size={17} />
             </IconButton>
-            <i className="ag-hair tr-hair absolute inset-x-5 bottom-0 sm:inset-x-8 md:inset-x-12" />
+            <i className="ag-hair tr-hair absolute inset-x-5 bottom-0 sm:inset-x-8 side:inset-x-[2.9rem]" />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:grid-cols-2 sm:px-8 md:gap-5 md:px-12 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:grid-cols-2 sm:px-8 md:gap-5 side:px-[2.9rem] lg:grid-cols-3 xl:grid-cols-4">
             {AMENITIES.map((a, i) => (
               <button
                 key={a.title}
                 type="button"
                 onClick={() => closeGrid(i)}
-                className="ag-card tr-panel is-flat tr-focus group flex flex-col overflow-hidden p-0 text-left"
+                onPointerMove={glowAt}
+                className="ag-card mn-glow tr-focus group flex touch-manipulation flex-col rounded-[0.9rem] bg-[color-mix(in_srgb,var(--espresso)_55%,transparent)] p-2.5 text-left shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ribbon-main-gold)_22%,transparent)]"
               >
-                <span className="relative block aspect-[4/3] w-full overflow-hidden">
+                <span className="relative block aspect-[4/3] w-full overflow-hidden rounded-[0.55rem]">
                   <img src={a.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
                   <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-espresso/85 to-transparent" />
-                  <span className="tr-label absolute bottom-3 right-4 text-gold-pale/80">{pad(i + 1)}</span>
+                  <span className="tr-num absolute bottom-3 right-4 text-[var(--ribbon-champagne)]">{pad(i + 1)}</span>
                 </span>
-                <span className="flex items-start gap-4 p-5">
+                <span className="flex items-start gap-4 px-2.5 pb-3 pt-4">
                   <IconTile Icon={a.Icon} size="sm" />
                   <span className="min-w-0">
-                    <span className="block font-serif text-[1.35rem] leading-tight text-cream transition-colors duration-300 group-hover:text-gold-pale">{a.title}</span>
-                    <span className="mt-1.5 block text-[0.8125rem] leading-[1.6] text-parchment/85">{a.description}</span>
+                    <span className="tr-display block text-[1.3rem] transition-colors duration-300 group-hover:text-[var(--ribbon-champagne)]">{a.title}</span>
+                    <span className="mt-1.5 block text-[0.8125rem] leading-[1.6] text-cream/75">{a.description}</span>
                   </span>
                 </span>
               </button>

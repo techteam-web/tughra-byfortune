@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
 import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
 import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose } from '../ui/icons.jsx'
+import { glowAt } from '../ui/glow.js'
 
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
 import extGolden from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
@@ -259,13 +260,13 @@ function Gallery({ onClose }) {
         )}
       </div>
 
-      {/* Picture only: the whole render in a fine bronze frame on espresso */}
+      {/* Picture only: the whole render in a glass frame */}
       {full && box && (
         <div
-          className="absolute left-1/2 top-1/2 z-[1] border border-bronze/55 bg-cocoa p-2"
+          className="tr-panel absolute left-1/2 top-1/2 z-[1] rounded-[0.75rem] p-2"
           style={{ width: box.w, height: box.h, transform: `translate(-50%, calc(-50% + ${box.dy}px))` }}
         >
-          <img src={slide.src} alt={slide.title} className="h-full w-full object-contain" draggable={false} />
+          <img src={slide.src} alt={slide.title} className="h-full w-full rounded-[0.4rem] object-contain" draggable={false} />
         </div>
       )}
 
@@ -277,7 +278,7 @@ function Gallery({ onClose }) {
 
       {/* ---------- Top: logo, collections, grid, picture only, back ---------- */}
       <div className="gv-ui">
-        <TopBar onBrand={onClose}>
+        <TopBar onBrand={onClose} compact>
           <div className="g-chrome flex items-center gap-2.5 md:gap-3">
             <div className={`mr-3 hidden transition-opacity duration-500 lg:block short:block ${full ? 'pointer-events-none opacity-0' : ''}`}>
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
@@ -319,16 +320,16 @@ function Gallery({ onClose }) {
         <div className={`transition-opacity duration-500 ${full ? 'pointer-events-none opacity-0' : ''}`}>
         <footer className="g-chrome flex flex-col gap-5 px-5 pb-[max(1.5rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 md:px-12 md:pb-9 short:flex-row short:items-end short:gap-6 short:pb-3">
           <div className="min-w-0 md:max-w-[34rem]">
-            <span className="g-count tr-label flex items-center gap-3">
-              <span className="text-gold">{pad(idx + 1)}</span>
-              <i className="tr-hair block w-8 bg-bronze" />
-              <span className="text-parchment/70">{pad(total)}</span>
-              <span className="ml-2 text-gold-pale/70">{category.label}</span>
+            <span className="g-count flex items-center gap-4">
+              <span className="tr-num text-[var(--ribbon-champagne)]">{pad(idx + 1)}</span>
+              <span className="tr-dash" />
+              <span className="tr-num">{pad(total)}</span>
+              <span className="tr-label ml-2">{category.label}</span>
             </span>
-            <h2 className="mt-3 font-serif text-[clamp(1.9rem,2.8vw,2.75rem)] font-normal leading-[1.08] text-cream short:mt-1 short:text-[1.35rem]">
+            <h2 className="tr-display mt-4 text-[clamp(2rem,3vw,3rem)] short:mt-1 short:text-[1.35rem]">
               <span className="g-title block truncate pb-1">{slide.title}</span>
             </h2>
-            <p className="g-sub mt-1 truncate text-[0.875rem] tracking-[0.02em] text-gold-pale/90 short:hidden">{slide.subtitle}</p>
+            <p className="g-sub tr-label mt-2 truncate text-cream/75 short:hidden">{slide.subtitle}</p>
           </div>
 
           <div ref={stripRef} className="tr-noscroll -mx-1 flex max-w-full gap-2 overflow-x-auto px-1 py-1 md:max-w-[min(46rem,55vw)]" role="tablist" aria-label={`${category.label} renders`}>
@@ -343,9 +344,10 @@ function Gallery({ onClose }) {
                   aria-current={on}
                   aria-label={sl.title}
                   onClick={() => setIdx(i)}
-                  className={`tr-focus relative h-[3.1rem] w-[4.6rem] shrink-0 overflow-hidden rounded-[0.55rem] border p-0 transition-[opacity,border-color] duration-300 md:h-[3.6rem] md:w-[5.4rem] short:h-[2.4rem] short:w-[3.6rem] ${on ? 'border-gold opacity-100' : 'border-bronze/35 opacity-55 hover:opacity-90'}`}
+                  onPointerMove={glowAt}
+                  className={`mn-glow tr-focus relative h-[3.1rem] w-[4.6rem] shrink-0 touch-manipulation rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 md:h-[3.6rem] md:w-[5.4rem] short:h-[2.4rem] short:w-[3.6rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-60 hover:opacity-100'}`}
                 >
-                  <img src={sl.src} alt="" className="h-full w-full object-cover" draggable={false} />
+                  <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
                 </button>
               )
             })}
@@ -356,11 +358,15 @@ function Gallery({ onClose }) {
 
       {/* ---------- Grid overview ---------- */}
       {grid && (
-        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-espresso" role="dialog" aria-modal="true" aria-label="All renders">
-          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-espresso px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] sm:px-8 md:px-12 md:pt-9">
+        <div ref={gridRef} className="absolute inset-0 z-40 overflow-y-auto bg-[color-mix(in_srgb,var(--espresso)_74%,transparent)] backdrop-blur-xl" style={{ backgroundImage: 'var(--grain)' }} role="dialog" aria-modal="true" aria-label="All renders">
+          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-[color-mix(in_srgb,var(--espresso)_70%,transparent)] px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] backdrop-blur-md sm:px-8 side:px-[2.9rem] side:pt-[2.7rem]">
             <div>
-              <span className="gg-head tr-label block">Gallery</span>
-              <h2 className="gg-head mt-2 font-serif text-[clamp(2rem,3vw,3rem)] font-normal leading-none text-cream">Every render</h2>
+              <span className="gg-head flex items-center gap-4">
+                <span className="tr-num">02</span>
+                <span className="tr-dash" />
+                <span className="tr-label">Gallery</span>
+              </span>
+              <h2 className="gg-head tr-display mt-3 text-[clamp(2rem,3vw,3rem)]">Every render</h2>
             </div>
             <IconButton label="Close" onClick={() => closeGrid()}>
               <IcClose size={17} />
@@ -368,31 +374,31 @@ function Gallery({ onClose }) {
             <i className="gg-hair tr-hair absolute inset-x-5 bottom-0 sm:inset-x-8 md:inset-x-12" />
           </div>
 
-          <div className="px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:px-8 md:px-12">
+          <div className="px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:px-8 side:px-[2.9rem]">
             {CATEGORIES.map((c, ci) => (
               <section key={c.id} className="mb-12">
                 <div className="mb-5 flex items-center gap-4">
                   <span className="tr-label">{c.label}</span>
                   <i className="gg-hair tr-hair flex-1" />
-                  <span className="tr-label text-gold-pale/60">{pad(c.slides.length)}</span>
+                  <span className="tr-num">{pad(c.slides.length)}</span>
                 </div>
-                {/* editorial grid; the 1px gaps are the bronze hairline gutters */}
-                <div className="grid grid-cols-1 gap-px overflow-hidden rounded-card border border-bronze/25 bg-bronze/25 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {c.slides.map((s, i) => (
                     <button
                       key={s.src}
                       type="button"
                       onClick={() => closeGrid([ci, i])}
-                      className={`gg-tile tr-focus group flex flex-col bg-espresso p-3 text-left md:p-4 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}
+                      onPointerMove={glowAt}
+                      className={`gg-tile mn-glow tr-focus group flex touch-manipulation flex-col rounded-[0.9rem] bg-[color-mix(in_srgb,var(--espresso)_55%,transparent)] p-2.5 text-left shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ribbon-main-gold)_22%,transparent)] md:p-3 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}
                     >
-                      <span className={`block w-full overflow-hidden rounded-[0.6rem] ${i === 0 ? 'aspect-[4/3] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}>
+                      <span className={`block w-full overflow-hidden rounded-[0.55rem] ${i === 0 ? 'aspect-[4/3] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}>
                         <img src={s.src} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
                       </span>
-                      <span className="mt-3 flex items-baseline gap-3 px-1">
-                        <span className="tr-label text-gold-pale/70">{pad(i + 1)}</span>
+                      <span className="mt-3 flex items-baseline gap-3 px-1.5 pb-1">
+                        <span className="tr-num">{pad(i + 1)}</span>
                         <span className="min-w-0">
-                          <span className="block truncate font-serif text-[1.2rem] leading-tight text-cream transition-colors duration-300 group-hover:text-gold-pale">{s.title}</span>
-                          <span className="mt-0.5 block truncate text-[0.75rem] text-parchment/65">{s.subtitle}</span>
+                          <span className="tr-display block truncate text-[1.25rem] transition-colors duration-300 group-hover:text-[var(--ribbon-champagne)]">{s.title}</span>
+                          <span className="mt-1 block truncate font-sans text-[0.625rem] uppercase tracking-[0.18em] text-cream/60">{s.subtitle}</span>
                         </span>
                       </span>
                     </button>

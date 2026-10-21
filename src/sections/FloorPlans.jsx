@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, glideTo } from '../motion/index.js'
 import { TopBar, BackControl } from '../ui/controls.jsx'
 import FloorStage from '../components/FloorStage.jsx'
+import tower from '../assets/render/menu-tower.webp'
 import { UNITS } from '../components/floorUnits.js'
 
 // Floors that are shown on the tower but cannot be opened.
@@ -140,7 +141,12 @@ function FloorPlans({ onClose }) {
   }
 
   return (
-    <section ref={rootRef} className="relative flex min-h-svh w-full flex-col bg-espresso text-cream lg:h-svh lg:overflow-hidden">
+    <section ref={rootRef} className="relative isolate flex min-h-svh w-full flex-col bg-espresso text-cream lg:h-svh lg:overflow-hidden">
+      {/* the dusk photograph, melted into warm light behind everything, with a faint grain */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <img src={tower} alt="" className="h-full w-full scale-125 object-cover opacity-80 blur-[48px]" draggable={false} />
+        <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--espresso)_62%,transparent)]" style={{ backgroundImage: 'var(--grain)' }} />
+      </div>
       <TopBar onBrand={onClose} sticky className="lg:absolute">
         <span className="fp-back">
           <BackControl onClick={onClose} />
@@ -159,7 +165,7 @@ function FloorPlans({ onClose }) {
             {/* the rail the floors hang on */}
             <span className="fp-rail tr-vhair pointer-events-none absolute bottom-0 top-0 left-[2.6rem]" aria-hidden="true" />
             {/* the chosen floor: a gold pill with ink figures */}
-            <span ref={pillRef} className="pointer-events-none absolute left-0 top-0 h-4 w-[2.4rem] rounded-full bg-gold" style={{ opacity: activeFloor ? 1 : 0 }} aria-hidden="true" />
+            <span ref={pillRef} className="pointer-events-none absolute left-0 top-0 h-4 w-[2.4rem] rounded-full bg-[linear-gradient(90deg,var(--ribbon-champagne),var(--ribbon-main-gold))] shadow-[0_0_0.9rem_color-mix(in_srgb,var(--ribbon-main-gold)_50%,transparent)]" style={{ opacity: activeFloor ? 1 : 0 }} aria-hidden="true" />
             {ordered.map((f) => {
               const locked = LOCKED_FLOORS.has(f.id)
               const on = f.id === selectedFloor
@@ -179,13 +185,13 @@ function FloorPlans({ onClose }) {
                   >
                     <span
                       className={`w-[2.4rem] text-center font-sans text-[0.625rem] tabular-nums tracking-[0.06em] transition-colors duration-300 ${
-                        on ? 'font-semibold text-ink' : locked ? 'text-parchment/25' : hot ? 'text-cream' : 'text-parchment/70'
+                        on ? 'font-semibold text-ink' : locked ? 'text-cream/25' : hot ? 'text-[var(--ribbon-champagne)]' : 'text-cream/65'
                       }`}
                     >
                       {f.num}
                     </span>
                     <span
-                      className={`block h-px origin-left transition-[transform,background-color] duration-300 ${on || hot ? 'scale-x-100 bg-gold' : 'scale-x-[0.6] bg-bronze/45'}`}
+                      className={`block h-px origin-left transition-[transform,background-color] duration-300 ${on || hot ? 'scale-x-100 bg-[var(--ribbon-champagne)]' : 'scale-x-[0.6] bg-gold-pale/40'}`}
                       style={{ width: '0.9rem' }}
                     />
                   </button>
@@ -193,7 +199,7 @@ function FloorPlans({ onClose }) {
               )
             })}
           </ul>
-          <p className="fp-tagline tr-label mt-6 hidden whitespace-nowrap text-[0.5625rem] leading-[1.9] text-gold-pale/70 lg:block">
+          <p className="fp-tagline tr-label mt-6 hidden whitespace-nowrap text-[0.5625rem] leading-[1.9] lg:block">
             A higher
             <br />
             standard of living
@@ -221,8 +227,8 @@ function FloorPlans({ onClose }) {
                             cursor: 'pointer',
                             pointerEvents: 'all',
                             transition: 'fill-opacity 0.3s ease',
-                            fill: 'var(--gold)',
-                            fillOpacity: isSelected ? 0.45 : isHovered ? 0.24 : 0.01,
+                            fill: 'var(--ribbon-main-gold)',
+                            fillOpacity: isSelected ? 0.5 : isHovered ? 0.26 : 0.01,
                           },
                         }
                     return floor.type === 'path' ? <path key={floor.id} d={floor.d} {...shapeProps} /> : <polygon key={floor.id} points={floor.points} {...shapeProps} />

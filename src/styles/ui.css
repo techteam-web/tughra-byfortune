@@ -1,11 +1,12 @@
 /* ---------------------------------------------------------------------------
-   Shared surfaces and controls. One radius, one hairline, one label style,
-   one button system on every page. Hover and press are CSS (0.28s); every
-   entrance, transition and glide is GSAP (src/motion).
+   Shared surfaces and controls, in the menu's language: smoky glass with a warm
+   gold edge and a faint grain, the ribbon's champagne and gold, square-cornered
+   gold-outline buttons, dark round controls, and the golden hover. Hover and
+   press are CSS; every entrance, transition and glide is GSAP (src/motion).
 --------------------------------------------------------------------------- */
 
 @layer components {
-/* tracking label: gold-pale on dark, bronze-deep on cream */
+/* tracking label (spaced capitals) */
 .tr-label {
   font-family: var(--sans);
   font-size: max(0.6875rem, 10px);
@@ -13,85 +14,104 @@
   line-height: 1.4;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gold-pale);
-}
-.on-light .tr-label,
-.tr-label.is-light {
-  color: var(--bronze-deep);
+  color: color-mix(in srgb, var(--ribbon-champagne) 85%, transparent);
 }
 
-/* hairlines - the brand's signature frame line */
+/* display type: the home page's serif capitals */
+.tr-display {
+  font-family: var(--serif);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.04;
+  color: var(--cream);
+}
+
+/* the menu's numbering: "01 —" */
+.tr-num {
+  font-family: var(--sans);
+  font-size: max(0.6875rem, 10px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--gold-pale) 60%, transparent);
+}
+.tr-dash {
+  display: inline-block;
+  width: 1rem;
+  height: var(--hairline);
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--gold-pale) 45%, transparent);
+}
+
+/* hairlines: the ribbon's gold, fading out */
 .tr-hair {
   display: block;
   height: var(--hairline);
-  background: color-mix(in srgb, var(--bronze) 45%, transparent);
+  background: var(--gold-line);
+  opacity: 0.7;
   transform-origin: left center;
 }
-.tr-hair.is-pale { background: color-mix(in srgb, var(--gold-pale) 35%, transparent); }
-.tr-hair.is-gold { background: var(--gold); }
+.tr-hair.is-pale { opacity: 0.45; }
+.tr-hair.is-gold { opacity: 1; }
 .tr-vhair {
   display: block;
   width: var(--hairline);
-  background: color-mix(in srgb, var(--bronze) 40%, transparent);
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--ribbon-main-gold) 55%, transparent) 15%, color-mix(in srgb, var(--ribbon-main-gold) 55%, transparent) 85%, transparent 100%);
   transform-origin: center top;
 }
 
-/* raised panel on espresso: cocoa, a faint top-light, a bronze edge and an inner hairline */
+/* smoky glass: see-through espresso, frosted, a warm gold edge and a faint grain */
 .tr-panel {
   position: relative;
   border-radius: var(--radius-card);
-  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 34%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--gold-pale) 6%, var(--cocoa)) 0%, var(--cocoa) 42%);
+    var(--grain),
+    linear-gradient(180deg, color-mix(in srgb, var(--ribbon-main-gold) 7%, transparent) 0%, transparent 38%),
+    color-mix(in srgb, var(--espresso) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(16px) saturate(1.15);
 }
 .tr-panel::before {
   content: '';
   position: absolute;
-  inset: 0.375rem;
-  border-radius: calc(var(--radius-card) - 0.375rem);
-  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 14%, transparent);
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--hairline);
+  background: var(--gold-edge);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
 }
-.tr-panel.is-flat::before { display: none; }
+.tr-panel.is-deep { background: var(--grain), color-mix(in srgb, var(--espresso) 80%, transparent); }
 
-/* feature card on espresso: cream, parchment edge, ink text */
-.tr-card-light {
-  position: relative;
-  border-radius: var(--radius-card);
-  border: var(--hairline) solid var(--parchment);
-  background: var(--cream);
-  color: var(--ink);
+/* small framed tile for an icon */
+.tr-tile {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  border: var(--hairline) solid color-mix(in srgb, var(--ribbon-main-gold) 45%, transparent);
+  background: color-mix(in srgb, var(--ribbon-main-gold) 10%, transparent);
+  color: var(--ribbon-champagne);
 }
 
-/* corner marks (see ui/Corners.jsx) */
-.tr-corner {
-  position: absolute;
-  width: 0.7rem;
-  height: 0.7rem;
-  pointer-events: none;
-  border-color: color-mix(in srgb, var(--bronze) 75%, transparent);
-  border-style: solid;
-  border-width: 0;
-}
-.tr-corner.tl { top: var(--ci, 0.65rem); left: var(--ci, 0.65rem); border-top-width: 1px; border-left-width: 1px; transform-origin: 0 0; }
-.tr-corner.tr { top: var(--ci, 0.65rem); right: var(--ci, 0.65rem); border-top-width: 1px; border-right-width: 1px; transform-origin: 100% 0; }
-.tr-corner.bl { bottom: var(--ci, 0.65rem); left: var(--ci, 0.65rem); border-bottom-width: 1px; border-left-width: 1px; transform-origin: 0 100%; }
-.tr-corner.br { bottom: var(--ci, 0.65rem); right: var(--ci, 0.65rem); border-bottom-width: 1px; border-right-width: 1px; transform-origin: 100% 100%; }
-.on-light .tr-corner { border-color: color-mix(in srgb, var(--bronze-deep) 60%, transparent); }
-
-/* ---------------- buttons ---------------- */
+/* ---------------- buttons: square corners, a fine gold border ---------------- */
 .tr-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
-  min-height: 2.875rem;
-  padding: 0.85rem 1.75rem;
-  border-radius: 999px;
-  border: var(--hairline) solid transparent;
+  gap: 1rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 2px;
+  border: var(--hairline) solid color-mix(in srgb, var(--ribbon-main-gold) 70%, transparent);
+  background: transparent;
+  color: var(--cream);
   font-family: var(--sans);
-  font-size: 0.6875rem;
+  font-size: max(0.6875rem, 10px);
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -103,51 +123,18 @@
     border-color var(--dur-micro) var(--ease-silk),
     transform var(--dur-micro) var(--ease-silk);
 }
+.tr-btn:hover,
+.tr-btn:focus-visible { border-color: var(--ribbon-champagne); color: var(--ribbon-champagne); }
 .tr-btn:active { transform: scale(0.98); }
 .tr-btn:disabled { opacity: 0.55; cursor: default; }
-.tr-btn svg { transition: transform var(--dur-micro) var(--ease-silk); }
+.tr-btn svg { color: var(--ribbon-main-gold); transition: transform var(--dur-micro) var(--ease-silk); }
 .tr-btn:hover svg.tr-arrow { transform: translateX(0.2rem); }
 
-/* the one filled gold element per view */
-.tr-btn--gold { background: var(--gold); color: var(--ink); }
-.tr-btn--gold:hover,
-.tr-btn--gold:focus-visible { background: var(--gold-pale); }
+/* the main action of a view: the same, with a warm gold wash */
+.tr-btn--gold { background: color-mix(in srgb, var(--ribbon-main-gold) 14%, transparent); color: var(--ribbon-champagne); }
+.tr-btn--outline { background: color-mix(in srgb, var(--espresso) 45%, transparent); }
 
-.tr-btn--outline {
-  border-color: color-mix(in srgb, var(--bronze) 65%, transparent);
-  color: var(--cream);
-  background: color-mix(in srgb, var(--espresso) 55%, transparent);
-}
-.tr-btn--outline:hover,
-.tr-btn--outline:focus-visible { border-color: var(--gold); color: var(--gold-pale); }
-
-.on-light .tr-btn--outline { border-color: color-mix(in srgb, var(--bronze-deep) 55%, transparent); color: var(--ink); background: transparent; }
-.on-light .tr-btn--outline:hover { border-color: var(--bronze-deep); color: var(--ink); background: color-mix(in srgb, var(--parchment) 45%, transparent); }
-
-/* ghost: text with a hairline that extends on hover */
-.tr-btn--ghost {
-  min-height: 0;
-  padding: 0.35rem 0;
-  border-radius: 0;
-  color: var(--gold-pale);
-  background: transparent;
-}
-.tr-btn--ghost::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--hairline);
-  background: var(--gold);
-  transform: scaleX(0.3);
-  transform-origin: left center;
-  transition: transform 0.45s var(--ease-silk);
-}
-.tr-btn--ghost:hover::after,
-.tr-btn--ghost:focus-visible::after { transform: scaleX(1); }
-
-/* circular control: outline bronze, gold icon. Back, Close, Home, arrows. */
+/* round control, as on the menu: a dark circle, a gold icon */
 .tr-icon-btn {
   position: relative;
   display: inline-flex;
@@ -157,65 +144,55 @@
   height: 2.75rem;
   width: 2.75rem;
   border-radius: 999px;
-  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 70%, transparent);
-  background: color-mix(in srgb, var(--espresso) 62%, transparent);
-  color: var(--gold);
+  border: 0;
+  background: var(--circle-fill);
+  color: var(--circle-ink);
   cursor: pointer;
   transition:
     color var(--dur-micro) var(--ease-silk),
     background-color var(--dur-micro) var(--ease-silk),
-    border-color var(--dur-micro) var(--ease-silk),
     transform var(--dur-micro) var(--ease-silk);
 }
-.tr-icon-btn.is-sm { height: 2.375rem; width: 2.375rem; }
+@media (min-width: 1024px) {
+  .tr-icon-btn { height: 2.6rem; width: 2.6rem; }
+}
+.tr-icon-btn.is-sm { height: 2.25rem; width: 2.25rem; }
 .tr-icon-btn:hover,
-.tr-icon-btn:focus-visible { border-color: var(--gold); background: color-mix(in srgb, var(--cocoa) 88%, transparent); color: var(--gold-pale); }
-.tr-icon-btn:active { transform: scale(0.98); }
-.tr-icon-btn.is-active { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--espresso)); }
+.tr-icon-btn:focus-visible { color: var(--ribbon-champagne); background: color-mix(in srgb, var(--espresso) 90%, transparent); }
+.tr-icon-btn:active { transform: scale(0.96); }
+.tr-icon-btn.is-active { color: var(--ribbon-champagne); background: color-mix(in srgb, var(--ribbon-main-gold) 22%, var(--espresso)); }
 .tr-icon-btn:disabled { opacity: 0.35; cursor: default; }
-.tr-icon-btn:disabled:hover { border-color: color-mix(in srgb, var(--bronze) 70%, transparent); background: color-mix(in srgb, var(--espresso) 62%, transparent); color: var(--gold); }
+.tr-icon-btn:disabled::before,
+.tr-icon-btn:disabled::after { display: none; }
 .tr-icon-btn svg { display: block; }
 
-/* labelled control (Back, Home): caps label beside the circle */
-.tr-ctl {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  color: var(--gold-pale);
-}
-.tr-ctl .tr-label { transition: color var(--dur-micro) var(--ease-silk); }
-.tr-ctl:hover .tr-label { color: var(--gold); }
-.tr-ctl:hover .tr-icon-btn { border-color: var(--gold); background: color-mix(in srgb, var(--cocoa) 88%, transparent); color: var(--gold-pale); }
-.tr-ctl:active .tr-icon-btn { transform: scale(0.98); }
-
-/* ---------------- segmented control ---------------- */
+/* ---------------- segmented control: glass, the active option lit in gold ---------------- */
 .tr-seg {
   position: relative;
   display: inline-flex;
   padding: 0.25rem;
-  border-radius: 999px;
-  border: var(--hairline) solid color-mix(in srgb, var(--bronze) 50%, transparent);
-  background: color-mix(in srgb, var(--espresso) 60%, transparent);
+  border-radius: 0.7rem;
+  background: var(--grain), color-mix(in srgb, var(--espresso) 55%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 var(--hairline) color-mix(in srgb, var(--ribbon-main-gold) 26%, transparent);
 }
-.tr-seg.is-grid { display: grid; border-radius: 1rem; }
+.tr-seg.is-grid { display: grid; }
 .tr-seg__ind {
   position: absolute;
   left: 0;
   top: 0;
-  border-radius: 999px;
-  border: var(--hairline) solid var(--gold);
-  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ribbon-main-gold) 24%, transparent), color-mix(in srgb, var(--ribbon-main-gold) 10%, transparent));
+  box-shadow:
+    inset 0 0 0 var(--hairline) color-mix(in srgb, var(--ribbon-champagne) 65%, transparent),
+    0 0 1.1rem color-mix(in srgb, var(--ribbon-main-gold) 22%, transparent);
   pointer-events: none;
 }
-.tr-seg.is-grid .tr-seg__ind { border-radius: 0.75rem; }
 .tr-seg__opt {
   position: relative;
   z-index: 1;
-  padding: 0.6rem 1.15rem;
+  padding: 0.6rem 1.1rem;
   border: 0;
   background: transparent;
   font-family: var(--sans);
@@ -224,39 +201,38 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--parchment) 72%, transparent);
+  color: color-mix(in srgb, var(--cream) 70%, transparent);
   cursor: pointer;
   transition: color var(--dur-micro) var(--ease-silk);
 }
 @media (min-width: 768px) {
-  .tr-seg__opt { padding: 0.65rem 1.5rem; }
+  .tr-seg__opt { padding: 0.62rem 1.4rem; }
 }
 .tr-seg__opt:hover { color: var(--cream); }
-.tr-seg__opt[aria-pressed='true'] { color: var(--gold); }
-.tr-seg.is-light { border-color: color-mix(in srgb, var(--bronze-deep) 38%, transparent); background: transparent; }
-.tr-seg.is-light .tr-seg__ind { border-color: var(--bronze-deep); background: color-mix(in srgb, var(--gold) 30%, transparent); }
-.tr-seg.is-light .tr-seg__opt { color: var(--ink-soft); }
-.tr-seg.is-light .tr-seg__opt:hover,
-.tr-seg.is-light .tr-seg__opt[aria-pressed='true'] { color: var(--ink); }
+.tr-seg__opt[aria-pressed='true'] { color: var(--ribbon-champagne); }
 
-/* ---------------- forms ---------------- */
+/* ---------------- forms: glass fields, a champagne focus glow ---------------- */
 .tr-input {
   display: block;
   width: 100%;
   margin-top: 0.6rem;
-  padding: 0.95rem 1.05rem;
-  border-radius: var(--radius-tile);
-  border: var(--hairline) solid var(--bronze-deep);
-  background: var(--cocoa);
+  padding: 0.9rem 1rem;
+  border-radius: 0.5rem;
+  border: var(--hairline) solid color-mix(in srgb, var(--ribbon-main-gold) 38%, transparent);
+  background: color-mix(in srgb, var(--espresso) 45%, transparent);
   color: var(--cream);
   font-family: var(--sans);
   font-size: 1rem;
   outline: none;
-  transition: border-color var(--dur-micro) var(--ease-silk), box-shadow var(--dur-micro) var(--ease-silk);
+  transition: border-color var(--dur-micro) var(--ease-silk), box-shadow var(--dur-micro) var(--ease-silk), background-color var(--dur-micro) var(--ease-silk);
 }
-.tr-input::placeholder { color: color-mix(in srgb, var(--parchment) 42%, transparent); }
-.tr-input:hover { border-color: var(--bronze); }
-.tr-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 24%, transparent); }
+.tr-input::placeholder { color: color-mix(in srgb, var(--parchment) 45%, transparent); }
+.tr-input:hover { border-color: color-mix(in srgb, var(--ribbon-main-gold) 65%, transparent); }
+.tr-input:focus {
+  border-color: var(--ribbon-champagne);
+  background: color-mix(in srgb, var(--espresso) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ribbon-main-gold) 20%, transparent), 0 0 1.4rem color-mix(in srgb, var(--ribbon-main-gold) 14%, transparent);
+}
 .tr-input[aria-invalid='true'] { border-color: var(--alert); }
 .tr-input:-webkit-autofill {
   -webkit-text-fill-color: var(--cream);
@@ -264,8 +240,8 @@
   caret-color: var(--cream);
 }
 
-/* Golden hover: a box whose border and fill light up around the cursor (the menu's original hover,
-   in the ribbon's colours). Set --mx/--my from the pointer; .is-on or keyboard focus shows it. */
+/* Golden hover: a box whose border and fill light up around the cursor (the menu's hover, in the
+   ribbon's colours). Set --mx/--my with glowAt (ui/glow.js); .is-on or keyboard focus shows it too. */
 .mn-glow {
   --mx: 50%;
   --my: 50%;
@@ -311,7 +287,7 @@
 .tr-icon-btn:focus-visible,
 .tr-seg__opt:focus-visible,
 .tr-focus:focus-visible {
-  outline: var(--hairline) solid var(--gold);
+  outline: var(--hairline) solid var(--ribbon-champagne);
   outline-offset: 3px;
 }
 }
