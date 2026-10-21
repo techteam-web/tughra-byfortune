@@ -95,7 +95,7 @@ function App() {
       page = <Gallery onClose={toMenu} />
       break
     case 'floors':
-      page = <FloorPlans onClose={toMenu} />
+      page = <FloorPlans onClose={toMenu} onEnquire={() => navigate('enquiry')} />
       break
     case 'location':
       page = <Location onClose={toMenu} />

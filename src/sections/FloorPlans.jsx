@@ -36,7 +36,7 @@ const idToLabel = (id) => {
   return `${id.replace(/^_/, '')} Floor`
 }
 
-function FloorPlans({ onClose }) {
+function FloorPlans({ onClose, onEnquire }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
@@ -242,7 +242,7 @@ function FloorPlans({ onClose }) {
         </div>
 
         {/* ---------- The residence on the chosen floor ---------- */}
-        {activeFloor && <FloorStage floor={activeFloor} unitId={unitId} setUnitId={setUnitId} />}
+        {activeFloor && <FloorStage floor={activeFloor} unitId={unitId} setUnitId={setUnitId} onEnquire={onEnquire} />}
       </div>
     </section>
   )
