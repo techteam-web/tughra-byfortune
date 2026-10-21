@@ -1,13 +1,40 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
-import { Segmented, IconButton } from '../ui/controls.jsx'
+import { IconButton } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
-import { IcArea, IcSea, IcBed, IcLayers, IcLiving, IcView, IcUnit, IcCompass, IcKey, IcArrow, IcClose } from '../ui/icons.jsx'
+import { IcArea, IcSea, IcBed, IcLayers, IcLiving, IcView, IcUnit, IcCompass, IcKey, IcArrow, IcClose, IcExpand, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from './floorUnits.js'
 
 const TBC = 'To be confirmed'
-const UNIT_OPTIONS = UNITS.map((u) => ({ value: u.id, label: u.label }))
+
+// the residence-type switch, in the same small golden-hover language as every other
+// button on the site: a row of menu buttons, not a pill/tab control
+function UnitSwitch({ value, onChange }) {
+  return (
+    <div className="flex items-center gap-1" role="group" aria-label="Residence type">
+      {UNITS.map((u) => {
+        const on = u.id === value
+        return (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => onChange(u.id)}
+            onPointerMove={glowAt}
+            aria-pressed={on}
+            className={`mn-glow tr-focus touch-manipulation rounded-lg border-none bg-transparent px-3 py-2 text-center ${on ? 'is-on' : ''}`}
+          >
+            <span className={`block font-sans text-[0.75rem] uppercase tracking-[0.14em] transition-colors duration-300 ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream/80'}`}>{u.label}</span>
+            <span
+              className={`mt-1.5 block h-px w-full origin-center bg-gold-pale/40 transition-[transform,background-color] duration-500 ${on ? 'scale-x-100 bg-[var(--ribbon-champagne)]' : 'scale-x-[0.4]'}`}
+              aria-hidden="true"
+            />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Terrace' : `Floor ${parseInt(f.num, 10)}`)
 
@@ -15,7 +42,8 @@ const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Ter
 // "Floor 17" creative), and the strip of facts beneath it. The card stays mounted; when the
 // floor or unit changes its contents cross-fade.
 function FloorStage({ floor, unitId, setUnitId }) {
-  const [zoom, setZoom] = useState(false)
+  // null when closed, otherwise which render is shown full-screen: '2d' or 'iso'
+  const [zoom, setZoom] = useState(null)
   const rootRef = useRef(null)
   const zoomRef = useRef(null)
   const mounted = useRef(false)
@@ -48,7 +76,7 @@ function FloorStage({ floor, unitId, setUnitId }) {
     return () => ctx.revert()
   }, [floor.id, unitId])
 
-  const closeZoom = useCallback(() => gsap.to(zoomRef.current, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.4, ease: EASE.soft, onComplete: () => setZoom(false) }), [])
+  const closeZoom = useCallback(() => gsap.to(zoomRef.current, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.4, ease: EASE.soft, onComplete: () => setZoom(null) }), [])
 
   useEffect(() => {
     if (!zoom) return
@@ -97,7 +125,7 @@ function FloorStage({ floor, unitId, setUnitId }) {
             <p className="fs-rise fs-swap mt-2 font-sans text-[0.6875rem] uppercase tracking-[0.22em] text-cream/65">Signature {unit.label} residence</p>
           </div>
           <div className="fs-rise">
-            <Segmented options={UNIT_OPTIONS} value={unitId} onChange={setUnitId} label="Residence type" />
+            <UnitSwitch value={unitId} onChange={setUnitId} />
           </div>
         </div>
 
@@ -117,46 +145,63 @@ function FloorStage({ floor, unitId, setUnitId }) {
           ))}
         </dl>
 
-        {/* the plan, and what makes the residence */}
-        <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-          <button
-            type="button"
-            onClick={() => setZoom(true)}
-            aria-label={`View the ${unit.label} plan larger`}
-            onPointerMove={glowAt}
-            className="fs-rise fs-plan mn-glow tr-focus group relative min-w-0 rounded-[0.75rem] border border-[color-mix(in_srgb,var(--ribbon-main-gold)_30%,transparent)] bg-[color-mix(in_srgb,var(--espresso)_40%,transparent)] p-1.5"
-          >
-            <span className="block aspect-[3/2] overflow-hidden rounded-[0.55rem]">
-              <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
-            </span>
-          </button>
-
-          <div className="flex min-w-0 flex-col justify-between gap-5">
-            <div>
-              <span className="fs-rise flex items-center gap-4">
-                <span className="tr-dash" />
-                <span className="tr-label">Residence highlights</span>
-              </span>
-              <ul className="mt-4 space-y-3.5">
-                {highlights.map(([Ic, main, sub]) => (
-                  <li key={main} className="fs-rise flex items-center gap-3.5">
-                    <span className="tr-tile h-10 w-10">
-                      <Ic size={18} />
+        {/* two renders of the same residence: the flat floor plan, and the isometric - each its own thumbnail and its own full-screen button */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {[
+            { key: '2d', label: 'Floor plan', Ic: IcPlan, src: unit.plan2d, alt: `${unit.label} floor plan` },
+            { key: 'iso', label: 'Isometric', Ic: IcExpand, src: unit.iso, alt: `${unit.label} isometric plan` },
+          ].map(({ key, label, Ic, src, alt }) => (
+            <div key={key} className="flex min-w-0 flex-col">
+              <button
+                type="button"
+                onClick={() => setZoom(key)}
+                aria-label={src ? `View the ${alt} larger` : `${alt} coming soon`}
+                onPointerMove={glowAt}
+                className="fs-rise fs-plan mn-glow tr-focus group relative min-w-0 overflow-hidden rounded-[0.75rem] border border-[color-mix(in_srgb,var(--ribbon-main-gold)_30%,transparent)] bg-[color-mix(in_srgb,var(--espresso)_40%,transparent)] p-1.5"
+              >
+                <span className="block aspect-[3/2] overflow-hidden rounded-[0.55rem]">
+                  {src ? (
+                    <img src={src} alt={alt} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
+                  ) : (
+                    <span className="flex h-full w-full flex-col items-center justify-center gap-2 text-center">
+                      <Ic size={20} className="text-cream/35" />
+                      <span className="font-sans text-[0.625rem] uppercase tracking-[0.18em] text-cream/40">Coming soon</span>
                     </span>
-                    <span className="min-w-0 leading-tight">
-                      <span className="block font-serif text-[1.05rem] text-cream">{main}</span>
-                      <span className="mt-0.5 block text-[0.75rem] text-cream/65">{sub}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                  )}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom(key)}
+                onPointerMove={glowAt}
+                className="fs-rise tr-btn tr-btn--gold mn-glow mt-3 self-start text-[0.6875rem]"
+              >
+                View {label}
+                <IcArrow size={14} className="tr-arrow" />
+              </button>
             </div>
+          ))}
+        </div>
 
-            <button type="button" onClick={() => setZoom(true)} onPointerMove={glowAt} className="fs-rise tr-btn tr-btn--gold mn-glow self-start">
-              View floor plan
-              <IcArrow size={15} className="tr-arrow" />
-            </button>
-          </div>
+        {/* what makes the residence */}
+        <div className="mt-6">
+          <span className="fs-rise flex items-center gap-4">
+            <span className="tr-dash" />
+            <span className="tr-label">Residence highlights</span>
+          </span>
+          <ul className="mt-4 grid gap-x-6 gap-y-3.5 sm:grid-cols-3">
+            {highlights.map(([Ic, main, sub]) => (
+              <li key={main} className="fs-rise flex items-center gap-3.5">
+                <span className="tr-tile h-10 w-10 shrink-0">
+                  <Ic size={18} />
+                </span>
+                <span className="min-w-0 leading-tight">
+                  <span className="block font-serif text-[1.05rem] text-cream">{main}</span>
+                  <span className="mt-0.5 block text-[0.75rem] text-cream/65">{sub}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -188,16 +233,28 @@ function FloorStage({ floor, unitId, setUnitId }) {
             onClick={closeZoom}
             role="dialog"
             aria-modal="true"
-            aria-label={`${unit.label} plan`}
+            aria-label={`${unit.label} ${zoom === '2d' ? 'floor plan' : 'isometric plan'}`}
           >
             <div className="absolute right-5 top-[max(1.25rem,var(--safe-t))] z-10 flex items-center gap-3 sm:right-8 sm:top-8">
-              <span className="tr-label hidden sm:inline">{unit.label} plan</span>
+              <span className="tr-label hidden sm:inline">{unit.label} {zoom === '2d' ? 'floor plan' : 'isometric'}</span>
               <IconButton label="Close" onClick={closeZoom}>
                 <IcClose size={17} />
               </IconButton>
             </div>
             <div className="fz-frame tr-panel relative h-full w-full max-w-[80rem] p-2" onClick={(e) => e.stopPropagation()}>
-              <img src={unit.iso} alt={`${unit.label} isometric plan`} className="h-full w-full rounded-[0.75rem] object-contain" draggable={false} />
+              {(zoom === '2d' ? unit.plan2d : unit.iso) ? (
+                <img
+                  src={zoom === '2d' ? unit.plan2d : unit.iso}
+                  alt={`${unit.label} ${zoom === '2d' ? 'floor plan' : 'isometric plan'}`}
+                  className="h-full w-full rounded-[0.75rem] object-contain"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-[0.75rem] text-center">
+                  <span className="tr-label">Coming soon</span>
+                  <p className="max-w-xs font-serif text-lg text-cream/70">The {unit.label} floor plan is on its way.</p>
+                </div>
+              )}
             </div>
           </div>,
           document.body,

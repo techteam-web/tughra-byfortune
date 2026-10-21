@@ -40,7 +40,7 @@ function FloorPlans({ onClose }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
-  const [unitId, setUnitId] = useState(UNITS[0].id)
+  const [unitId, setUnitId] = useState(UNITS.find((u) => u.iso)?.id ?? UNITS[0].id)
   const rootRef = useRef(null)
   const pillRef = useRef(null)
   const btnRefs = useRef({})
@@ -153,7 +153,9 @@ function FloorPlans({ onClose }) {
         </span>
       </TopBar>
 
-      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.75rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-[max(2rem,var(--safe-b))] pt-4 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[10rem_minmax(0,0.8fr)_minmax(0,1.55fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[2.5rem] lg:pt-[8rem] xl:pl-[4.5rem]">
+      {/* lg+: a true half-and-half split - the tower on its side, the residence card on the other
+          (the floor picker is a thin rail outside that split, not counted in either half) */}
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.75rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-[max(2rem,var(--safe-b))] pt-4 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[2.5rem] lg:pt-[8rem] xl:pl-[4.5rem]">
         {/* ---------- Floor picker ---------- */}
         <nav className="flex min-h-0 flex-col justify-center" aria-label="Floor picker">
           <span className="fp-picker-head tr-label mb-4 block leading-[1.6]">
@@ -209,7 +211,7 @@ function FloorPlans({ onClose }) {
 
         {/* ---------- The tower: tap a floor ---------- */}
         <div className="fp-tower relative flex min-h-0 items-center justify-center">
-          <div className="relative shrink-0" style={{ height: 'min(calc(100svh - 9rem), 44rem)', maxHeight: '100%', aspectRatio: `${CROP.width} / ${CROP.height}` }}>
+          <div className="relative shrink-0" style={{ height: 'min(calc(100svh - 13rem), 34rem)', maxHeight: '88%', aspectRatio: `${CROP.width} / ${CROP.height}` }}>
             <div className="relative h-full w-full select-none overflow-hidden">
               <div style={innerStyle}>
                 <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />

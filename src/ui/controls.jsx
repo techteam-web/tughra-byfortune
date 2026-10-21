@@ -99,20 +99,22 @@ export function TopBar({ onBrand, children, aside, sticky = false, fixed = false
   return (
     <header
       ref={barRef}
-      className={`${fixed ? 'fixed' : sticky ? 'sticky' : 'absolute'} isolate inset-x-0 top-0 z-30 flex items-center justify-between gap-4 px-5 pb-3 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3 ${className}`}
+      className={`${fixed ? 'fixed' : sticky ? 'sticky' : 'absolute'} isolate inset-x-0 top-0 z-30 flex items-center justify-between gap-4 px-5 pb-3 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3 pointer-events-none ${className}`}
     >
       {sticky && (
         <span ref={bgRef} className="tr-panel pointer-events-none absolute inset-0 -z-10 rounded-none opacity-0 before:hidden" aria-hidden="true">
           <span className="tr-hair absolute inset-x-0 bottom-0" />
         </span>
       )}
-      <div className="tb-anim flex min-w-0 items-center gap-5">
+      {/* the bar itself lets clicks through everywhere except its own content, so page
+          content sitting in the same band (a card's own header row, say) stays clickable */}
+      <div className="tb-anim pointer-events-auto flex min-w-0 items-center gap-5">
         <button type="button" onClick={onBrand} aria-label={brandLabel} className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
           <Lockup compact={compact} />
         </button>
         {aside}
       </div>
-      {children}
+      <div className="pointer-events-auto flex items-center">{children}</div>
     </header>
   )
 }
