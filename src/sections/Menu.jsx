@@ -17,8 +17,12 @@ const MENU_ITEMS = [
   { num: '07', key: 'enquiry', name: 'Enquire' },
 ]
 
-// Colours sampled from the reference, mapped onto the tokens
-const ACTIVE = 'text-[color-mix(in_srgb,var(--gold-pale)_60%,var(--cream))]'
+// the golden hover follows the pointer across each menu button
+const glowAt = (e) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
 
 const FRAME = 'absolute inset-0 side:origin-top-left side:scale-[1.12] short:translate-x-[14vw] short:scale-100'
 const PHOTO =
@@ -127,30 +131,36 @@ function Menu({ onClose, onSelect }) {
         {/* phones and tablets: the tower shows through here */}
         <div className="min-h-6 flex-1 side:hidden" />
 
-        <ul className="flex shrink-0 flex-col side:flex-1 side:justify-center" onMouseLeave={() => setActive(-1)}>
+        <ul className="flex shrink-0 flex-col gap-1 side:flex-1 side:justify-center short:gap-0" onMouseLeave={() => setActive(-1)}>
           {MENU_ITEMS.map((m, i) => {
             const on = i === active
             return (
               <li key={m.key}>
+                {/* small entries with the golden hover: border and fill light up around the cursor */}
                 <button
                   type="button"
                   onClick={() => onSelect?.(m.key)}
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onBlur={() => setActive(-1)}
-                  className="tr-focus flex w-full touch-manipulation items-center border-none bg-transparent py-[clamp(0.55rem,1.55svh,0.9rem)] text-left side:h-[8.08svh] side:py-0 short:h-auto short:py-[0.32rem]"
+                  onPointerMove={glowAt}
+                  className={`mn-glow tr-focus flex w-full max-w-[20rem] touch-manipulation items-center rounded-lg border-none bg-transparent py-[0.7rem] pl-3 pr-2.5 text-left side:py-[clamp(0.5rem,1.35svh,0.85rem)] short:py-[0.22rem] ${on ? 'is-on' : ''}`}
                 >
-                  <span className="mn-num w-[2.5rem] shrink-0 font-sans text-[max(0.8rem,10.5px)] font-normal tabular-nums tracking-[0.04em] text-gold-pale/55 short:w-8 short:text-[0.75rem]">
-                    {m.num}
-                  </span>
+                  <span className="mn-num w-8 shrink-0 font-sans text-[max(0.6875rem,10px)] tabular-nums tracking-[0.06em] text-gold-pale/55 short:w-7">{m.num}</span>
                   <span
-                    className={`mn-dash block h-px w-[1.3rem] shrink-0 origin-left bg-gold-pale/45 transition-[scale,background-color] duration-500 short:w-4 ${on ? 'scale-x-[1.6] bg-gold-pale/80' : ''}`}
+                    className={`mn-dash block h-px w-4 shrink-0 origin-left bg-gold-pale/45 transition-[scale,background-color] duration-500 ${on ? 'scale-x-[1.6] bg-[var(--ribbon-champagne)]' : ''}`}
                     aria-hidden="true"
                   />
                   <span
-                    className={`mn-name ml-[1.7rem] min-w-0 font-sans text-[1.05rem] font-light uppercase leading-tight tracking-[0.18em] transition-colors duration-300 sm:text-[1.15rem] side:text-[clamp(1rem,2.4svh,1.4rem)] short:ml-5 short:text-[0.8rem] ${on ? ACTIVE : 'text-cream'}`}
+                    className={`mn-name ml-6 min-w-0 flex-1 font-sans text-[0.8125rem] font-normal uppercase leading-tight tracking-[0.2em] transition-colors duration-300 sm:text-[0.875rem] short:ml-4 short:text-[0.6875rem] ${on ? 'text-[var(--ribbon-champagne)]' : 'text-cream'}`}
                   >
                     {m.name}
+                  </span>
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--ribbon-main-gold)_70%,transparent)] text-[var(--ribbon-champagne)] transition-[opacity,translate] duration-500 short:h-5 short:w-5 ${on ? 'translate-x-0 opacity-100' : '-translate-x-1.5 opacity-0'}`}
+                    aria-hidden="true"
+                  >
+                    <IcArrow size={11} />
                   </span>
                 </button>
               </li>
@@ -158,12 +168,13 @@ function Menu({ onClose, onSelect }) {
           })}
         </ul>
 
-        {/* the one action: square corners, a fine gold border */}
+        {/* the one action: square corners, a fine gold border, the same golden hover */}
         <div className="mn-cta mt-6 shrink-0 side:mt-0 short:hidden">
           <button
             type="button"
             onClick={() => onSelect?.('enquiry')}
-            className="tr-focus group inline-flex touch-manipulation items-center gap-[1.1rem] border border-gold/70 bg-transparent px-[2.2rem] py-[0.78rem] font-sans text-[max(0.75rem,10px)] font-normal uppercase tracking-[0.22em] text-cream transition-colors duration-300 hover:border-gold hover:bg-gold/10 active:scale-[0.98]"
+            onPointerMove={glowAt}
+            className="mn-glow tr-focus group inline-flex touch-manipulation items-center gap-4 border border-gold/70 bg-transparent px-7 py-[0.7rem] font-sans text-[max(0.6875rem,10px)] font-normal uppercase tracking-[0.22em] text-cream transition-colors duration-300 hover:border-gold hover:text-[var(--ribbon-champagne)] active:scale-[0.98]"
           >
             Enquire now
             <IcArrow size={15} className="text-gold transition-transform duration-300 group-hover:translate-x-1" />

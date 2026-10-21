@@ -264,6 +264,48 @@
   caret-color: var(--cream);
 }
 
+/* Golden hover: a box whose border and fill light up around the cursor (the menu's original hover,
+   in the ribbon's colours). Set --mx/--my from the pointer; .is-on or keyboard focus shows it. */
+.mn-glow {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  isolation: isolate;
+}
+.mn-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: radial-gradient(9rem 6rem at var(--mx) var(--my), var(--ribbon-champagne) 0%, color-mix(in srgb, var(--ribbon-main-gold) 55%, transparent) 40%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-silk);
+  pointer-events: none;
+}
+.mn-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(10rem 5rem at var(--mx) var(--my), color-mix(in srgb, var(--ribbon-main-gold) 24%, transparent), color-mix(in srgb, var(--ribbon-main-gold) 7%, transparent) 60%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-silk);
+  pointer-events: none;
+}
+.mn-glow.is-on::before,
+.mn-glow.is-on::after,
+.mn-glow:hover::before,
+.mn-glow:hover::after,
+.mn-glow:focus-visible::before,
+.mn-glow:focus-visible::after {
+  opacity: 1;
+}
+
 /* keyboard focus, everywhere */
 .tr-btn:focus-visible,
 .tr-icon-btn:focus-visible,
