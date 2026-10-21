@@ -1,5 +1,8 @@
-// Geometry of the menu's glass ribbon (see GlassRibbon.jsx), traced from the reference artwork.
-// Kept apart from the component so the panel's shape can also be used in screen pixels.
+// Geometry of the menu's glass ribbon (see GlassRibbon.jsx). Kept apart from the component so the
+// panel's shape can also be used in screen pixels.
+//
+// Points are in the reference artwork's pixels (750 px tall); the drawing space is 420 x 900 units
+// (one unit = 1/900 of the screen height) with the ribbon's core at x 82.
 const S = 1.2 // reference px -> units
 const U = ([x, y]) => [82 + (x - 380) * S, y * S]
 const f = (p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`
@@ -22,38 +25,37 @@ function curve(pts, start = 'M', T = (p) => p) {
   }
   return d
 }
-const rev = (a) => [...a].reverse()
 
-const I = [...down(371, 576), [373, 590], [377, 603], [382, 615], [389, 627], [398, 639], [410, 651], [426, 663], [447, 675], [472, 687], [497, 699], [517, 711], [532, 723], [544, 735], [553, 747], [561, 760], [568, 775]]
-const A = [...down(380, 545), [381, 558], [382, 570], [385, 582], [389, 594], [394, 606], [401, 620], [410, 634], [422, 648], [438, 661], [458, 674], [484, 688], [510, 702], [533, 716], [553, 730], [570, 744], [584, 758], [596, 772]]
-const B = [...down(389, 470), [390, 485], [392, 500], [394, 514], [396, 528], [398, 542], [401, 556], [403, 568], [406, 580], [409, 592], [413, 604], [418, 616], [425, 628], [434, 640], [445, 652], [458, 664], [474, 676], [493, 688], [515, 700], [537, 713], [555, 726], [570, 739], [583, 752], [595, 765]]
-const C = [...down(389, 470), [392, 485], [395, 500], [399, 514], [403, 528], [408, 542], [413, 556], [419, 569], [426, 582], [434, 595], [443, 608], [452, 620], [462, 633], [474, 646], [489, 659], [505, 672], [521, 685], [537, 698], [552, 711], [565, 724], [576, 737], [586, 750], [596, 763]]
+// The panel's right edge: the left edge of the ribbon artwork (public/assets/fortune1.png), traced
+// from its alpha, set 1.5 px under the ribbon so no seam shows between them.
+const EDGE = [
+  ...down(371.5, 574),
+  [374.7, 586.6], [377.9, 599.3], [382.7, 612.1], [389.9, 624.8], [400.2, 637.6], [414.6, 650.4], [435.3, 663.1],
+  [462.4, 675.9], [491.1, 688.6], [509.4, 701.4], [525.4, 714.1], [539.7, 726.9], [550.9, 739.6], [557.2, 749.2],
+  [563.5, 762], [569.5, 775],
+]
+// A faint edge where the dark panel turns into clearer glass beside the ribbon (top half only)
 const CURL = [[315, -30], [316, 30], [318, 80], [320, 120], [323, 160], [328, 200], [334, 240], [342, 280], [352, 315], [362, 350], [368, 380], [371, 410]]
 
-export const LINE_I = curve(I)
-export const LINE_A = curve(A)
-export const LINE_B = curve(B.slice(B.findIndex((p) => p[1] >= 470)))
-export const LINE_C = curve(C)
+export const LINE_EDGE = curve(EDGE)
 export const LINE_CURL = curve(CURL)
-export const PANEL = `M-4000 -36 ${curve(I, 'L')} L-4000 ${U(I.at(-1))[1].toFixed(1)} Z`
-export const BODY = `${curve(I)} ${curve(rev(C), 'L')} Z`
-export const CORE = `${curve(A)} ${curve(rev(B), 'L')} Z`
-export const FACE = `${curve(B)} ${curve(rev(C), 'L')} Z`
+export const PANEL = `M-4000 -36 ${curve(EDGE, 'L')} L-4000 ${U(EDGE.at(-1))[1].toFixed(1)} Z`
 export const GLASS = `${LINE_CURL} L${f(U([371, -30]))} Z`
 export const FLOOR = U([450, 705])
-export const SWEEP_I = curve(I.slice(I.findIndex((p) => p[1] >= 540)))
-// the glossy face is lit from its leading edge (B) and dims toward the outer edge (C): a gradient
-// across the band, whose run is roughly straight at this angle
-export const FACE_FROM = [244, 840]
-export const FACE_TO = [244 + 32 * 0.58, 840 - 32 * 0.81]
+
+// The ribbon artwork, placed so its lines sit on the geometry above. Both files are 941 px tall,
+// the full height of the reference; fortune2 is the same ribbon drawn 1 px further right.
+export const RIBBON_IMAGES = [
+  { href: '/assets/fortune1.png', x: U([370, 0])[0], width: 359 * 0.797 * S },
+  { href: '/assets/fortune2.png', x: U([369.2, 0])[0], width: 282 * 0.797 * S },
+]
 
 // The panel in screen pixels, for clipping the frosted copy of the photograph:
 // `left` is the ribbon box's left edge and H the screen height, both in px.
 export function panelClip(left, H) {
   const k = H / 900
   const T = ([u, v]) => [left + u * k, v * k]
-  const top = T(U(I[0]))
-  const end = T(U(I.at(-1)))
-  return `M-60 ${top[1].toFixed(1)} ${curve(I, 'L', T)} L-60 ${end[1].toFixed(1)} Z`
+  const top = T(U(EDGE[0]))
+  const end = T(U(EDGE.at(-1)))
+  return `M-60 ${top[1].toFixed(1)} ${curve(EDGE, 'L', T)} L-60 ${end[1].toFixed(1)} Z`
 }
-

@@ -76,9 +76,10 @@ function App() {
     tl.set(curtainRef.current, { autoAlpha: 0 })
   }, [view, navigate])
 
-  // the menu's full-screen photograph is fetched while the intro plays, so it is there on arrival
+  // the menu's photograph and ribbon artwork are fetched while the intro plays, so they are there on arrival
   useEffect(() => {
-    if (started) new Image().src = menuTower
+    if (!started) return
+    for (const src of [menuTower, '/assets/fortune1.png', '/assets/fortune2.png']) new Image().src = src
   }, [started])
 
   const toMenu = () => navigate('menu')
