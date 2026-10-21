@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, glideTo } from '../motion/index.js'
-import { TopBar, BackControl } from '../ui/controls.jsx'
+import { TopBar, BackControl, IconButton } from '../ui/controls.jsx'
+import { glowAt } from '../ui/glow.js'
+import { IcPrev, IcArrow } from '../ui/icons.jsx'
 import FloorStage from '../components/FloorStage.jsx'
 import tower from '../assets/render/menu-tower.webp'
 import { UNITS } from '../components/floorUnits.js'
@@ -36,7 +38,7 @@ const idToLabel = (id) => {
   return `${id.replace(/^_/, '')} Floor`
 }
 
-function FloorPlans({ onClose, onEnquire }) {
+function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
@@ -148,14 +150,17 @@ function FloorPlans({ onClose, onEnquire }) {
         <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--espresso)_62%,transparent)]" style={{ backgroundImage: 'var(--grain)' }} />
       </div>
       <TopBar onBrand={onClose} sticky className="lg:absolute">
-        <span className="fp-back">
+        <span className="fp-back flex items-center gap-3">
+          <button type="button" onClick={onEnquire} onPointerMove={glowAt} className="tr-btn tr-btn--gold mn-glow hidden text-[0.6875rem] sm:inline-flex">
+            Enquire
+          </button>
           <BackControl onClick={onClose} />
         </span>
       </TopBar>
 
       {/* lg+: a true half-and-half split - the tower on its side, the residence card on the other
           (the floor picker is a thin rail outside that split, not counted in either half) */}
-      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.75rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-[max(2rem,var(--safe-b))] pt-4 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[2.5rem] lg:pt-[8rem] xl:pl-[4.5rem]">
+      <div className="relative z-10 grid min-h-0 flex-1 grid-cols-[4.75rem_minmax(0,1fr)] gap-x-4 gap-y-6 px-5 pb-[max(2rem,var(--safe-b))] pt-4 sm:px-8 md:grid-cols-[6rem_minmax(0,1fr)] md:px-12 lg:grid-cols-[9rem_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-x-8 lg:pb-[6rem] lg:pt-[8rem] xl:pl-[4.5rem]">
         {/* ---------- Floor picker ---------- */}
         <nav className="flex min-h-0 flex-col justify-center" aria-label="Floor picker">
           <span className="fp-picker-head tr-label mb-4 block leading-[1.6]">
@@ -243,6 +248,25 @@ function FloorPlans({ onClose, onEnquire }) {
 
         {/* ---------- The residence on the chosen floor ---------- */}
         {activeFloor && <FloorStage floor={activeFloor} unitId={unitId} setUnitId={setUnitId} onEnquire={onEnquire} />}
+      </div>
+
+      {/* ---------- Foot: where this section sits among the others, and the way through ---------- */}
+      <div className="fp-foot pointer-events-none absolute inset-x-0 bottom-0 z-20 hidden items-center justify-between px-8 pb-[2.2rem] lg:flex lg:px-12 xl:pl-[4.5rem]">
+        <span className="pointer-events-auto flex items-center gap-4">
+          <span className="tr-num text-[var(--ribbon-champagne)]">04</span>
+          <span className="tr-dash" />
+          <span className="tr-num">07</span>
+          <span className="tr-label ml-2">Residences</span>
+        </span>
+        <span className="pointer-events-auto flex items-center gap-3">
+          <IconButton label="Previous section" onClick={onPrev} small>
+            <IcPrev size={15} />
+          </IconButton>
+          <button type="button" onClick={onNext} onPointerMove={glowAt} className="tr-btn tr-btn--gold mn-glow text-[0.6875rem]">
+            Neighborhood
+            <IcArrow size={14} className="tr-arrow" />
+          </button>
+        </span>
       </div>
     </section>
   )
