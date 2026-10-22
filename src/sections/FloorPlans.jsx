@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
 import BrandMark from '../components/BrandMark.jsx'
-import { IcArrow, IcPrev, IcBack, IcExpand, IcClose, IcLayers as IcPlan } from '../ui/icons.jsx'
+import { IcArrow, IcPrev, IcBack, IcClose, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
 const TBC = 'To be confirmed'
@@ -39,14 +39,13 @@ const idToLabel = (id) => {
   return `${id.replace(/^_/, '')} Floor`
 }
 
-// The reference's paper sidebar and layout table, kept exactly as built - the only
-// thing that changes here is what sits in the white space in the middle: the tower,
-// its floors as clickable switches, and (once one is picked) the plan in its place.
+// The reference's paper sidebar and layout table, with the tower in the middle. Clicking
+// a floor on the tower opens the plan page: a big plan, a small residence list on its
+// left, and the floor plan / isometric switch underneath - all on the same beige ground.
 function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
-  const [stage, setStage] = useState('tower') // 'tower' | 'plan' - what the white card shows
   const [unitId, setUnitId] = useState(UNITS.find((u) => u.iso)?.id ?? UNITS[0].id)
   const [planView, setPlanView] = useState('2d') // '2d' (floor plan) or 'iso' (isometric)
   const [zoomOpen, setZoomOpen] = useState(false)
@@ -116,29 +115,16 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
     return () => ctx.revert()
   }, [])
 
-  // Tower <-> plan: a clean crossfade between the two cards in the same spot
+  // Unit or tab changed: the plan and the table cross-fade in place
   useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      if (stage === 'plan') {
-        gsap.fromTo('.fp2-tower-layer', { autoAlpha: 1 }, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.4, ease: EASE.soft })
-        gsap.fromTo('.fp2-plan-layer', { autoAlpha: 0, scale: 0.98 }, { autoAlpha: 1, scale: 1, duration: REDUCED ? 0.1 : 0.55, ease: EASE.soft, delay: REDUCED ? 0 : 0.15 })
-      } else {
-        gsap.fromTo('.fp2-plan-layer', { autoAlpha: 1 }, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.35, ease: EASE.soft })
-        gsap.fromTo('.fp2-tower-layer', { autoAlpha: 0 }, { autoAlpha: 1, duration: REDUCED ? 0.1 : 0.5, ease: EASE.soft, delay: REDUCED ? 0 : 0.1 })
-      }
-    }, rootRef)
-    return () => ctx.revert()
-  }, [stage])
-
-  // Unit or tab changed: the render and the table cross-fade in place
-  useLayoutEffect(() => {
-    gsap.fromTo('.fp2-plan-layer img', { opacity: 0 }, { opacity: 1, duration: REDUCED ? 0.2 : 0.6, ease: EASE.move, overwrite: 'auto' })
+    gsap.fromTo('.fp2-big img', { opacity: 0 }, { opacity: 1, duration: REDUCED ? 0.2 : 0.6, ease: EASE.move, overwrite: 'auto' })
     gsap.fromTo('.fp2-swap', { opacity: 0.2, y: 3 }, { opacity: 1, y: 0, duration: REDUCED ? 0.2 : 0.45, ease: EASE.soft, stagger: 0.02, overwrite: 'auto' })
   }, [unitId, planView])
 
   const openFloor = (id) => {
     setSelectedFloor(id)
-    setStage('plan')
+    setPlanView('2d')
+    setZoomOpen(true)
   }
 
   const closeZoom = () => gsap.to(zoomRef.current, { autoAlpha: 0, duration: REDUCED ? 0.1 : 0.4, ease: EASE.soft, onComplete: () => setZoomOpen(false) })
@@ -148,9 +134,11 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
     const onKey = (e) => e.key === 'Escape' && closeZoom()
     window.addEventListener('keydown', onKey)
     gsap.fromTo(zoomRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: REDUCED ? 0.15 : 0.5, ease: EASE.soft })
-    gsap.fromTo(zoomRef.current.querySelector('.fz-frame'), { opacity: 0, scale: 0.985 }, { opacity: 1, scale: 1, duration: REDUCED ? 0.15 : 0.7, ease: EASE.soft, delay: 0.1 })
+    gsap.fromTo(zoomRef.current.querySelector('.fp2-big'), { opacity: 0, scale: 0.985 }, { opacity: 1, scale: 1, duration: REDUCED ? 0.15 : 0.7, ease: EASE.soft, delay: 0.1 })
     return () => window.removeEventListener('keydown', onKey)
   }, [zoomOpen])
+
+  const floorName = floors.find((f) => f.id === selectedFloor)?.label
 
   // The room-by-room layout table. Room count follows the bedroom count; sizes
   // read "To be confirmed" until real dimensions are supplied - no numbers invented.
@@ -227,49 +215,11 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
           </ul>
         </aside>
 
-        {/* ---------- Middle: the tower, its floors as switches, then the plan in its place ---------- */}
+        {/* ---------- Middle: the tower, its floors as switches that open the plan page ---------- */}
         <div className="fp2-stage flex min-w-0 flex-col items-center">
-          {/* the floor-plan/isometric switch only matters once a floor has opened the plan */}
-          {stage === 'plan' && (
-            <div className="mb-5 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setStage('tower')}
-                onPointerMove={glowAt}
-                aria-label="Back to the tower"
-                className="mn-glow tr-focus flex h-9 w-9 items-center justify-center rounded-full border border-[var(--ink)]/15 bg-white/70 text-[var(--ink)]"
-              >
-                <IcBack size={15} />
-              </button>
-              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/12 bg-white/60 p-1">
-                {[
-                  ['2d', 'Floor plan'],
-                  ['iso', 'Isometric'],
-                ].map(([v, l]) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setPlanView(v)}
-                    onPointerMove={glowAt}
-                    aria-pressed={planView === v}
-                    className={`mn-glow tr-focus rounded-full px-4 py-1.5 font-sans text-[0.65rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
-                      planView === v ? 'bg-[var(--bronze-deep)] text-[var(--cream)]' : 'text-[var(--ink-soft)]'
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
-            {/* ---- the tower, on a wide torn white sheet - a deep white mat either side of the
-                 building, same as the reference's card - with its floors as clickable switches ---- */}
-            <div
-              className="fp2-tower-layer absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
-              style={{ visibility: stage === 'plan' ? 'hidden' : 'visible' }}
-            >
+            {/* ---- the tower on a wide white mat, its floors as clickable switches ---- */}
+            <div className="absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
                 <div className="relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
                   <div style={innerStyle}>
@@ -298,36 +248,6 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* ---- the plan, once a floor has been picked - same wide mat, and the frame around
-                 the render matches its own shape (the isometrics are wide landscape photos), so
-                 object-cover never has to crop into an unrepresentative sliver of the render ---- */}
-            <div
-              className="fp2-plan-layer absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
-              style={{ visibility: stage === 'tower' ? 'hidden' : 'visible' }}
-            >
-              <button
-                type="button"
-                onClick={() => setZoomOpen(true)}
-                onPointerMove={glowAt}
-                aria-label={activeSrc ? `View the ${unit.label} ${planLabel} larger` : `${unit.label} ${planLabel} coming soon`}
-                className="group relative flex h-full w-full items-center justify-center overflow-hidden"
-              >
-                <span className="relative block h-full overflow-hidden" style={{ aspectRatio: planView === 'iso' ? '3 / 2' : '4 / 5' }}>
-                  {activeSrc ? (
-                    <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
-                  ) : (
-                    <span className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[color-mix(in_srgb,var(--cream)_60%,var(--parchment))] text-center">
-                      <IcPlan size={24} className="text-[var(--ink-soft)]/50" />
-                      <span className="font-sans text-[0.625rem] uppercase tracking-[0.18em] text-[var(--ink-soft)]/60">Coming soon</span>
-                    </span>
-                  )}
-                </span>
-                <span className="pointer-events-none absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 text-[var(--ink)] shadow-[0_0.3rem_0.8rem_rgba(42,28,18,0.18)]">
-                  <IcExpand size={14} />
-                </span>
-              </button>
             </div>
           </div>
         </div>
@@ -378,37 +298,91 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
         </span>
       </div>
 
-      {/* Larger view - portalled to <body> so nothing on the page can overlap it */}
+      {/* ---------- The plan page: opened by a floor on the tower, portalled over everything ---------- */}
       {zoomOpen &&
         createPortal(
           <div
             ref={zoomRef}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--scrim)] p-4 pt-20 backdrop-blur-md sm:p-10 sm:pt-24"
+            className="fixed inset-0 z-[200] flex flex-col bg-[var(--cream)] text-[var(--ink)]"
             style={{ visibility: 'hidden' }}
-            onClick={closeZoom}
             role="dialog"
             aria-modal="true"
             aria-label={`${unit.label} ${planLabel}`}
           >
-            <div className="absolute right-5 top-[max(1.25rem,var(--safe-t))] z-10 flex items-center gap-3 sm:right-8 sm:top-8">
-              <span className="hidden font-sans text-[0.7rem] uppercase tracking-[0.2em] text-cream/80 sm:inline">
-                {unit.label} {planLabel}
-              </span>
-              <button type="button" onClick={closeZoom} aria-label="Close" className="tr-icon-btn mn-glow">
-                <IcClose size={17} />
+            <header className="flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-10 sm:pt-8">
+              <button type="button" onClick={closeZoom} onPointerMove={glowAt} className="mn-glow tr-focus flex items-center gap-2.5 rounded-md border-none bg-transparent p-1 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+                <IcBack size={15} />
+                Back to the tower
               </button>
+              <BrandMark tone="dark" size="seal" credit={false} seal />
+              <button type="button" onClick={closeZoom} onPointerMove={glowAt} aria-label="Close" className="mn-glow tr-focus flex h-9 w-9 items-center justify-center rounded-full border border-[var(--ink)]/20 text-[var(--ink)]">
+                <IcClose size={15} />
+              </button>
+            </header>
+
+            <div className="flex min-h-0 flex-1 gap-8 px-5 pt-6 sm:px-10 lg:gap-14">
+              {/* the residence types */}
+              <aside className="flex w-[8.5rem] shrink-0 flex-col justify-center">
+                {floorName && <span className="block font-sans text-[0.65rem] uppercase tracking-[0.24em] text-[var(--bronze-deep)]">{floorName}</span>}
+                <ul className="mt-6 flex flex-col gap-5">
+                  {UNITS.map((u, i) => {
+                    const on = u.id === unitId
+                    return (
+                      <li key={u.id} className="relative pl-4">
+                        {on && <span className="absolute left-0 top-[0.15em] h-[1.1em] w-[2px] bg-[var(--bronze-deep)]" aria-hidden="true" />}
+                        <button
+                          type="button"
+                          onClick={() => setUnitId(u.id)}
+                          onPointerMove={glowAt}
+                          aria-pressed={on}
+                          className="mn-glow tr-focus flex touch-manipulation items-baseline gap-3 rounded-md border-none bg-transparent p-0 text-left"
+                        >
+                          <span className="font-sans text-[0.65rem] tabular-nums tracking-[0.1em] text-[var(--ink-soft)]">{String(i + 1).padStart(2, '0')}</span>
+                          <span className={`font-serif text-[1.15rem] leading-none transition-colors duration-300 ${on ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}>{u.label}</span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </aside>
+
+              {/* the plan, big */}
+              <div className="fp2-big flex min-w-0 flex-1 items-center justify-center">
+                {activeSrc ? (
+                  <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full object-contain" draggable={false} />
+                ) : (
+                  <div className="flex aspect-[4/5] h-full max-h-full flex-col items-center justify-center gap-3 border border-[var(--ink)]/12 bg-[color-mix(in_srgb,var(--cream)_60%,var(--parchment))] text-center">
+                    <IcPlan size={26} className="text-[var(--ink-soft)]/50" />
+                    <span className="font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]/70">Coming soon</span>
+                    <p className="max-w-[16rem] font-serif text-[1rem] text-[var(--ink-soft)]">
+                      The {unit.label} {planLabel} is on its way.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="fz-frame tr-panel relative h-full w-full max-w-[80rem] p-2" onClick={(e) => e.stopPropagation()}>
-              {activeSrc ? (
-                <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full rounded-[0.75rem] object-contain" draggable={false} />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-[0.75rem] text-center">
-                  <span className="tr-label">Coming soon</span>
-                  <p className="max-w-xs font-serif text-lg text-cream/70">
-                    The {unit.label} {planLabel} is on its way.
-                  </p>
-                </div>
-              )}
+
+            {/* floor plan / isometric, underneath */}
+            <div className="flex justify-center pb-[max(1.75rem,var(--safe-b))] pt-5">
+              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 p-1">
+                {[
+                  ['2d', 'Floor plan'],
+                  ['iso', 'Isometric'],
+                ].map(([v, l]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setPlanView(v)}
+                    onPointerMove={glowAt}
+                    aria-pressed={planView === v}
+                    className={`mn-glow tr-focus rounded-full px-5 py-2 font-sans text-[0.68rem] uppercase tracking-[0.16em] transition-colors duration-300 ${
+                      planView === v ? 'bg-[var(--bronze-deep)] text-[var(--cream)]' : 'text-[var(--ink-soft)]'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>,
           document.body,
