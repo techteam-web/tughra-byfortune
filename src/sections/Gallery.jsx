@@ -58,19 +58,17 @@ const FLAT = CATEGORIES.flatMap((c, ci) => c.slides.map((s, i) => ({ ...s, ci, i
 const OFFSETS = CATEGORIES.map((c, ci) => CATEGORIES.slice(0, ci).reduce((n, x) => n + x.slides.length, 0))
 const TABS = CATEGORIES.map((c, i) => ({ value: i, label: c.label }))
 
-// The frame the picture sits in on the page, and edge to edge in the full-screen view
-const FRAME = { top: '9.5rem', right: '2.9rem', bottom: '5.25rem', left: '2.9rem' }
-const BLEED = { top: '0rem', right: '0rem', bottom: '0rem', left: '0rem' }
+const EXIT_IDLE = 2000 // ms the way out of full screen stays up after the pointer stops
 
-// A framed gallery: each render sits in a clean frame on the espresso ground, with a single
-// quiet line of words beneath it. A new render is uncovered by a panel that slides across
-// as the picture settles out of a slow zoom. One button lets the frame open out to the
-// whole screen, with nothing else on it.
+// A full-screen gallery: each render fills the screen, shown whole on the espresso ground,
+// with the logo, collections, a single quiet caption line and the arrows over it. A new
+// render is uncovered by a panel that slides across as the picture settles out of a slow
+// zoom. The full-screen button clears every word and control away, leaving the picture
+// alone; the way back out only shows while the pointer is moving.
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
   const [full, setFull] = useState(false)
-  const [inset, setInset] = useState({ top: 0, right: 0 }) // the letterbox gap around the fitted render
   const rootRef = useRef(null)
   const frameRef = useRef(null)
   const prevFlat = useRef(null)
@@ -78,6 +76,7 @@ function Gallery({ onClose }) {
   const touchX = useRef(0)
   const wheelAt = useRef(0)
   const firstFull = useRef(true)
+  const exitIdle = useRef(0)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
@@ -94,10 +93,9 @@ function Gallery({ onClose }) {
   )
   const step = useCallback((d) => go(idx + d, d), [go, idx])
 
-  // Arrival: the frame opens from a thin line, the picture settles, then the words come in
+  // Arrival: the picture opens from a thin line, settles, then the words come in
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(frameRef.current, FRAME)
       const tl = gsap.timeline({ delay: PAGE_IN })
       if (REDUCED) {
         tl.add(fx.show('.g-frame, .g-ui'), 0)
@@ -148,42 +146,30 @@ function Gallery({ onClose }) {
     return () => ctx.revert()
   }, [flat])
 
-  // Full screen: the frame opens out to the edges and everything else steps away
+  // Full screen: every word and control steps away, leaving the picture alone
   useLayoutEffect(() => {
     if (firstFull.current) {
       firstFull.current = false
       return
     }
-    const d = REDUCED ? 0 : 1.1
-    gsap.to(frameRef.current, { ...(full ? BLEED : FRAME), duration: d, ease: 'expo.inOut', overwrite: 'auto' })
-    gsap.to(rootRef.current.querySelectorAll('.g-chrome'), { autoAlpha: full ? 0 : 1, duration: full ? 0.35 : 0.6, delay: full ? 0 : d * 0.6, ease: EASE.soft, overwrite: 'auto' })
-    gsap.to(rootRef.current.querySelector('.g-exit'), { autoAlpha: full ? 1 : 0, duration: 0.5, delay: full ? d * 0.8 : 0, ease: EASE.soft, overwrite: 'auto' })
+    gsap.to(rootRef.current.querySelectorAll('.g-chrome'), { autoAlpha: full ? 0 : 1, duration: REDUCED ? 0 : full ? 0.45 : 0.6, ease: EASE.soft, overwrite: 'auto' })
+    if (!full) {
+      clearTimeout(exitIdle.current)
+      gsap.to(rootRef.current.querySelector('.g-exit'), { autoAlpha: 0, duration: 0.25, overwrite: 'auto' })
+    }
   }, [full])
 
-  // The renders run from tall portrait to very wide, so each one is letterboxed in the frame
-  // by a different amount. Measure where the fitted picture's own top-right corner lands, so
-  // the full-screen button can sit on the picture rather than in the gap beside it. A
-  // ResizeObserver covers both window resizes and the frame opening out to full screen.
-  useLayoutEffect(() => {
-    const frame = frameRef.current
-    const img = frame?.querySelector(`[data-slide="${flat}"] img`)
-    if (!frame || !img) return
-    const place = () => {
-      const { clientWidth: fw, clientHeight: fh } = frame
-      const { naturalWidth: nw, naturalHeight: nh } = img
-      if (!nw || !nh || !fw || !fh) return
-      const scale = Math.min(fw / nw, fh / nh)
-      setInset({ top: Math.round((fh - nh * scale) / 2), right: Math.round((fw - nw * scale) / 2) })
-    }
-    place()
-    img.addEventListener('load', place)
-    const ro = new ResizeObserver(place)
-    ro.observe(frame)
-    return () => {
-      img.removeEventListener('load', place)
-      ro.disconnect()
-    }
-  }, [flat])
+  // In full screen the way out is hidden; it surfaces while the pointer moves and goes
+  // again once it has been still for a moment.
+  const wakeExit = () => {
+    if (!full) return
+    const el = rootRef.current?.querySelector('.g-exit')
+    if (!el) return
+    gsap.to(el, { autoAlpha: 1, duration: 0.3, ease: EASE.soft, overwrite: 'auto' })
+    clearTimeout(exitIdle.current)
+    exitIdle.current = setTimeout(() => gsap.to(el, { autoAlpha: 0, duration: 0.6, ease: EASE.soft, overwrite: 'auto' }), EXIT_IDLE)
+  }
+  useEffect(() => () => clearTimeout(exitIdle.current), [])
 
   // Autoplay: a gold hairline fills under the picture, then the next render comes in
   useEffect(() => {
@@ -221,6 +207,8 @@ function Gallery({ onClose }) {
     <div
       ref={rootRef}
       className="relative h-svh w-full overflow-clip bg-espresso text-cream"
+      onPointerMove={wakeExit}
+      onPointerDown={wakeExit}
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         const dx = e.changedTouches[0].clientX - touchX.current
@@ -233,8 +221,8 @@ function Gallery({ onClose }) {
         step(e.deltaY > 0 ? 1 : -1)
       }}
     >
-      {/* ---------- the frame, and every render stacked in it ---------- */}
-      <div ref={frameRef} className="g-frame absolute overflow-clip" aria-live="polite">
+      {/* ---------- the whole screen, and every render stacked on it ---------- */}
+      <div ref={frameRef} className="g-frame absolute inset-0 overflow-clip" aria-live="polite">
         <div className="g-zoom absolute inset-0">
           {FLAT.map((s, i) => (
             <div key={s.src} data-slide={i} className="invisible absolute inset-0 overflow-clip">
@@ -255,12 +243,6 @@ function Gallery({ onClose }) {
             <button type="button" aria-label="Next render" onClick={() => step(1)} className="absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize border-none bg-transparent" />
           </>
         )}
-        {/* full screen, in the picture's own top-right corner */}
-        <div className="g-chrome absolute z-30" style={{ top: inset.top + 16, right: inset.right + 16 }}>
-          <IconButton label="Full screen (F)" onClick={() => setFull(true)} small>
-            <IcExpand size={15} />
-          </IconButton>
-        </div>
       </div>
 
       {/* ---------- top: the logo, the collections, back ---------- */}
@@ -270,17 +252,19 @@ function Gallery({ onClose }) {
             <div className="mr-1 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
+            {/* the picture fills the screen, so its top-right corner is up here, by the menu */}
+            <IconButton label="Full screen (F)" onClick={() => setFull(true)}>
+              <IcExpand size={17} />
+            </IconButton>
             <MenuControl onClick={onClose} />
           </div>
         </TopBar>
       </div>
 
-      {/* ---------- beneath the frame: one quiet line, the arrows, the progress ---------- */}
-      <div className="g-chrome absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.4rem,var(--safe-b))] sm:px-8 side:px-[2.9rem]" style={{ height: FRAME.bottom }}>
-        <span className="absolute inset-x-5 top-0 block h-px bg-cream/12 sm:inset-x-8 side:inset-x-[2.9rem]">
-          <span className="g-progress absolute inset-0 origin-left bg-[var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
-        </span>
-        <div className="g-ui flex h-full items-center justify-between gap-6">
+      {/* ---------- over the foot of the picture: one quiet line, the arrows, the progress.
+           No gradient wash - a soft shadow under the words keeps them legible on any render ---------- */}
+      <div className="g-chrome absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.6rem,var(--safe-b))] [text-shadow:0_1px_12px_rgba(28,19,13,0.85)] sm:px-8 side:px-[2.9rem]">
+        <div className="g-ui flex items-center justify-between gap-6 pb-4">
           <div className="g-caption flex min-w-0 items-baseline gap-4">
             <span className="tr-num shrink-0 text-[var(--ribbon-champagne)]">
               {pad(idx + 1)} <span className="text-cream/40">/ {pad(total)}</span>
@@ -297,6 +281,10 @@ function Gallery({ onClose }) {
             </IconButton>
           </div>
         </div>
+        {/* the autoplay line, filling along the foot */}
+        <span className="relative block h-px bg-cream/20">
+          <span className="g-progress absolute inset-0 origin-left bg-[var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
+        </span>
       </div>
 
       {/* collections on small screens */}
