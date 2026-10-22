@@ -6,6 +6,8 @@ import BrandMark from '../components/BrandMark.jsx'
 import { IcArrow, IcPrev, IcBack, IcExpand, IcClose, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
+const TBC = 'To be confirmed'
+
 // Floors that are shown on the tower but cannot be opened.
 const LOCKED_FLOORS = new Set(['_8th', '_9th'])
 const DEFAULT_FLOOR = '_17th'
@@ -37,9 +39,9 @@ const idToLabel = (id) => {
   return `${id.replace(/^_/, '')} Floor`
 }
 
-// The reference's paper sidebar, kept exactly as built. No right-hand layout table -
-// the tower/plan card alone fills the rest of the page: the tower with its floors as
-// clickable switches by default, and (once one is picked) the plan in its place.
+// The reference's paper sidebar and layout table, kept exactly as built - the only
+// thing that changes here is what sits in the white space in the middle: the tower,
+// its floors as clickable switches, and (once one is picked) the plan in its place.
 function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
@@ -108,6 +110,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
       tl.add(fx.fade('.fp2-top', { y: -10 }), 0)
       tl.add(fx.fade('.fp2-aside-l > *', { y: 10, stagger: 0.07 }), 0.15)
       tl.add(fx.show('.fp2-stage', { duration: 1 }), 0.25)
+      tl.add(fx.fade('.fp2-aside-r > *', { y: 10, stagger: 0.07 }), 0.4)
       tl.add(fx.fade('.fp2-foot', { y: 10 }), 0.6)
     }, rootRef)
     return () => ctx.revert()
@@ -149,6 +152,17 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [zoomOpen])
 
+  // The room-by-room layout table. Room count follows the bedroom count; sizes
+  // read "To be confirmed" until real dimensions are supplied - no numbers invented.
+  const roomRows = [
+    { label: 'Drawing room' },
+    { label: 'Dining' },
+    { label: 'Kitchen' },
+    ...Array.from({ length: unit.bedrooms }, (_, i) => ({ label: `Bedroom ${String(i + 1).padStart(2, '0')}` })),
+    { label: 'Balcony' },
+  ]
+  const specRows = [{ label: 'Carpet area', value: unit.carpetArea }, ...roomRows.map((r) => ({ ...r, value: null }))]
+
   // The inner box is oversized relative to the cropped wrapper so that, once
   // clipped by overflow:hidden, only the CROP window is visible - and since
   // both the image and the svg fill this same oversized box, they always
@@ -178,8 +192,8 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
         </button>
       </header>
 
-      {/* ---------- Body: text sidebar, then the tower/plan filling the rest ---------- */}
-      <div className="grid min-h-0 flex-1 gap-10 px-5 pb-28 pt-10 sm:px-10 lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-center lg:gap-12 xl:grid-cols-[19rem_minmax(0,1fr)]">
+      {/* ---------- Body: text sidebar, the tower/plan, the layout table ---------- */}
+      <div className="grid min-h-0 flex-1 gap-10 px-5 pb-28 pt-10 sm:px-10 lg:grid-cols-[17rem_minmax(0,1fr)_17rem] lg:items-center lg:gap-12 xl:grid-cols-[19rem_minmax(0,1fr)_19rem]">
         {/* ---------- Left: what this is, and the unit types ---------- */}
         <aside className="fp2-aside-l">
           <span className="block font-sans text-[0.7rem] uppercase tracking-[0.24em] text-[var(--bronze-deep)]">Residences</span>
@@ -249,11 +263,11 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
             </div>
           )}
 
-          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 50rem)', maxHeight: '88%', width: '100%' }}>
+          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
             {/* ---- the tower, on the same torn white sheet, with its floors as clickable switches ---- */}
             <div
               className="fp2-tower-layer absolute"
-              style={{ visibility: stage === 'plan' ? 'hidden' : 'visible', height: '100%', maxWidth: '98%', aspectRatio: `${CROP.width} / ${CROP.height}` }}
+              style={{ visibility: stage === 'plan' ? 'hidden' : 'visible', height: '100%', maxWidth: '94%', aspectRatio: `${CROP.width} / ${CROP.height}` }}
             >
               <div className="tr-torn relative h-full w-full overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]">
                 <div className="relative h-full w-full select-none overflow-hidden">
@@ -290,7 +304,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
                  crop into an unrepresentative sliver of the render ---- */}
             <div
               className="fp2-plan-layer absolute"
-              style={{ visibility: stage === 'tower' ? 'hidden' : 'visible', height: '100%', maxWidth: '98%', aspectRatio: planView === 'iso' ? '3 / 2' : '4 / 5' }}
+              style={{ visibility: stage === 'tower' ? 'hidden' : 'visible', height: '100%', maxWidth: '94%', aspectRatio: planView === 'iso' ? '3 / 2' : '4 / 5' }}
             >
               <button
                 type="button"
@@ -317,6 +331,26 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
           </div>
         </div>
 
+        {/* ---------- Right: the layout table, stretched to match the tower/plan card's height ---------- */}
+        <aside className="fp2-aside-r flex min-w-0 flex-col lg:self-stretch">
+          <h2 className="fp2-swap font-serif text-[1.4rem] leading-tight text-[var(--ink)]">
+            {unit.label}
+            <br />
+            Flat Layout
+          </h2>
+          <span className="mt-5 block h-px w-full bg-[var(--ink)]/15" aria-hidden="true" />
+          <dl className="mt-2 flex flex-1 flex-col justify-between divide-y divide-[var(--ink)]/10">
+            {specRows.map(({ label, value }) => (
+              <div key={label} className="flex items-center justify-between gap-4 py-2.5">
+                <dt className="font-sans text-[0.8rem] text-[var(--ink-soft)]">{label}</dt>
+                <dd className={`fp2-swap font-serif text-[0.9rem] ${value ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]/70'}`}>{value ?? TBC}</dd>
+              </div>
+            ))}
+          </dl>
+          <button type="button" onClick={onEnquire} onPointerMove={glowAt} className="mn-glow tr-focus mt-7 w-full rounded-md bg-[var(--bronze-deep)] py-3 text-center font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--cream)]">
+            Request Price
+          </button>
+        </aside>
       </div>
 
       {/* ---------- Foot: where this sits, and the way through ---------- */}
