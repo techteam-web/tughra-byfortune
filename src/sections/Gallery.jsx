@@ -250,7 +250,7 @@ function Gallery({ onClose }) {
         <TopBar onBrand={onClose}>
           <div className="g-ui flex items-center gap-3">
             <div className="mr-1 hidden md:block">
-              <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
+              <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" className="tr-seg--flat" />
             </div>
             {/* the picture fills the screen, so its top-right corner is up here, by the menu */}
             <IconButton label="Full screen (F)" onClick={() => setFull(true)}>
@@ -289,7 +289,7 @@ function Gallery({ onClose }) {
 
       {/* collections on small screens */}
       <div className="g-chrome g-ui absolute inset-x-0 top-[5.25rem] z-30 flex justify-center md:hidden">
-        <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
+        <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" className="tr-seg--flat" />
       </div>
 
       {/* ---------- full screen: the only thing left is the way out ---------- */}

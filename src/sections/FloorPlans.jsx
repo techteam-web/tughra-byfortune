@@ -101,18 +101,31 @@ function FloorPlans({ onClose }) {
     }
   }, [])
 
-  // Entrance
+  // Entrance: the tower rises from the ground up, as it was built; then its floor reads out
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
       tl.add(fx.fade('.fp2-top', { y: -10 }), 0)
       tl.add(fx.fade('.fp2-aside-l > *', { y: 10, stagger: 0.07 }), 0.15)
-      tl.add(fx.show('.fp2-stage', { duration: 1 }), 0.25)
-      tl.add(fx.fade('.fp2-aside-r > *', { y: 10, stagger: 0.07 }), 0.4)
-      tl.add(fx.fade('.fp2-foot', { y: 10 }), 0.6)
+      tl.add(fx.show('.fp2-stage', { duration: 0.6 }), 0.2)
+      if (!REDUCED) tl.fromTo('.fp2-tower', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'expo.inOut', clearProps: 'clipPath' }, 0.3)
+      tl.add(fx.fade('.fp2-read > *', { y: 18, stagger: 0.09 }), 1.3)
+      tl.add(fx.fade('.fp2-aside-r > *', { y: 10, stagger: 0.07 }), 0.5)
+      tl.add(fx.fade('.fp2-foot', { y: 10 }), 0.7)
     }, rootRef)
     return () => ctx.revert()
   }, [])
+
+  // The floor read-out: the floor under the cursor, or the one last chosen
+  const readId = hoveredFloor ?? selectedFloor
+  const readFloor = floors.find((f) => f.id === readId)
+  const readNum = readFloor ? (/^\d+$/.test(readFloor.num) ? String(parseInt(readFloor.num, 10)) : readFloor.num) : ''
+
+  // moving between floors, the numeral rolls over to the new one
+  useLayoutEffect(() => {
+    if (!readId || REDUCED) return
+    gsap.fromTo('.fp2-num', { yPercent: 22, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.45, ease: EASE.enter, overwrite: 'auto' })
+  }, [readId])
 
   // Unit or tab changed: the plan and the table cross-fade in place
   useLayoutEffect(() => {
@@ -214,10 +227,32 @@ function FloorPlans({ onClose }) {
         <div className="fp2-stage flex min-h-0 min-w-0 flex-col items-center justify-center">
           {/* the tower takes whatever height the row leaves it, so the page never scrolls */}
           <div className="relative flex h-full max-h-full w-full items-center justify-center">
-            {/* ---- the tower on a wide parchment mat, its floors as clickable switches ---- */}
-            <div className="absolute inset-0 overflow-hidden border border-[var(--bronze)]/25 bg-[var(--parchment)] p-3 shadow-[0_1.75rem_3.5rem_-1.75rem_rgba(42,28,18,0.35)]">
+            {/* ---- the tower on a parchment field - a step in tone, not an outline or a shadow -
+                 with its floors as switches, and the floor under the cursor read out beside it ---- */}
+            <div className="absolute inset-0 overflow-hidden bg-[var(--parchment)] p-3">
+              {/* the read-out: the floor number at poster size, live as the cursor moves */}
+              <div className="fp2-read pointer-events-none absolute bottom-10 left-10 hidden flex-col lg:flex" aria-live="polite">
+                <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
+                <span className="overflow-hidden">
+                  <span key={readId} className="fp2-num block font-serif text-[clamp(5.5rem,9vw,9rem)] leading-[0.9] tracking-[-0.03em] text-[var(--bronze-deep)]">
+                    {readNum}
+                  </span>
+                </span>
+              </div>
+              <div className="fp2-read absolute bottom-10 right-10 hidden max-w-[12rem] flex-col items-end text-right lg:flex">
+                <span className="font-serif text-[1.35rem] leading-tight text-[var(--ink)]">{readFloor?.label}</span>
+                <span className="mt-2 font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">Choose a floor on the tower to see its plans.</span>
+                <button
+                  type="button"
+                  onClick={() => readFloor && openFloor(readFloor.id)}
+                  onPointerMove={glowAt}
+                  className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
+                >
+                  Open plans
+                </button>
+              </div>
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
-                <div className="relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
+                <div className="fp2-tower relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
                   <div style={innerStyle}>
                     <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
                     <svg viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} className="absolute inset-0 h-full w-full">
@@ -256,14 +291,14 @@ function FloorPlans({ onClose }) {
 
         {/* ---------- Right: the layout, kept small and held in its own card ---------- */}
         <aside className="fp2-aside-r min-h-0 min-w-0 lg:self-center">
-          <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--parchment)_55%,transparent)] px-4 py-3.5">
-            <h2 className="fp2-swap font-serif text-[0.95rem] leading-none text-[var(--ink)]">{unit.label} Flat Layout</h2>
-            <span className="mt-3 block h-px w-full bg-[var(--ink)]/12" aria-hidden="true" />
-            <dl className="divide-y divide-[var(--ink)]/8">
+          {/* a step darker than the page, so it reads as its own surface without an outline */}
+          <div className="rounded-lg bg-[var(--parchment)] px-5 py-4">
+            <h2 className="fp2-swap font-serif text-[1.15rem] leading-none text-[var(--ink)]">{unit.label} layout</h2>
+            <dl className="mt-3 divide-y divide-[var(--ink)]/10">
               {specRows.map(({ label, value }) => (
                 <div key={label} className="flex items-baseline justify-between gap-3 py-[0.42rem]">
-                  <dt className="font-sans text-[0.68rem] uppercase tracking-[0.06em] text-[var(--ink-soft)]">{label}</dt>
-                  <dd className={`fp2-swap shrink-0 font-sans text-[0.68rem] ${value ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]/60'}`}>{value ?? 'TBC'}</dd>
+                  <dt className="font-sans text-[0.82rem] text-[var(--ink)]">{label}</dt>
+                  <dd className={`fp2-swap shrink-0 font-sans text-[0.82rem] ${value ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}>{value ?? 'To be confirmed'}</dd>
                 </div>
               ))}
             </dl>
