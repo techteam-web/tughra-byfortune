@@ -3,22 +3,27 @@ import { gsap, EASE, REDUCED } from '../motion/index.js'
 
 const PX_PER_FRAME = 14 // hand travel for one frame
 const WHEEL_PER_FRAME = 40 // wheel travel for one frame
-const FOLLOW = 0.42 // how closely the view tracks the hand: high enough to feel attached,
-// low enough to iron out the jitter between pointer events
-const DECAY = 0.9 // how quickly a flick runs down
+const FOLLOW_MS = 55 // time constant for the view catching the hand - feels attached, irons out jitter
+const GLIDE_MS = 420 // time constant for a flick running down
+const SETTLE_MS = 140 // time constant for coming to rest on a whole frame
+const VEL_WINDOW = 90 // ms of recent movement a flick's speed is measured over
 
 // The isometric as a turntable: drag (or scroll) to sweep the residence through its frames.
 //
-// Built for smoothness, which mostly means doing less per frame:
-// - One sharp frame is shown at a time. Sixty frames is dense enough that stepping
-//   through them reads as continuous motion, the way scrubbing a video does; blending
-//   two at once only ghosted them and doubled the drawing.
-// - A frame is only drawn when it actually changes. Most animation frames draw nothing.
-// - The canvas is never given more pixels than the frames themselves have. On a scaled
-//   screen it would otherwise be drawing up to four times as many, every frame, for no
-//   extra detail.
-// - It paints to one opaque canvas, which is never cleared - a frame that has not arrived
-//   yet is simply not drawn and the last picture stays, so nothing ever flashes through.
+// As smooth as sixty frames allow:
+// - The position is fractional, and the frame either side of it are blended, so the turn is
+//   continuous rather than stepping from picture to picture. The base frame is always drawn
+//   solid and only the next one is laid over it at the fraction between them, so the page
+//   behind can never show through. At rest it settles onto a single, crisp frame.
+// - All easing is by elapsed time, not per animation frame, so it moves the same on a
+//   60Hz, 120Hz or 144Hz screen.
+// - The hand is read at full resolution: the in-between positions the browser coalesces
+//   into one event are all used, so a fast mouse is not sampled coarsely.
+// - A flick's speed is taken over the last stretch of movement, not one event, so a single
+//   jittery reading or a change of direction cannot fling it; the glide fades out smoothly.
+// - The canvas is opaque, never given more pixels than the frames have, and only redrawn
+//   when the position has moved. A frame not yet arrived is not drawn - the last picture
+//   stays put.
 // - Position runs in a rAF loop; React never re-renders while it turns.
 //
 // The frames are a partial sweep, not a full turn, so it holds at either end.
@@ -30,15 +35,15 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
   const canvasRef = useRef(null)
   const ctxRef = useRef(null)
   const imgs = useRef([])
-  const shown = useRef(null) // the image currently on the canvas, so it is never redrawn needlessly
-  const run = useRef({ pos: 0, target: 0, vel: 0, dragging: false, raf: 0, live: false })
+  const run = useRef({ pos: 0, target: 0, vel: 0, dragging: false, raf: 0, live: false, painted: -1, at: 0, trail: [] })
 
   const n = frames.length
   const last = n - 1
+  const clampPos = (v) => gsap.utils.clamp(0, last, v)
 
   const loaded = (img) => img && img.complete && img.naturalWidth > 0
 
-  // If the frame wanted has not arrived, the nearest one that has stands in for it.
+  // If a frame wanted has not arrived, the nearest one that has stands in for it.
   const nearest = (i) => {
     for (let d = 0; d <= last; d++) {
       if (loaded(imgs.current[i - d])) return imgs.current[i - d]
@@ -47,7 +52,7 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     return null
   }
 
-  const draw = (img) => {
+  const draw = (img, alpha) => {
     const ctx = ctxRef.current
     if (!ctx) return
     const cw = ctx.canvas.width
@@ -55,20 +60,26 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
     const w = img.naturalWidth * scale
     const h = img.naturalHeight * scale
+    ctx.globalAlpha = alpha
     ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h)
-    shown.current = img
+    ctx.globalAlpha = 1
   }
 
   const paint = (force = false) => {
-    const i = Math.round(gsap.utils.clamp(0, last, run.current.pos))
-    const img = nearest(i)
-    if (!img) return
-    if (!force && img === shown.current) return
-    draw(img)
+    const s = run.current
+    const p = clampPos(s.pos)
+    if (!force && Math.abs(p - s.painted) < 0.002) return
+    const i0 = Math.floor(p)
+    const t = p - i0
+    const base = nearest(i0)
+    if (!base) return
+    draw(base, 1)
+    const next = imgs.current[Math.min(i0 + 1, last)]
+    if (t > 0.002 && next !== base && loaded(next)) draw(next, t)
+    s.painted = p
   }
 
-  // Size the canvas to the screen, but never past the frames' own resolution: beyond
-  // that it would only be stretching the same pixels, at a real cost on every draw.
+  // Size the canvas to the screen, but never past the frames' own resolution.
   const fit = () => {
     const box = boxRef.current
     const canvas = canvasRef.current
@@ -79,20 +90,55 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     const ref = imgs.current.find(loaded)
     const iw = ref?.naturalWidth || 1764
     const ih = ref?.naturalHeight || 1172
-    const cover = Math.max(bw / iw, bh / ih) // CSS px per frame px
-    const density = Math.min(window.devicePixelRatio || 1, 1 / cover)
+    const density = Math.min(window.devicePixelRatio || 1, 1 / Math.max(bw / iw, bh / ih))
     const w = Math.max(1, Math.round(bw * density))
     const h = Math.max(1, Math.round(bh * density))
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w
       canvas.height = h
-      shown.current = null
     }
     paint(true)
   }
 
-  // One context, made once, opaque: an opaque canvas is cheaper for the browser to
-  // composite, since nothing behind it ever needs blending in.
+  // ease `from` towards `to` by elapsed time: the same feel at any refresh rate
+  const approach = (from, to, dt, tau) => to + (from - to) * Math.exp(-dt / tau)
+
+  const tick = (now) => {
+    const s = run.current
+    const dt = Math.min(now - (s.at || now - 16), 64)
+    s.at = now
+    if (!s.dragging) {
+      if (s.vel) {
+        // the flick carries on, fading out smoothly
+        s.target = clampPos(s.target + s.vel * dt)
+        s.vel = approach(s.vel, 0, dt, GLIDE_MS)
+        if (Math.abs(s.vel) < 0.0004 || s.target === 0 || s.target === last) s.vel = 0
+      } else {
+        // run down: settle onto the nearest whole frame, so it rests crisp
+        s.target = approach(s.target, Math.round(s.target), dt, SETTLE_MS)
+      }
+    }
+    s.pos = approach(s.pos, s.target, dt, FOLLOW_MS)
+    paint()
+    const resting = !s.dragging && s.vel === 0 && Math.abs(s.target - Math.round(s.target)) < 0.002 && Math.abs(s.pos - s.target) < 0.002
+    if (resting) {
+      s.pos = s.target = Math.round(s.target)
+      paint(true)
+      s.live = false
+      return
+    }
+    s.raf = requestAnimationFrame(tick)
+  }
+
+  const kick = () => {
+    const s = run.current
+    if (s.live) return
+    s.live = true
+    s.at = 0
+    s.raf = requestAnimationFrame(tick)
+  }
+
+  // One opaque context, made once.
   useEffect(() => {
     ctxRef.current = canvasRef.current?.getContext('2d', { alpha: false, desynchronized: true }) ?? null
   }, [])
@@ -109,14 +155,14 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
         if (i === 0) {
           fit()
           setReady(true)
-        } else paint()
+        } else paint(true)
       }
       img.src = src
       return img
     })
     // Decode every frame ahead of time, off the main thread, and draw each once - then put
-    // the right one straight back, in the same task, so only it reaches the screen. The
-    // first draw of a frame is the expensive one; this keeps it out of the sweep.
+    // the right picture straight back, in the same task, so only it reaches the screen.
+    // The first draw of a frame is the expensive one; this keeps it out of the turn.
     ;(async () => {
       for (const img of imgs.current) {
         if (!live) return
@@ -126,7 +172,7 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
           continue // a frame that fails is skipped; nearest() stands in for it
         }
         if (!live || !loaded(img) || !ctxRef.current) continue
-        draw(img)
+        draw(img, 1)
         paint(true)
       }
     })()
@@ -137,7 +183,6 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
         img.src = ''
       })
       imgs.current = []
-      shown.current = null
     }
     // draw/paint/fit read only refs
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,31 +198,6 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const tick = () => {
-    const s = run.current
-    if (!s.dragging) {
-      s.target = gsap.utils.clamp(0, last, s.target + s.vel)
-      s.vel *= DECAY
-      if (Math.abs(s.vel) < 0.02 || s.target === 0 || s.target === last) s.vel = 0
-    }
-    s.pos += (s.target - s.pos) * FOLLOW
-    paint()
-    if (!s.dragging && s.vel === 0 && Math.abs(s.target - s.pos) < 0.01) {
-      s.pos = s.target
-      paint()
-      s.live = false
-      return
-    }
-    s.raf = requestAnimationFrame(tick)
-  }
-
-  const kick = () => {
-    const s = run.current
-    if (s.live) return
-    s.live = true
-    s.raf = requestAnimationFrame(tick)
-  }
-
   useEffect(() => {
     const s = run.current
     return () => cancelAnimationFrame(s.raf)
@@ -190,8 +210,7 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     s.vel = 0
     s.grabX = e.clientX
     s.grabFrom = s.target
-    s.lastX = e.clientX
-    s.lastT = e.timeStamp
+    s.trail = [{ x: e.clientX, t: e.timeStamp }]
     e.currentTarget.setPointerCapture(e.pointerId)
     kick()
   }
@@ -199,13 +218,12 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
   const onPointerMove = (e) => {
     const s = run.current
     if (!s.dragging) return
-    const dt = e.timeStamp - s.lastT
-    // frames per animation frame, for the glide on release - smoothed, so one jittery
-    // event or a change of direction cannot fling it
-    if (dt > 0) s.vel = s.vel * 0.5 + ((-(e.clientX - s.lastX) / PX_PER_FRAME / dt) * 16) * 0.5
-    s.lastX = e.clientX
-    s.lastT = e.timeStamp
-    s.target = gsap.utils.clamp(0, last, s.grabFrom - (e.clientX - s.grabX) / PX_PER_FRAME)
+    // every position the browser saw, not just the one it reported
+    const pts = e.nativeEvent.getCoalescedEvents?.() ?? []
+    for (const p of pts.length ? pts : [e.nativeEvent]) s.trail.push({ x: p.clientX, t: p.timeStamp })
+    const cutoff = e.timeStamp - VEL_WINDOW
+    while (s.trail.length > 2 && s.trail[0].t < cutoff) s.trail.shift()
+    s.target = clampPos(s.grabFrom - (e.clientX - s.grabX) / PX_PER_FRAME)
     if (!spun) setSpun(true)
     kick()
   }
@@ -214,8 +232,14 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     const s = run.current
     if (!s.dragging) return
     s.dragging = false
-    // a pause before letting go means a placed stop, not a flick
-    if (REDUCED || e.timeStamp - s.lastT > 80) s.vel = 0
+    // the flick's speed over the last stretch of movement, in frames per ms; a pause
+    // before letting go means a placed stop, not a flick
+    const a = s.trail[0]
+    const b = s.trail[s.trail.length - 1]
+    const span = b && a ? b.t - a.t : 0
+    const still = e.timeStamp - (b?.t ?? 0) > 70
+    s.vel = REDUCED || still || span < 8 ? 0 : -(b.x - a.x) / PX_PER_FRAME / span
+    s.trail = []
     kick()
   }
 
@@ -223,12 +247,12 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
     if (!ready) return
     const s = run.current
     s.vel = 0
-    s.target = gsap.utils.clamp(0, last, s.target + e.deltaY / WHEEL_PER_FRAME)
+    s.target = clampPos(s.target + e.deltaY / WHEEL_PER_FRAME)
     if (!spun) setSpun(true)
     kick()
   }
 
-  // the hint fades away the first time it is swept
+  // the hint fades away the first time it is turned
   useEffect(() => {
     if (!spun || REDUCED) return
     gsap.to('.iso-hint', { autoAlpha: 0, duration: 0.4, ease: EASE.soft, overwrite: 'auto' })
