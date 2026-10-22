@@ -110,6 +110,8 @@ function FloorPlans({ onClose }) {
       tl.add(fx.show('.fp2-stage', { duration: 0.6 }), 0.2)
       if (!REDUCED) tl.fromTo('.fp2-tower', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.6, ease: 'expo.inOut', clearProps: 'clipPath' }, 0.3)
       tl.add(fx.fade('.fp2-read > *', { y: 18, stagger: 0.09 }), 1.3)
+      tl.add(fx.fade('.fp2-strip > *', { y: -10, stagger: 0.1 }), 1.1)
+      if (!REDUCED) tl.from('.fp2-strip button span', { scaleY: 0, transformOrigin: '50% 100%', duration: 0.5, ease: EASE.enter, stagger: 0.02 }, 1.2)
       tl.add(fx.fade('.fp2-aside-r > *', { y: 10, stagger: 0.07 }), 0.5)
       tl.add(fx.fade('.fp2-foot', { y: 10 }), 0.7)
     }, rootRef)
@@ -120,6 +122,11 @@ function FloorPlans({ onClose }) {
   const readId = hoveredFloor ?? selectedFloor
   const readFloor = floors.find((f) => f.id === readId)
   const readNum = readFloor ? (/^\d+$/.test(readFloor.num) ? String(parseInt(readFloor.num, 10)) : readFloor.num) : ''
+  // where that floor sits on the card, as a fraction of the tower's height - for the level line
+  const readLevel = readFloor ? ((readFloor.y0 + readFloor.y1) / 2 - CROP.y) / CROP.height : null
+  // every floor from the ground up, for the strip across the top
+  const ladder = [...floors].sort((a, b) => b.y1 - a.y1)
+  const openable = floors.filter((f) => !LOCKED_FLOORS.has(f.id)).length
 
   // moving between floors, the numeral rolls over to the new one
   useLayoutEffect(() => {
@@ -230,6 +237,55 @@ function FloorPlans({ onClose }) {
             {/* ---- the tower on a parchment field - a step in tone, not an outline or a shadow -
                  with its floors as switches, and the floor under the cursor read out beside it ---- */}
             <div className="absolute inset-0 overflow-hidden bg-[var(--parchment)] p-3">
+              {/* the level line: a fine rule across the whole card at the height of the floor
+                  in question, as on an architect's elevation; it glides from floor to floor */}
+              {readLevel != null && (
+                <div
+                  className="fp2-level pointer-events-none absolute inset-x-0 z-0 hidden items-center lg:flex"
+                  style={{ top: `calc(0.75rem + (100% - 1.5rem) * ${readLevel})`, transition: REDUCED ? 'none' : 'top 0.5s cubic-bezier(0.22, 1, 0.36, 1)' }}
+                  aria-hidden="true"
+                >
+                  <span className="ml-10 shrink-0 font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Level {readFloor.num}</span>
+                  <span className="mx-3 h-px flex-1 bg-[var(--bronze-deep)]/35" />
+                  <span className="mr-10 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--bronze-deep)]" />
+                </div>
+              )}
+
+              {/* across the top: every floor from the ground up as a tick; the one in question
+                  stands tall, and any open floor can be chosen from here as well as the tower */}
+              <div className="fp2-strip absolute inset-x-10 top-8 z-10 hidden items-end justify-between gap-8 lg:flex">
+                <div className="flex flex-col">
+                  <span className="font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Elevation</span>
+                  <span className="mt-1.5 font-serif text-[1.2rem] leading-none text-[var(--ink)]">
+                    {floors.length || ''} levels<span className="text-[var(--ink-soft)]"> · {openable || ''} to explore</span>
+                  </span>
+                </div>
+                <div className="flex items-end gap-[3px]" role="group" aria-label="Floors, ground to terrace">
+                  <span className="mr-2 font-sans text-[0.68rem] text-[var(--ink-soft)]">G</span>
+                  {ladder.map((f) => {
+                    const locked = LOCKED_FLOORS.has(f.id)
+                    const on = f.id === readId
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => openFloor(f.id)}
+                        onMouseEnter={() => setHoveredFloor(f.id)}
+                        onMouseLeave={() => setHoveredFloor(null)}
+                        aria-label={locked ? `${f.label}, not open` : `Open ${f.label}`}
+                        className="tr-focus group flex h-7 w-[5px] items-end border-none bg-transparent p-0 disabled:cursor-default"
+                      >
+                        <span
+                          className={`block w-full rounded-full transition-all duration-300 ${on ? 'h-7 bg-[var(--bronze-deep)]' : locked ? 'h-2 bg-[var(--ink)]/10' : 'h-3 bg-[var(--ink)]/25 group-hover:h-5 group-hover:bg-[var(--bronze-deep)]/70'}`}
+                        />
+                      </button>
+                    )
+                  })}
+                  <span className="ml-2 font-sans text-[0.68rem] text-[var(--ink-soft)]">T</span>
+                </div>
+              </div>
+
               {/* the read-out: the floor number at poster size, live as the cursor moves */}
               <div className="fp2-read pointer-events-none absolute bottom-10 left-10 hidden flex-col lg:flex" aria-live="polite">
                 <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
