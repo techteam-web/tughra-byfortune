@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap, EASE, REDUCED } from '../motion/index.js'
 
-const PX_PER_FRAME = 16 // hand travel for one frame
-const WHEEL_PER_FRAME = 90 // wheel travel for one frame
+const PX_PER_FRAME = 18 // hand travel for one frame: the full sweep is about one screen wide
+const WHEEL_PER_FRAME = 45 // wheel travel for one frame
 const EASE_TO = 0.22 // how quickly the view catches the hand
 const DECAY = 0.93 // how quickly a flick runs down
 
@@ -23,19 +23,23 @@ function IsoTurntable({ frames, poster, alt, className = '' }) {
   const n = frames.length
   const last = n - 1
 
-  // Decode every frame before handing over from the poster, so the first sweep does not
-  // stall while the browser catches up.
+  // Fetch every frame, but only wait on the first before handing over from the poster.
+  // Decoding all sixty at once would pin hundreds of megabytes of bitmaps; the rest are
+  // left for the browser to decode as they are reached, by which time they are cached.
   useEffect(() => {
     let live = true
-    Promise.all(
-      frames.map((src) => {
-        const img = new Image()
-        img.src = src
-        return img.decode?.().catch(() => {}) ?? Promise.resolve()
-      }),
-    ).then(() => live && setReady(true))
+    const first = new Image()
+    first.src = frames[0]
+    const show = () => live && setReady(true)
+    ;(first.decode?.().then(show, show) ?? Promise.resolve().then(show))
+    const rest = frames.slice(1).map((src) => {
+      const img = new Image()
+      img.src = src
+      return img
+    })
     return () => {
       live = false
+      rest.forEach((img) => (img.src = ''))
     }
   }, [frames])
 

@@ -10,10 +10,10 @@ import iso6 from '../assets/gallery/iso/Fortune_6BHK_ISO.jpg'
 // isoFrames is the turntable: the frames in /public/isoframes/<id>/, which the
 // isometric view spins through as you drag. `iso` stays as the still shown
 // while those frames load, and as the fallback if they are missing.
-const frames = (id, count) => Array.from({ length: count }, (_, i) => `/isoframes/${id}/frame_${String(i + 1).padStart(3, '0')}.webp`)
+const frames = (id, count) => Array.from({ length: count }, (_, i) => `/isoframes/${id}/${String(i + 1).padStart(2, '0')}.webp`)
 
 export const UNITS = [
-  { id: '4bhk', label: '4 BHK', bedrooms: 4, iso: iso4, isoFrames: frames('4bhk', 15), plan2d: null, carpetArea: null },
-  { id: '5bhk', label: '5 BHK', bedrooms: 5, iso: iso5, isoFrames: frames('5bhk', 15), plan2d: null, carpetArea: null },
-  { id: '6bhk', label: '6 BHK', bedrooms: 6, iso: iso6, isoFrames: frames('6bhk', 15), plan2d: null, carpetArea: null },
+  { id: '4bhk', label: '4 BHK', bedrooms: 4, iso: iso4, isoFrames: frames('4bhk', 60), plan2d: null, carpetArea: null },
+  { id: '5bhk', label: '5 BHK', bedrooms: 5, iso: iso5, isoFrames: frames('5bhk', 60), plan2d: null, carpetArea: null },
+  { id: '6bhk', label: '6 BHK', bedrooms: 6, iso: iso6, isoFrames: frames('6bhk', 60), plan2d: null, carpetArea: null },
 ]
