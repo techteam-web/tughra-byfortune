@@ -45,7 +45,6 @@ export default function RibbonStage({ image, slides, active = 0, bare = false, f
       if (!REDUCED) tl.fromTo('.rs-photo', { scale: 1.06 }, { scale: 1, duration: 2.8, ease: 'power2.out' }, 0)
       tl.add(fx.show('.rs-bg', { duration: 1.2 }), 0)
       tl.add(fx.show('.mn-panel', { duration: 1 }), 0.15)
-      tl.add(fx.draw('.mn-line', { duration: 1.9, ease: EASE.move }), 0.3)
       if (REDUCED) tl.add(fx.show('.mn-ribbon', { duration: 0.3 }), 0.3)
       else tl.fromTo('.mn-ribbon', { clipPath: 'inset(0% 0% 100% 0%)' }, { clipPath: 'inset(0% 0% -2% 0%)', duration: 1.9, ease: EASE.move }, 0.3)
       tl.add(fx.show('.mn-light', { duration: 1.4 }), 1.2)

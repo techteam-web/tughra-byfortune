@@ -3,7 +3,7 @@
 //
 // Drawn in a 420 x 900 space (one unit = 1/900 of the screen height) with the ribbon's core at x 82,
 // so the page can place it with --rx; the geometry lives in glassRibbonGeometry.js.
-import { LINE_EDGE, LINE_CURL, PANEL, GLASS, FLOOR, RIBBON_IMAGES } from './glassRibbonGeometry.js'
+import { LINE_EDGE, PANEL, FLOOR, RIBBON_IMAGES } from './glassRibbonGeometry.js'
 
 const glow = 'var(--ribbon-glow)'
 
@@ -14,15 +14,6 @@ export default function GlassRibbon({ className = '', style, ref }) {
         <clipPath id="gr-panel">
           <path d={PANEL} />
         </clipPath>
-        {/* the panel is clearer glass between the curl and the ribbon */}
-        <mask id="gr-thin" maskUnits="userSpaceOnUse" x="-4000" y="-100" width="4500" height="1100">
-          <rect x="-4000" y="-100" width="4500" height="1100" fill="white" />
-          <path d={GLASS} style={{ fill: 'url(#gr-thin-g)' }} />
-        </mask>
-        <linearGradient id="gr-thin-g" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="71" y2="0">
-          <stop offset="0" style={{ stopColor: 'black', stopOpacity: 0.42 }} />
-          <stop offset="1" style={{ stopColor: 'black', stopOpacity: 0.78 }} />
-        </linearGradient>
         {/* wide screens: smoky, see-through glass (opacities: --menu-panel-* tokens), a little deeper at the foot */}
         <linearGradient id="gr-fill-side" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="900">
           <stop offset="0" style={{ stopColor: 'var(--espresso)', stopOpacity: 'var(--menu-panel-top)' }} />
@@ -43,12 +34,6 @@ export default function GlassRibbon({ className = '', style, ref }) {
           <stop offset="0.7" style={{ stopColor: glow, stopOpacity: 0.05 }} />
           <stop offset="1" style={{ stopColor: glow, stopOpacity: 0.05 }} />
         </linearGradient>
-        {/* the glass between the curl and the ribbon is lit, more so lower down */}
-        <linearGradient id="gr-glass" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="500">
-          <stop offset="0" style={{ stopColor: glow, stopOpacity: 0.04 }} />
-          <stop offset="0.55" style={{ stopColor: glow, stopOpacity: 0.18 }} />
-          <stop offset="1" style={{ stopColor: glow, stopOpacity: 0.3 }} />
-        </linearGradient>
         <radialGradient id="gr-floor" gradientUnits="userSpaceOnUse" cx={FLOOR[0]} cy={FLOOR[1]} r="150">
           <stop offset="0" style={{ stopColor: glow, stopOpacity: 0.18 }} />
           <stop offset="1" style={{ stopColor: glow, stopOpacity: 0 }} />
@@ -58,16 +43,13 @@ export default function GlassRibbon({ className = '', style, ref }) {
         </filter>
       </defs>
 
-      {/* the panel */}
-      <path className="mn-panel side:[mask:url(#gr-thin)]" d={PANEL} style={{ fill: 'var(--panel-fill)' }} />
+      {/* the panel: one smoky gradient all the way to the ribbon */}
+      <path className="mn-panel" d={PANEL} style={{ fill: 'var(--panel-fill)' }} />
       {/* the ribbon's warm light, spilling into the panel only */}
       <g className="mn-light" clipPath="url(#gr-panel)">
         <path d={LINE_EDGE} fill="none" strokeWidth="180" filter="url(#gr-blur-l)" style={{ stroke: 'url(#gr-spill)' }} />
       </g>
       <ellipse className="mn-light" cx={FLOOR[0]} cy={FLOOR[1]} rx="170" ry="80" style={{ fill: 'url(#gr-floor)' }} />
-      <path className="mn-light hidden side:inline" d={GLASS} style={{ fill: 'url(#gr-glass)' }} />
-      {/* the curl's faint edge */}
-      <path className="mn-line hidden side:inline" d={LINE_CURL} fill="none" strokeWidth="1.3" style={{ stroke: 'var(--ribbon-champagne)', strokeOpacity: 0.24 }} />
 
       {/* the ribbon: fortune1 (soft glow where it leaves the screen) under fortune2 (richer glass) */}
       <g className="mn-ribbon">

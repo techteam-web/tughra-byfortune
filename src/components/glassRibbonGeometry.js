@@ -34,13 +34,8 @@ const EDGE = [
   [462.4, 675.9], [491.1, 688.6], [509.4, 701.4], [525.4, 714.1], [539.7, 726.9], [550.9, 739.6], [557.2, 749.2],
   [563.5, 762], [569.5, 775],
 ]
-// A faint edge where the dark panel turns into clearer glass beside the ribbon (top half only)
-const CURL = [[315, -30], [316, 30], [318, 80], [320, 120], [323, 160], [328, 200], [334, 240], [342, 280], [352, 315], [362, 350], [368, 380], [371, 410]]
-
 export const LINE_EDGE = curve(EDGE)
-export const LINE_CURL = curve(CURL)
 export const PANEL = `M-4000 -36 ${curve(EDGE, 'L')} L-4000 ${U(EDGE.at(-1))[1].toFixed(1)} Z`
-export const GLASS = `${LINE_CURL} L${f(U([371, -30]))} Z`
 export const FLOOR = U([450, 705])
 
 // The ribbon artwork, placed so its lines sit on the geometry above. Both files are 941 px tall,
