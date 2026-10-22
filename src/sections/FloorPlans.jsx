@@ -116,7 +116,8 @@ function FloorPlans({ onClose }) {
 
   // Unit or tab changed: the plan and the table cross-fade in place
   useLayoutEffect(() => {
-    gsap.fromTo('.fp2-big img', { opacity: 0 }, { opacity: 1, duration: REDUCED ? 0.2 : 0.6, ease: EASE.move, overwrite: 'auto' })
+    // direct children only: the turntable owns the opacity of its own stacked frames
+    gsap.fromTo('.fp2-big > img', { opacity: 0 }, { opacity: 1, duration: REDUCED ? 0.2 : 0.6, ease: EASE.move, overwrite: 'auto' })
     gsap.fromTo('.fp2-swap', { opacity: 0.2, y: 3 }, { opacity: 1, y: 0, duration: REDUCED ? 0.2 : 0.45, ease: EASE.soft, stagger: 0.02, overwrite: 'auto' })
   }, [unitId, planView])
 
