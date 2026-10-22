@@ -121,8 +121,6 @@ function FloorPlans({ onClose }) {
   const readId = hoveredFloor ?? selectedFloor
   const readFloor = floors.find((f) => f.id === readId)
   const readNum = readFloor ? (/^\d+$/.test(readFloor.num) ? String(parseInt(readFloor.num, 10)) : readFloor.num) : ''
-  // where that floor sits on the card, as a fraction of the tower's height - for the level line
-  const readLevel = readFloor ? ((readFloor.y0 + readFloor.y1) / 2 - CROP.y) / CROP.height : null
   const openable = floors.filter((f) => !LOCKED_FLOORS.has(f.id)).length
 
   // moving between floors, the numeral rolls over to the new one
@@ -234,20 +232,6 @@ function FloorPlans({ onClose }) {
             {/* ---- the tower on a parchment field - a step in tone, not an outline or a shadow -
                  with its floors as switches, and the floor under the cursor read out beside it ---- */}
             <div className="absolute inset-0 overflow-hidden bg-[var(--parchment)] p-3">
-              {/* the level line: a fine rule across the whole card at the height of the floor
-                  in question, as on an architect's elevation; it glides from floor to floor */}
-              {readLevel != null && (
-                <div
-                  className="fp2-level pointer-events-none absolute inset-x-0 z-0 hidden items-center lg:flex"
-                  style={{ top: `calc(0.75rem + (100% - 1.5rem) * ${readLevel})`, transition: REDUCED ? 'none' : 'top 0.5s cubic-bezier(0.22, 1, 0.36, 1)' }}
-                  aria-hidden="true"
-                >
-                  <span className="ml-10 shrink-0 font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Level {readFloor.num}</span>
-                  <span className="mx-3 h-px flex-1 bg-[var(--bronze-deep)]/35" />
-                  <span className="mr-10 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--bronze-deep)]" />
-                </div>
-              )}
-
               {/* top left: the tower in figures */}
               <div className="fp2-strip absolute left-10 top-8 z-10 hidden flex-col lg:flex">
                 <span className="font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Elevation</span>
