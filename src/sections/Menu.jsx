@@ -18,19 +18,11 @@ const MENU_ITEMS = [
   { num: '07', key: 'enquiry', name: 'Enquire' },
 ]
 
-// The quiet line at the foot of the column: the building in three facts the rest of the
-// site already states (floor count, unit mix, address), so nothing here is invented.
-const FOOT_FACTS = [
-  ['Floors', '24'],
-  ['Residences', '4 · 5 · 6 BHK'],
-  ['Address', 'Mumbai Central'],
-]
-
 function Menu({ onClose, onSelect }) {
   const [active, setActive] = useState(-1)
   const rootRef = useRef(null)
 
-  // the seal, then the numbers, their dashes and the names in turn, then the foot
+  // the seal, then the numbers, their dashes and the names in turn
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
@@ -39,8 +31,6 @@ function Menu({ onClose, onSelect }) {
       tl.add(fx.fade('.mn-num', { y: 8, stagger: 0.07, duration: 0.5 }), 0.85)
       tl.add(fx.line('.mn-dash', { stagger: 0.07, duration: 0.6 }), 0.9)
       tl.add(fx.fade('.mn-name', { y: 12, stagger: 0.07 }), 0.95)
-      tl.add(fx.line('.mn-foot-hair'), 1.15)
-      tl.add(fx.fade('.mn-foot-rise', { y: 10, stagger: 0.08 }), 1.25)
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -100,22 +90,6 @@ function Menu({ onClose, onSelect }) {
                   )
                 })}
               </ul>
-            </div>
-
-            {/* the foot of the column: the brand line, in the display face, and the building in three facts */}
-            <div className="mn-foot shrink-0 pt-5 side:pt-0 short:hidden">
-              <i className="mn-foot-hair tr-hair block w-full max-w-[19rem]" aria-hidden="true" />
-              <p className="mn-foot-rise mt-4 max-w-[18rem] font-serif text-[0.9375rem] italic leading-snug text-cream/75 side:text-base">
-                A higher perspective — city, sea, opportunity.
-              </p>
-              <dl className="mn-foot-rise mt-5 flex items-stretch">
-                {FOOT_FACTS.map(([k, v], i) => (
-                  <div key={k} className={`whitespace-nowrap ${i ? 'ml-5 border-l border-[color-mix(in_srgb,var(--ribbon-main-gold)_24%,transparent)] pl-5' : ''}`}>
-                    <dt className="tr-num text-[0.5625rem]">{k}</dt>
-                    <dd className="mt-1 font-sans text-[0.8125rem] uppercase tracking-[0.06em] text-cream/90">{v}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </nav>
         }
