@@ -162,7 +162,7 @@ function FloorPlans({ onClose }) {
   }
 
   return (
-    <section ref={rootRef} className="relative isolate flex min-h-svh w-full flex-col bg-[var(--cream)] text-[var(--ink)]">
+    <section ref={rootRef} className="relative isolate flex h-svh w-full flex-col overflow-hidden bg-[var(--cream)] text-[var(--ink)]">
       {/* ---------- Top: the logo on the left (back to the menu, as on every page) ---------- */}
       <header className="fp2-top flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
         <button type="button" onClick={onClose} aria-label="Back to menu" className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
@@ -172,19 +172,21 @@ function FloorPlans({ onClose }) {
       </header>
 
       {/* ---------- Body: text sidebar, the tower/plan, the layout table ---------- */}
-      <div className="grid min-h-0 flex-1 gap-8 px-5 pb-24 pt-6 sm:px-10 lg:grid-cols-[15rem_minmax(0,1fr)_14rem] lg:items-center lg:gap-10 xl:grid-cols-[17rem_minmax(0,1fr)_15rem]">
+      {/* stacked on small screens with the tower holding the middle row, three columns from lg */}
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-4 overflow-hidden px-5 pb-16 pt-4 sm:px-10 lg:grid-cols-[15rem_minmax(0,1fr)_14rem] lg:grid-rows-none lg:items-stretch lg:gap-10 xl:grid-cols-[17rem_minmax(0,1fr)_15rem]">
         {/* ---------- Left: what this is, and the unit types ---------- */}
-        <aside className="fp2-aside-l">
+        <aside className="fp2-aside-l min-h-0 lg:self-center">
           <span className="block font-sans text-[0.7rem] uppercase tracking-[0.24em] text-[var(--bronze-deep)]">Residences</span>
-          <h1 className="mt-4 font-serif text-[clamp(2.2rem,3.2vw,2.9rem)] leading-[1.05]" style={{ color: 'var(--ink)' }}>
+          <h1 className="mt-2 font-serif text-[1.75rem] leading-[1.05] sm:text-[2.1rem] lg:mt-4 lg:text-[clamp(2.2rem,3.2vw,2.9rem)]" style={{ color: 'var(--ink)' }}>
             Homes
             <br />
             Designed
             <br />
             to Inspire
           </h1>
-          <p className="mt-5 max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)]">4, 5 &amp; 6 BHK residences, each with panoramic views over the city skyline and the sea.</p>
-          <ul className="mt-9 flex flex-col gap-5">
+          {/* the line of copy gives way to the tower on small screens */}
+          <p className="mt-5 hidden max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)] lg:block">4, 5 &amp; 6 BHK residences, each with panoramic views over the city skyline and the sea.</p>
+          <ul className="mt-4 flex flex-row flex-wrap gap-x-6 gap-y-2 lg:mt-9 lg:flex-col lg:gap-5">
             {UNITS.map((u, i) => {
               const on = u.id === unitId
               return (
@@ -207,8 +209,9 @@ function FloorPlans({ onClose }) {
         </aside>
 
         {/* ---------- Middle: the tower, its floors as switches that open the plan page ---------- */}
-        <div className="fp2-stage flex min-w-0 flex-col items-center">
-          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 9.5rem), 50rem)', maxHeight: '94%', width: '100%' }}>
+        <div className="fp2-stage flex min-h-0 min-w-0 flex-col items-center justify-center">
+          {/* the tower takes whatever height the row leaves it, so the page never scrolls */}
+          <div className="relative flex h-full max-h-full w-full items-center justify-center">
             {/* ---- the tower on a wide parchment mat, its floors as clickable switches ---- */}
             <div className="absolute inset-0 overflow-hidden border border-[var(--bronze)]/25 bg-[var(--parchment)] p-3 shadow-[0_1.75rem_3.5rem_-1.75rem_rgba(42,28,18,0.35)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
@@ -250,7 +253,7 @@ function FloorPlans({ onClose }) {
         </div>
 
         {/* ---------- Right: the layout, kept small and held in its own card ---------- */}
-        <aside className="fp2-aside-r min-w-0">
+        <aside className="fp2-aside-r min-h-0 min-w-0 lg:self-center">
           <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--parchment)_55%,transparent)] px-4 py-3.5">
             <h2 className="fp2-swap font-serif text-[0.95rem] leading-none text-[var(--ink)]">{unit.label} Flat Layout</h2>
             <span className="mt-3 block h-px w-full bg-[var(--ink)]/12" aria-hidden="true" />
