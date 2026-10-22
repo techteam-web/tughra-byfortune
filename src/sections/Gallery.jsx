@@ -70,6 +70,7 @@ function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
   const [full, setFull] = useState(false)
+  const [inset, setInset] = useState({ top: 0, right: 0 }) // the letterbox gap around the fitted render
   const rootRef = useRef(null)
   const frameRef = useRef(null)
   const prevFlat = useRef(null)
@@ -159,6 +160,31 @@ function Gallery({ onClose }) {
     gsap.to(rootRef.current.querySelector('.g-exit'), { autoAlpha: full ? 1 : 0, duration: 0.5, delay: full ? d * 0.8 : 0, ease: EASE.soft, overwrite: 'auto' })
   }, [full])
 
+  // The renders run from tall portrait to very wide, so each one is letterboxed in the frame
+  // by a different amount. Measure where the fitted picture's own top-right corner lands, so
+  // the full-screen button can sit on the picture rather than in the gap beside it. A
+  // ResizeObserver covers both window resizes and the frame opening out to full screen.
+  useLayoutEffect(() => {
+    const frame = frameRef.current
+    const img = frame?.querySelector(`[data-slide="${flat}"] img`)
+    if (!frame || !img) return
+    const place = () => {
+      const { clientWidth: fw, clientHeight: fh } = frame
+      const { naturalWidth: nw, naturalHeight: nh } = img
+      if (!nw || !nh || !fw || !fh) return
+      const scale = Math.min(fw / nw, fh / nh)
+      setInset({ top: Math.round((fh - nh * scale) / 2), right: Math.round((fw - nw * scale) / 2) })
+    }
+    place()
+    img.addEventListener('load', place)
+    const ro = new ResizeObserver(place)
+    ro.observe(frame)
+    return () => {
+      img.removeEventListener('load', place)
+      ro.disconnect()
+    }
+  }, [flat])
+
   // Autoplay: a gold hairline fills under the picture, then the next render comes in
   useEffect(() => {
     const line = rootRef.current?.querySelector('.g-progress')
@@ -212,7 +238,8 @@ function Gallery({ onClose }) {
         <div className="g-zoom absolute inset-0">
           {FLAT.map((s, i) => (
             <div key={s.src} data-slide={i} className="invisible absolute inset-0 overflow-clip">
-              <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-cover will-change-transform" draggable={false} />
+              {/* contain, not cover: every render is shown whole, never cropped to the frame */}
+              <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-contain will-change-transform" draggable={false} />
             </div>
           ))}
         </div>
@@ -228,18 +255,21 @@ function Gallery({ onClose }) {
             <button type="button" aria-label="Next render" onClick={() => step(1)} className="absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize border-none bg-transparent" />
           </>
         )}
+        {/* full screen, in the picture's own top-right corner */}
+        <div className="g-chrome absolute z-30" style={{ top: inset.top + 16, right: inset.right + 16 }}>
+          <IconButton label="Full screen (F)" onClick={() => setFull(true)} small>
+            <IcExpand size={15} />
+          </IconButton>
+        </div>
       </div>
 
-      {/* ---------- top: the logo, the collections, full screen, back ---------- */}
+      {/* ---------- top: the logo, the collections, back ---------- */}
       <div className="g-chrome relative z-30">
         <TopBar onBrand={onClose}>
           <div className="g-ui flex items-center gap-3">
             <div className="mr-1 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
-            <IconButton label="Full screen (F)" onClick={() => setFull(true)}>
-              <IcExpand size={17} />
-            </IconButton>
             <BackControl onClick={onClose} />
           </div>
         </TopBar>
