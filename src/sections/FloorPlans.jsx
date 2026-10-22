@@ -264,13 +264,14 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
           )}
 
           <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
-            {/* ---- the tower, on the same torn white sheet, with its floors as clickable switches ---- */}
+            {/* ---- the tower, on a wide torn white sheet - a deep white mat either side of the
+                 building, same as the reference's card - with its floors as clickable switches ---- */}
             <div
-              className="fp2-tower-layer absolute"
-              style={{ visibility: stage === 'plan' ? 'hidden' : 'visible', height: '100%', maxWidth: '94%', aspectRatio: `${CROP.width} / ${CROP.height}` }}
+              className="fp2-tower-layer tr-torn absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
+              style={{ visibility: stage === 'plan' ? 'hidden' : 'visible' }}
             >
-              <div className="tr-torn relative h-full w-full overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]">
-                <div className="relative h-full w-full select-none overflow-hidden">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden">
+                <div className="relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
                   <div style={innerStyle}>
                     <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
                     <svg viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} className="absolute inset-0 h-full w-full">
@@ -299,21 +300,21 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
               </div>
             </div>
 
-            {/* ---- the plan, once a floor has been picked - the frame matches each render's own
-                 shape (the isometrics are wide landscape photos), so object-cover never has to
-                 crop into an unrepresentative sliver of the render ---- */}
+            {/* ---- the plan, once a floor has been picked - same wide mat, and the frame around
+                 the render matches its own shape (the isometrics are wide landscape photos), so
+                 object-cover never has to crop into an unrepresentative sliver of the render ---- */}
             <div
-              className="fp2-plan-layer absolute"
-              style={{ visibility: stage === 'tower' ? 'hidden' : 'visible', height: '100%', maxWidth: '94%', aspectRatio: planView === 'iso' ? '3 / 2' : '4 / 5' }}
+              className="fp2-plan-layer tr-torn absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
+              style={{ visibility: stage === 'tower' ? 'hidden' : 'visible' }}
             >
               <button
                 type="button"
                 onClick={() => setZoomOpen(true)}
                 onPointerMove={glowAt}
                 aria-label={activeSrc ? `View the ${unit.label} ${planLabel} larger` : `${unit.label} ${planLabel} coming soon`}
-                className="tr-torn group relative block h-full w-full overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
+                className="group relative flex h-full w-full items-center justify-center overflow-hidden"
               >
-                <span className="block h-full w-full overflow-hidden">
+                <span className="relative block h-full overflow-hidden" style={{ aspectRatio: planView === 'iso' ? '3 / 2' : '4 / 5' }}>
                   {activeSrc ? (
                     <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
                   ) : (
