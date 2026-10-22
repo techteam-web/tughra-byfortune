@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { gsap, fx, EASE, PAGE_IN, REDUCED, revealOnScroll } from '../motion/index.js'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
-import { IcPrev, IcNext, IcExpand, IcCollapse, IcGrid, IcClose } from '../ui/icons.jsx'
+import { IcPrev, IcNext } from '../ui/icons.jsx'
 import { glowAt } from '../ui/glow.js'
 
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
@@ -21,8 +21,8 @@ import intPodium from '../assets/amenities/podium-cam-01.webp'
 import intPool from '../assets/amenities/swimming-pool.webp'
 import intTheatre from '../assets/amenities/theater.webp'
 
-// Add more entries to either list as renders come in - the tabs, the strip
-// and the counter all size themselves to the data.
+// Add more entries to either list as renders come in - the tabs, the strip,
+// the rail and the counter all size themselves to the data.
 const CATEGORIES = [
   {
     id: 'exterior',
@@ -53,74 +53,145 @@ const CATEGORIES = [
   },
 ]
 
+const AUTOPLAY = 6 // seconds per render
 const pad = (n) => String(n).padStart(2, '0')
-
 const FLAT = CATEGORIES.flatMap((c, ci) => c.slides.map((s, i) => ({ ...s, ci, i })))
 const OFFSETS = CATEGORIES.map((c, ci) => CATEGORIES.slice(0, ci).reduce((n, x) => n + x.slides.length, 0))
-const SRCS = FLAT.map((s) => s.src)
 const TABS = CATEGORIES.map((c, i) => ({ value: i, label: c.label }))
 
-// An immersive viewer: the render fills the screen; a slim glass dock, the caption and a gold
-// timeline are the only things on it, and even they step back when nothing moves.
+// The title, one masked span per word and one span per letter, so the letters can rise in turn.
+function SplitTitle({ text }) {
+  return text.split(' ').map((word, w) => (
+    <span key={w} className="mr-[0.28em] inline-block overflow-hidden pb-[0.08em] align-bottom last:mr-0">
+      {[...word].map((ch, c) => (
+        <span key={c} className="g-char inline-block will-change-transform">
+          {ch}
+        </span>
+      ))}
+    </span>
+  ))
+}
+
+// A cinematic viewer: every render fills the screen, and each new one is wiped in over the
+// last while it settles from a slow zoom. The title rises letter by letter, a gold line counts
+// down to the next render, and the picture drifts a touch with the cursor.
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  const [full, setFull] = useState(false) // picture only: everything steps aside
-  const [grid, setGrid] = useState(false)
+  const [hold, setHold] = useState(false) // autoplay paused while the pointer is on the controls
   const rootRef = useRef(null)
+  const stageRef = useRef(null)
   const stripRef = useRef(null)
-  const gridRef = useRef(null)
+  const prevFlat = useRef(null)
+  const dir = useRef(1)
   const touchX = useRef(0)
   const wheelAt = useRef(0)
-  const firstShow = useRef(true)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
   const total = slides.length
   const slide = slides[idx]
   const flat = OFFSETS[cat] + idx
-  const key = `${cat}-${idx}`
 
-  // arrival
+  const go = useCallback(
+    (to, d) => {
+      dir.current = d
+      setIdx(((to % total) + total) % total)
+    },
+    [total],
+  )
+  const step = useCallback((d) => go(idx + d, d), [go, idx])
+
+  // Arrival: an espresso curtain lifts off the first render as it settles from a deep zoom,
+  // then the words and controls come in.
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: PAGE_IN })
-      tl.add(fx.show('.gv-stage', { duration: 1.2 }), 0)
-      tl.add(fx.fade('.tb-anim', { y: -10 }), 0.3)
-      tl.add(fx.fade('.g-chrome', { y: 12, stagger: 0.08 }), 0.5)
-      tl.add(fx.line('.g-timeline'), 0.8)
+      if (REDUCED) {
+        tl.set('.g-curtain', { autoAlpha: 0 })
+        tl.add(fx.show('.g-chrome', { stagger: 0.05 }), 0)
+        return
+      }
+      tl.fromTo('.g-curtain', { scaleY: 1 }, { scaleY: 0, duration: 1.4, ease: 'expo.inOut' }, 0)
+      tl.fromTo('.g-curtain-line', { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: EASE.move }, 0)
+      tl.fromTo('.gv-zoom', { scale: 1.28 }, { scale: 1, duration: 2.6, ease: 'expo.out' }, 0.25)
+      tl.add(fx.fade('.tb-anim', { y: -12 }), 0.9)
+      tl.add(fx.fade('.g-chrome', { y: 18, stagger: 0.09, duration: 0.9 }), 1.0)
+      tl.fromTo('.g-tick', { scaleY: 0 }, { scaleY: 1, duration: 0.6, stagger: 0.04, ease: EASE.enter }, 1.1)
     }, rootRef)
     return () => ctx.revert()
   }, [])
 
-  // the chosen render crossfades in and drifts 3% while it is shown
+  // The change of render: the new one is wiped in from the side you are heading towards while
+  // it eases out of a zoom; the old one slides a little the other way under it.
   useLayoutEffect(() => {
     const root = rootRef.current
-    const on = root.querySelector(`[data-slide="${flat}"]`)
-    root.querySelectorAll('[data-slide]').forEach((el) => {
-      if (el !== on) gsap.to(el, { opacity: 0, duration: REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
+    const all = root.querySelectorAll('[data-slide]')
+    const inEl = root.querySelector(`[data-slide="${flat}"]`)
+    const outEl = prevFlat.current === null ? null : root.querySelector(`[data-slide="${prevFlat.current}"]`)
+    prevFlat.current = flat
+    if (!inEl) return
+
+    all.forEach((el) => {
+      if (el !== inEl && el !== outEl) gsap.set(el, { autoAlpha: 0, zIndex: 0 })
     })
-    if (!on) return
-    gsap.to(on, { opacity: 1, duration: firstShow.current ? 0 : REDUCED ? 0.2 : 1.1, ease: EASE.move, overwrite: 'auto' })
-    firstShow.current = false
-    const img = on.querySelector('img')
-    if (img && !REDUCED) gsap.fromTo(img, { scale: 1 }, { scale: 1.04, duration: 9, ease: 'power1.out', overwrite: 'auto' })
+    const inImg = inEl.querySelector('img')
+
+    if (!outEl || outEl === inEl || REDUCED) {
+      gsap.set(inEl, { autoAlpha: 1, zIndex: 2, clipPath: 'inset(0% 0% 0% 0%)' })
+      if (outEl && outEl !== inEl) gsap.set(outEl, { autoAlpha: 0 })
+      if (!REDUCED) gsap.fromTo(inImg, { scale: 1.08 }, { scale: 1, duration: 9, ease: 'power1.out', overwrite: 'auto' })
+      return
+    }
+
+    const d = dir.current
+    gsap.set(outEl, { autoAlpha: 1, zIndex: 1 })
+    gsap.set(inEl, { autoAlpha: 1, zIndex: 2 })
+    const tl = gsap.timeline({
+      onComplete: () => {
+        gsap.set(outEl, { autoAlpha: 0, zIndex: 0 })
+        gsap.set(outEl.querySelector('img'), { xPercent: 0, scale: 1 })
+      },
+    })
+    tl.fromTo(inEl, { clipPath: d > 0 ? 'inset(0% 0% 0% 100%)' : 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.35, ease: 'expo.inOut' }, 0)
+    tl.fromTo(inImg, { scale: 1.3, xPercent: d * 8 }, { scale: 1.06, xPercent: 0, duration: 1.8, ease: 'expo.out' }, 0.15)
+    tl.to(inImg, { scale: 1, duration: 8, ease: 'power1.out' }, 1.95)
+    tl.to(outEl.querySelector('img'), { xPercent: -d * 12, scale: 1.08, duration: 1.35, ease: 'expo.inOut' }, 0)
+    return () => tl.progress(1).kill()
   }, [flat])
 
-  // the gold timeline marks where you are in the collection
-  useLayoutEffect(() => {
-    gsap.to('.g-progress', { scaleX: (idx + 1) / total, duration: REDUCED ? 0 : 0.8, ease: EASE.enter, overwrite: 'auto' })
-  }, [idx, total, cat])
-
-  // the title wipes up on every change; the subtitle arrives late
+  // The title rises letter by letter; the count rolls; the line under it follows.
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      fx.heading('.g-title', { delay: 0.1 })
-      fx.fade('.g-count', { y: 6, duration: 0.5 })
-      fx.fade('.g-sub', { delay: 0.4, duration: 0.7 })
+      if (REDUCED) {
+        fx.show('.g-char, .g-sub, .g-roll')
+        return
+      }
+      gsap.fromTo('.g-char', { yPercent: 115, rotate: 6 }, { yPercent: 0, rotate: 0, duration: 1.1, ease: 'expo.out', stagger: 0.022, delay: 0.35 })
+      gsap.fromTo('.g-roll', { yPercent: dir.current * 100 }, { yPercent: 0, duration: 0.9, ease: 'expo.out', delay: 0.2 })
+      gsap.fromTo('.g-sub', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.9, ease: EASE.soft, delay: 0.7 })
+      gsap.fromTo('.g-rule', { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: EASE.move, delay: 0.5 })
     }, rootRef)
     return () => ctx.revert()
-  }, [key])
+  }, [flat])
+
+  // A new collection: its thumbnails and rail ticks come in one after another
+  useLayoutEffect(() => {
+    if (REDUCED) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.g-thumb', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.7, ease: EASE.enter, stagger: 0.05, delay: 0.15 })
+    }, rootRef)
+    return () => ctx.revert()
+  }, [cat])
+
+  // Autoplay: the gold line fills over six seconds, then the next render comes in
+  useEffect(() => {
+    const line = rootRef.current?.querySelector('.g-progress')
+    if (!line) return
+    if (hold) return
+    const t = gsap.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: AUTOPLAY, ease: 'none', onComplete: () => step(1) })
+    return () => t.kill()
+  }, [flat, hold, step])
 
   // keep the current thumbnail in view
   useEffect(() => {
@@ -128,271 +199,187 @@ function Gallery({ onClose }) {
     const chip = strip?.querySelector('[aria-current="true"]')
     if (!chip) return
     const target = chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2
-    gsap.to(strip, { scrollLeft: Math.max(0, target), duration: REDUCED ? 0 : 0.6, ease: EASE.soft, overwrite: 'auto' })
-  }, [key])
+    gsap.to(strip, { scrollLeft: Math.max(0, target), duration: REDUCED ? 0 : 0.7, ease: EASE.soft, overwrite: 'auto' })
+  }, [flat])
 
-  // the interface steps back when nothing has moved for a few seconds
+  // the picture drifts a touch against the cursor
   useEffect(() => {
-    let t
-    let idle = false
-    const setIdle = (v) => {
-      if (v === idle) return
-      idle = v
-      rootRef.current?.classList.toggle('cursor-none', v)
-      gsap.to(rootRef.current?.querySelectorAll('.gv-ui'), { autoAlpha: v ? 0 : 1, duration: v ? 0.9 : 0.4, ease: EASE.soft, overwrite: 'auto' })
+    if (REDUCED || !stageRef.current) return
+    const xTo = gsap.quickTo(stageRef.current, 'x', { duration: 1.4, ease: 'power3.out' })
+    const yTo = gsap.quickTo(stageRef.current, 'y', { duration: 1.4, ease: 'power3.out' })
+    const onMove = (e) => {
+      xTo((e.clientX / window.innerWidth - 0.5) * -26)
+      yTo((e.clientY / window.innerHeight - 0.5) * -18)
     }
-    const wake = () => {
-      setIdle(false)
-      clearTimeout(t)
-      t = setTimeout(() => setIdle(true), 4500)
-    }
-    wake()
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart']
-    events.forEach((e) => window.addEventListener(e, wake, { passive: true }))
-    return () => {
-      clearTimeout(t)
-      events.forEach((e) => window.removeEventListener(e, wake))
-    }
+    window.addEventListener('pointermove', onMove)
+    return () => window.removeEventListener('pointermove', onMove)
   }, [])
 
-  // warm the cache for the big renders so switching feels instant
+  // warm the cache so every render is ready when it is called
   useEffect(() => {
-    const t = setTimeout(() => SRCS.forEach((src) => { new Image().src = src }), 1200)
+    const t = setTimeout(() => FLAT.forEach((s) => (new Image().src = s.src)), 1200)
     return () => clearTimeout(t)
   }, [])
 
-  const switchCategory = (c) => {
-    if (c === cat) return
-    setCat(c)
-    setIdx(0)
-  }
-  const step = (d) => total > 1 && setIdx((i) => (i + d + total) % total)
-
-  // grid overview: opens over the viewer; a tile returns to the viewer on that render
-  const closeGrid = (to) => {
-    const done = () => {
-      if (to) {
-        setCat(to[0])
-        setIdx(to[1])
-      }
-      setGrid(false)
-    }
-    if (REDUCED) return done()
-    gsap.to(gridRef.current, { autoAlpha: 0, duration: 0.45, ease: EASE.soft, onComplete: done })
-  }
-
-  useLayoutEffect(() => {
-    if (!grid) return
-    const ctx = gsap.context(() => {
-      fx.show(gridRef.current, { duration: 0.6 })
-      fx.fade('.gg-head', { stagger: 0.08, delay: 0.1 })
-      fx.line('.gg-hair', { delay: 0.2, stagger: 0.1 })
-      revealOnScroll('.gg-tile', { scroller: gridRef.current, stagger: 0.07 })
-    }, gridRef)
-    return () => ctx.revert()
-  }, [grid])
-
   useEffect(() => {
     const onKey = (e) => {
-      if (grid) {
-        if (e.key === 'Escape') closeGrid()
-        return
-      }
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
-      if (e.key === 'f' || e.key === 'F') setFull((v) => !v)
-      if (e.key === 'Escape') setFull(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  })
+  }, [step])
 
-  const hide = full ? 'pointer-events-none opacity-0' : ''
+  const switchCategory = (c) => {
+    if (c === cat) return
+    dir.current = 1
+    setCat(c)
+    setIdx(0)
+  }
 
   return (
     <div
       ref={rootRef}
-      className="relative h-svh w-full overflow-hidden bg-espresso text-cream"
+      className="relative h-svh w-full overflow-clip bg-espresso text-cream"
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
-        if (grid) return
         const dx = e.changedTouches[0].clientX - touchX.current
         if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1)
       }}
       onWheel={(e) => {
-        if (grid) return
         const now = e.timeStamp
-        if (Math.abs(e.deltaY) < 20 || now - wheelAt.current < 900) return
+        if (Math.abs(e.deltaY) < 20 || now - wheelAt.current < 1100) return
         wheelAt.current = now
         step(e.deltaY > 0 ? 1 : -1)
       }}
     >
-      {/* every render stacked, edge to edge; only the current one is lit */}
-      <div className="gv-stage absolute inset-0" aria-live="polite">
-        {FLAT.map((s, i) => (
-          <div key={s.src} data-slide={i} className="absolute inset-0 overflow-hidden" style={{ opacity: 0 }}>
-            <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
-          </div>
-        ))}
+      {/* ---------- every render, stacked edge to edge ---------- */}
+      {/* overflow-clip, not hidden: the stage is oversized for the cursor drift, and a hidden
+          overflow would let focus scroll the whole page sideways */}
+      <div className="gv-zoom absolute inset-0 overflow-clip">
+        <div ref={stageRef} className="absolute -inset-6" aria-live="polite">
+          {FLAT.map((s, i) => (
+            <div key={s.src} data-slide={i} className="absolute inset-0 overflow-hidden">
+              <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-cover will-change-transform" draggable={false} />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* shade where the words sit: a smoky gradient with a faint grain */}
+      {/* smoky shade where the words sit, with the faint grain */}
       <div
-        className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${full ? 'opacity-0' : ''}`}
+        className="pointer-events-none absolute inset-0 z-[3]"
         style={{
           backgroundImage:
-            'var(--grain), linear-gradient(180deg, color-mix(in srgb, var(--espresso) 70%, transparent) 0%, transparent 26%), linear-gradient(0deg, color-mix(in srgb, var(--espresso) 92%, transparent) 0%, color-mix(in srgb, var(--espresso) 55%, transparent) 24%, transparent 55%)',
+            'var(--grain), linear-gradient(180deg, color-mix(in srgb, var(--espresso) 72%, transparent) 0%, transparent 24%), linear-gradient(0deg, color-mix(in srgb, var(--espresso) 94%, transparent) 0%, color-mix(in srgb, var(--espresso) 55%, transparent) 26%, transparent 58%), linear-gradient(90deg, color-mix(in srgb, var(--espresso) 55%, transparent) 0%, transparent 45%)',
         }}
       />
 
-      {/* ---------- Top: seal, collections, round controls ---------- */}
-      <div className="gv-ui">
-        <div className={`transition-opacity duration-500 ${hide}`}>
+      {/* ---------- top: the seal, the collections, back ---------- */}
+      <div className="relative z-20">
         <TopBar onBrand={onClose} compact>
           <div className="g-chrome flex items-center gap-3">
-            <div className="mr-2 hidden lg:block short:block">
+            <div className="mr-2 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
-            <IconButton label="All renders" onClick={() => setGrid(true)}>
-              <IcGrid size={18} />
-            </IconButton>
-            <IconButton label="Picture only (F)" onClick={() => setFull(true)}>
-              <IcExpand size={18} />
-            </IconButton>
             <BackControl onClick={onClose} />
           </div>
         </TopBar>
-        <div className="g-chrome absolute inset-x-0 top-[6.25rem] z-20 flex justify-center px-5 lg:hidden short:hidden">
+        <div className="g-chrome absolute inset-x-0 top-[6rem] flex justify-center px-5 md:hidden">
           <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
-        </div>
         </div>
       </div>
 
-      {/* picture only: one small way back */}
-      {full && (
-        <div className="gv-ui absolute right-3 top-[max(1rem,var(--safe-t))] z-30 sm:right-6 side:right-[2.8rem] side:top-[2.7rem]">
-          <IconButton label="Show details (Esc)" onClick={() => setFull(false)} active>
-            <IcCollapse size={18} />
-          </IconButton>
-        </div>
-      )}
+      {/* ---------- the rail: one tick per render, the current one long and gold ---------- */}
+      <nav className="absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-end gap-2.5 sm:flex side:right-[2.9rem]" aria-label={`${category.label} renders`}>
+        {slides.map((s, i) => {
+          const on = i === idx
+          return (
+            <button
+              key={s.src}
+              type="button"
+              onClick={() => i !== idx && go(i, i > idx ? 1 : -1)}
+              aria-label={s.title}
+              aria-current={on}
+              className="g-tick tr-focus group flex h-3 origin-top items-center border-none bg-transparent p-0"
+            >
+              <span
+                className={`block h-px transition-[width,background-color] duration-500 ${on ? 'w-10 bg-[var(--ribbon-champagne)] shadow-[0_0_0.6rem_var(--ribbon-main-gold)]' : 'w-4 bg-cream/40 group-hover:w-6 group-hover:bg-cream/80'}`}
+              />
+            </button>
+          )
+        })}
+      </nav>
 
-      {/* side arrows */}
-      {total > 1 && (
-        <div className="gv-ui pointer-events-none absolute inset-x-0 top-1/2 z-20 -translate-y-1/2 px-3 sm:px-6 side:px-[2.8rem]">
-          <div className={`flex items-center justify-between transition-opacity duration-500 ${hide}`}>
-          <IconButton label="Previous render" onClick={() => step(-1)} className="pointer-events-auto">
-            <IcPrev size={18} />
-          </IconButton>
-          <IconButton label="Next render" onClick={() => step(1)} className="pointer-events-auto">
-            <IcNext size={18} />
-          </IconButton>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- Foot: caption left, glass dock right, a gold timeline along the edge ---------- */}
-      <div className="gv-ui absolute inset-x-0 bottom-0 z-20">
-        <div className={`transition-opacity duration-500 ${hide}`}>
-        <div className="flex flex-col gap-5 px-5 pb-[max(1.4rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 side:px-[2.9rem] side:pb-[3.2rem] short:flex-row short:items-end short:gap-6 short:pb-4">
-          <div className="g-chrome min-w-0 md:max-w-[36rem]">
-            <span className="g-count flex items-center gap-4">
-              <span className="tr-num text-[var(--ribbon-champagne)]">{pad(idx + 1)}</span>
+      {/* ---------- foot: the caption, the arrows and the strip ---------- */}
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        <div className="flex flex-col gap-6 px-5 pb-[max(1.6rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 side:px-[2.9rem] side:pb-[2.6rem]">
+          {/* caption */}
+          <div className="g-chrome min-w-0 md:max-w-[44rem]">
+            <span className="flex items-center gap-4">
+              <span className="inline-block h-[1.1em] overflow-hidden">
+                <span key={flat} className="g-roll tr-num inline-block text-[var(--ribbon-champagne)]">
+                  {pad(idx + 1)}
+                </span>
+              </span>
               <span className="tr-dash" />
               <span className="tr-num">{pad(total)}</span>
               <span className="tr-label ml-2">{category.label}</span>
             </span>
-            <h2 className="tr-display mt-4 text-[clamp(2.1rem,3.6vw,3.6rem)] short:mt-1 short:text-[1.4rem]">
-              <span className="g-title block truncate pb-1">{slide.title}</span>
+            <h2 key={`t-${flat}`} className="tr-display mt-4 text-[clamp(2.4rem,5.2vw,5.4rem)] leading-[0.98] short:text-[1.8rem]">
+              <SplitTitle text={slide.title} />
             </h2>
-            <p className="g-sub tr-label mt-2 text-cream/75 short:hidden">{slide.subtitle}</p>
+            <span key={`r-${flat}`} className="g-rule mt-5 block h-px w-24 origin-left bg-[linear-gradient(90deg,var(--ribbon-champagne),var(--ribbon-main-gold),transparent)]" />
+            <p key={`s-${flat}`} className="g-sub tr-label mt-4 text-cream/80 short:hidden">
+              {slide.subtitle}
+            </p>
           </div>
 
-          {/* the dock: every render in the collection, in smoky glass */}
-          <div className="g-chrome tr-panel shrink-0 rounded-[0.9rem] p-2 md:max-w-[min(30rem,46vw)] short:max-w-[40vw]">
-            <div ref={stripRef} className="tr-noscroll flex gap-2 overflow-x-auto" role="tablist" aria-label={`${category.label} renders`}>
-              {slides.map((sl, i) => {
-                const on = i === idx
-                return (
-                  <button
-                    key={sl.src}
-                    type="button"
-                    role="tab"
-                    aria-selected={on}
-                    aria-current={on}
-                    aria-label={sl.title}
-                    onClick={() => setIdx(i)}
-                    onPointerMove={glowAt}
-                    className={`mn-glow tr-focus relative h-[3rem] w-[4.4rem] shrink-0 touch-manipulation rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 short:h-[2.2rem] short:w-[3.2rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-60 hover:opacity-100'}`}
-                  >
-                    <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
-                  </button>
-                )
-              })}
+          {/* arrows and the strip */}
+          <div className="g-chrome flex shrink-0 items-end gap-4" onPointerEnter={() => setHold(true)} onPointerLeave={() => setHold(false)}>
+            <div className="flex gap-2">
+              <IconButton label="Previous render" onClick={() => step(-1)}>
+                <IcPrev size={18} />
+              </IconButton>
+              <IconButton label="Next render" onClick={() => step(1)}>
+                <IcNext size={18} />
+              </IconButton>
+            </div>
+            <div className="tr-panel rounded-[0.9rem] p-2 md:max-w-[min(28rem,40vw)]">
+              <div ref={stripRef} className="tr-noscroll flex gap-2 overflow-x-auto" role="tablist" aria-label={`${category.label} renders`}>
+                {slides.map((sl, i) => {
+                  const on = i === idx
+                  return (
+                    <button
+                      key={sl.src}
+                      type="button"
+                      role="tab"
+                      aria-selected={on}
+                      aria-current={on}
+                      aria-label={sl.title}
+                      onClick={() => i !== idx && go(i, i > idx ? 1 : -1)}
+                      onPointerMove={glowAt}
+                      className={`g-thumb mn-glow tr-focus relative h-[3.2rem] w-[4.8rem] shrink-0 touch-manipulation overflow-hidden rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 short:h-[2.2rem] short:w-[3.2rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-55 hover:opacity-100'}`}
+                    >
+                      <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* the gold timeline */}
-        <div className="g-timeline relative h-px w-full bg-cream/20">
+        {/* the gold line counting down to the next render */}
+        <div className="g-chrome relative h-px w-full bg-cream/15">
           <span className="g-progress absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,var(--ribbon-deep-bronze),var(--ribbon-main-gold),var(--ribbon-champagne))] shadow-[0_0_0.8rem_var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
-        </div>
         </div>
       </div>
 
-      {/* ---------- Grid overview ---------- */}
-      {grid && (
-        <div ref={gridRef} className="fixed inset-0 z-[60] overflow-y-auto bg-[color-mix(in_srgb,var(--espresso)_74%,transparent)] backdrop-blur-xl" style={{ backgroundImage: 'var(--grain)' }} role="dialog" aria-modal="true" aria-label="All renders">
-          <div className="sticky top-0 z-10 flex items-end justify-between gap-4 bg-[color-mix(in_srgb,var(--espresso)_70%,transparent)] px-5 pb-5 pt-[max(1.5rem,var(--safe-t))] backdrop-blur-md sm:px-8 side:px-[2.9rem] side:pt-[2.7rem]">
-            <div>
-              <span className="gg-head flex items-center gap-4">
-                <span className="tr-num">02</span>
-                <span className="tr-dash" />
-                <span className="tr-label">Gallery</span>
-              </span>
-              <h2 className="gg-head tr-display mt-3 text-[clamp(2rem,3vw,3rem)]">Every render</h2>
-            </div>
-            <IconButton label="Close" onClick={() => closeGrid()}>
-              <IcClose size={17} />
-            </IconButton>
-            <i className="gg-hair tr-hair absolute inset-x-5 bottom-0 sm:inset-x-8 side:inset-x-[2.9rem]" />
-          </div>
-
-          <div className="px-5 pb-[max(2rem,var(--safe-b))] pt-8 sm:px-8 side:px-[2.9rem]">
-            {CATEGORIES.map((c, ci) => (
-              <section key={c.id} className="mb-12">
-                <div className="mb-5 flex items-center gap-4">
-                  <span className="tr-label">{c.label}</span>
-                  <i className="gg-hair tr-hair flex-1" />
-                  <span className="tr-num">{pad(c.slides.length)}</span>
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {c.slides.map((s, i) => (
-                    <button
-                      key={s.src}
-                      type="button"
-                      onClick={() => closeGrid([ci, i])}
-                      onPointerMove={glowAt}
-                      className={`gg-tile mn-glow tr-focus group flex touch-manipulation flex-col rounded-[0.9rem] bg-[color-mix(in_srgb,var(--espresso)_55%,transparent)] p-2.5 text-left shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ribbon-main-gold)_22%,transparent)] md:p-3 ${i === 0 ? 'lg:col-span-2 lg:row-span-2' : ''}`}
-                    >
-                      <span className={`block w-full overflow-hidden rounded-[0.55rem] ${i === 0 ? 'aspect-[4/3] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}>
-                        <img src={s.src} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]" draggable={false} />
-                      </span>
-                      <span className="mt-3 flex items-baseline gap-3 px-1.5 pb-1">
-                        <span className="tr-num">{pad(i + 1)}</span>
-                        <span className="min-w-0">
-                          <span className="tr-display block truncate text-[1.25rem] transition-colors duration-300 group-hover:text-[var(--ribbon-champagne)]">{s.title}</span>
-                          <span className="mt-1 block truncate font-sans text-[0.625rem] uppercase tracking-[0.18em] text-cream/60">{s.subtitle}</span>
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* ---------- the arrival curtain ---------- */}
+      <div className="g-curtain pointer-events-none absolute inset-0 z-40 origin-top bg-espresso" aria-hidden="true">
+        <span className="g-curtain-line tr-hair is-gold absolute inset-x-0 bottom-0 origin-center" />
+      </div>
     </div>
   )
 }
