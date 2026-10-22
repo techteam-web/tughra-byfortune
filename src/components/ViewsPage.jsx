@@ -35,7 +35,7 @@ const TIMES = [
   { key: 'night', label: 'Night', Icon: IcMoon },
 ]
 const TILE_BASE_PATH = '/Fortune-panos/app-files/tiles'
-const SLIDER_HEIGHT = 'min(40vh, 18.75rem)' // shared by the slider track and its floor-number ruler
+const SLIDER_HEIGHT = 'clamp(8rem, calc(100svh - 30rem), 18.75rem)' // shared by the slider track and its floor-number ruler
 
 // Real elevation profile of the tower, so the slider represents the actual
 // roofline-to-podium travel rather than just a flat list index.
@@ -257,8 +257,9 @@ const ViewsPage = ({ onClose, onHome }) => {
         aria-live="polite"
       />
 
-      {/* Right-centre dock: time of day, auto-rotate, and the elevation slider */}
-      <div className="pointer-events-none absolute right-[max(1rem,var(--safe-r))] top-1/2 z-20 -translate-y-1/2 md:right-6">
+      {/* Right dock: time of day, auto-rotate, and the elevation slider - centred in the space
+          below the top bar, so it never runs up under Home and Menu */}
+      <div className="pointer-events-none absolute bottom-[max(1rem,var(--safe-b))] right-[max(1rem,var(--safe-r))] top-[max(7.25rem,calc(var(--safe-t)+6.5rem))] z-20 flex items-center md:right-6 short:top-3">
         <div className="v-chrome short:origin-right short:scale-[0.72]">
           <div className="v-dock tr-panel pointer-events-auto flex w-[4.5rem] flex-col items-center gap-3 py-4 short:py-3">
             {/* time of day: a vertical segmented control, the gold ring glides */}
