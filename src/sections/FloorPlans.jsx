@@ -310,7 +310,7 @@ function FloorPlans({ onClose }) {
             </div>
 
             <header className="relative z-10 flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
-              <button type="button" onClick={closeZoom} onPointerMove={glowAt} aria-label="Back to the tower" className="mn-glow tr-focus flex h-10 w-10 items-center justify-center rounded-full border border-[var(--ink)]/20 bg-[color-mix(in_srgb,var(--cream)_70%,transparent)] text-[var(--ink)] backdrop-blur-sm">
+              <button type="button" onClick={closeZoom} onPointerMove={glowAt} aria-label="Back to the tower" className="mn-glow tr-focus flex h-10 w-10 items-center justify-center rounded-full border border-[var(--ink)]/20 bg-[color-mix(in_srgb,var(--cream)_92%,transparent)] text-[var(--ink)]">
                 <IcBack size={16} />
               </button>
               <MenuControl onClick={onClose} />
@@ -318,7 +318,7 @@ function FloorPlans({ onClose }) {
 
             {/* the residence types, over the plan on the left */}
             <aside className="relative z-10 mt-auto mb-auto w-fit px-5 sm:px-8 side:px-[2.9rem]">
-              <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--cream)_72%,transparent)] px-4 py-3 backdrop-blur-sm">
+              <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--cream)_92%,transparent)] px-4 py-3">
                 {floorName && <span className="block font-sans text-[0.6rem] uppercase tracking-[0.22em] text-[var(--bronze-deep)]">{floorName}</span>}
                 <ul className="mt-2.5 flex flex-col gap-2.5">
                   {UNITS.map((u, i) => {
@@ -345,7 +345,7 @@ function FloorPlans({ onClose }) {
 
             {/* floor plan / isometric, over the plan at the foot - both fill the screen */}
             <div className="relative z-10 flex justify-center pb-[max(1.5rem,var(--safe-b))]">
-              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 bg-[color-mix(in_srgb,var(--cream)_72%,transparent)] p-1 backdrop-blur-sm">
+              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 bg-[color-mix(in_srgb,var(--cream)_92%,transparent)] p-1">
                 {[
                   ['2d', 'Floor plan'],
                   ['iso', 'Isometric'],
