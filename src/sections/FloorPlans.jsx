@@ -218,8 +218,8 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
         {/* ---------- Middle: the tower, its floors as switches that open the plan page ---------- */}
         <div className="fp2-stage flex min-w-0 flex-col items-center">
           <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
-            {/* ---- the tower on a wide white mat, its floors as clickable switches ---- */}
-            <div className="absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]">
+            {/* ---- the tower on a wide parchment mat, its floors as clickable switches ---- */}
+            <div className="absolute inset-0 overflow-hidden border border-[var(--bronze)]/25 bg-[var(--parchment)] p-3 shadow-[0_1.75rem_3.5rem_-1.75rem_rgba(42,28,18,0.35)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
                 <div className="relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
                   <div style={innerStyle}>
@@ -351,7 +351,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
                 {activeSrc ? (
                   <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full object-contain" draggable={false} />
                 ) : (
-                  <div className="flex aspect-[4/5] h-full max-h-full flex-col items-center justify-center gap-3 border border-[var(--ink)]/12 bg-[color-mix(in_srgb,var(--cream)_60%,var(--parchment))] text-center">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 border border-[var(--ink)]/12 bg-[color-mix(in_srgb,var(--cream)_60%,var(--parchment))] text-center">
                     <IcPlan size={26} className="text-[var(--ink-soft)]/50" />
                     <span className="font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]/70">Coming soon</span>
                     <p className="max-w-[16rem] font-serif text-[1rem] text-[var(--ink-soft)]">
