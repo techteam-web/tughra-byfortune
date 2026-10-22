@@ -272,16 +272,24 @@ function applyDepth(map) {
 const ROUTE_SRC = 'route'
 const ALL_SRC = 'routes-all'
 
-// each category has its own colour, for its pins and its routes
-const CAT_COLORS = {
-  connectivity: '#F2B45A',
-  healthcare: '#E8766A',
-  landmarks: '#7FC8B2',
-  hospitality: '#C99AE6',
-  business: '#78B0EE',
-  education: '#A9D874',
+// Each category reads as its own colour family - never gold, bronze or yellow, so a
+// route is never mistaken for the map's own roads or the brand's accent. Within a
+// category, each place gets its own shade of that colour (lightened by a different
+// amount), so when several routes share the map at once (the overview) every route
+// still reads as its own line without leaving the category's hue.
+const CATEGORY_COLORS = {
+  connectivity: '#5B8DEF', // blue
+  healthcare: '#E8766A', // coral red
+  landmarks: '#4FB8A8', // teal
+  hospitality: '#E583B0', // pink
+  business: '#8F7FE0', // violet
+  education: '#6FBF73', // green
 }
-const colorOf = (key) => CAT_COLORS[key] || T.goldPale
+const SHADE_KEEP = [1, 0.72, 0.5, 0.86, 0.6, 0.94, 0.4, 0.78]
+const colorOf = (category, i = 0) => {
+  const base = CATEGORY_COLORS[category] || T.goldPale
+  return mix(base, '#ffffff', SHADE_KEEP[((i % SHADE_KEEP.length) + SHADE_KEEP.length) % SHADE_KEEP.length])
+}
 const ROUTE_OFF = alpha(T.goldPale, 0)
 // The route is revealed by masking a line-gradient (cheap) rather than re-sending
 // the geometry every frame (which re-parses and re-tiles it).
@@ -434,10 +442,10 @@ function Location({ onClose }) {
     if (!ready || !map) return
     const markers = markersRef.current
     const placed = []
-    for (const p of current.places) {
+    current.places.forEach((p, i) => {
       const el = document.createElement('div')
       el.className = 'loc-mk'
-      el.style.setProperty('--pin', colorOf(category))
+      el.style.setProperty('--pin', colorOf(category, i))
       const pin = document.createElement('div')
       pin.className = 'loc-pin'
       const label = document.createElement('span')
@@ -450,7 +458,7 @@ function Location({ onClose }) {
       })
       placed.push(new Marker({ element: el }).setLngLat(p.at).addTo(map))
       markers.set(p.id, el)
-    }
+    })
     return () => {
       for (const m of placed) m.remove()
       markers.clear()
@@ -465,7 +473,8 @@ function Location({ onClose }) {
     for (const [id, el] of markersRef.current) el.classList.toggle('is-on', id === selected)
     const source = map.getSource(ROUTE_SRC)
     source?.setData(EMPTY)
-    setRouteProgress(map, 0, colorOf(category))
+    const selectedIndex = current.places.findIndex((p) => p.id === selected)
+    setRouteProgress(map, 0, colorOf(category, selectedIndex))
     if (selectedPlace) map.getSource(ALL_SRC)?.setData(EMPTY)
     if (!selectedPlace) return
 
@@ -529,7 +538,7 @@ function Location({ onClose }) {
       const frame = (now) => {
         if (cancelled) return
         const t = Math.min((now - started) / duration, 1)
-        setRouteProgress(map, 0.65 * t + 0.35 * (0.5 - Math.cos(Math.PI * t) / 2), colorOf(category))
+        setRouteProgress(map, 0.65 * t + 0.35 * (0.5 - Math.cos(Math.PI * t) / 2), colorOf(category, selectedIndex))
         if (t < 1) drawRef.current = requestAnimationFrame(frame)
       }
       drawRef.current = requestAnimationFrame(frame)
@@ -607,13 +616,12 @@ function Location({ onClose }) {
     if (!map) return
     setSelected(null)
     orbitRef.current.paused = true
-    const color = colorOf(category)
-    const lines = await Promise.all(current.places.map((pl) => fetchRoute(pl).then((coords) => ({ coords, id: pl.id }))))
+    const lines = await Promise.all(current.places.map((pl, i) => fetchRoute(pl).then((coords) => ({ coords, id: pl.id, color: colorOf(category, i) }))))
     if (!mapRef.current || mapRef.current !== map) return
     map.getSource(ROUTE_SRC)?.setData(EMPTY)
     map.getSource(ALL_SRC)?.setData({
       type: 'FeatureCollection',
-      features: lines.map((l) => ({ type: 'Feature', properties: { color }, geometry: { type: 'LineString', coordinates: l.coords } })),
+      features: lines.map((l) => ({ type: 'Feature', properties: { color: l.color }, geometry: { type: 'LineString', coordinates: l.coords } })),
     })
     const pts = [PROJECT, ...lines.flatMap((l) => l.coords)]
     const xs = pts.map((c) => c[0])
@@ -715,7 +723,7 @@ function Location({ onClose }) {
         <button
           type="button"
           onClick={overview}
-          style={{ borderColor: colorOf(category) }}
+          style={{ borderColor: CATEGORY_COLORS[category] }}
           onPointerMove={glowAt}
           className="tr-btn tr-btn--outline mn-glow absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
         >
