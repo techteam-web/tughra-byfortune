@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
 import { Lockup, MenuControl } from '../ui/controls.jsx'
+import IsoTurntable from '../components/IsoTurntable.jsx'
 import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
@@ -292,7 +293,9 @@ function FloorPlans({ onClose }) {
           >
             {/* the plan fills the screen; everything else sits on top of it */}
             <div className="fp2-big absolute inset-0">
-              {activeSrc ? (
+              {planView === 'iso' && unit.isoFrames ? (
+                <IsoTurntable key={unit.id} frames={unit.isoFrames} poster={unit.iso} alt={`${unit.label} isometric`} className="h-full w-full" />
+              ) : activeSrc ? (
                 <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="absolute inset-0 h-full w-full object-contain" draggable={false} />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
