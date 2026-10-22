@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
-import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
+import { TopBar, MenuControl, IconButton, Segmented } from '../ui/controls.jsx'
 import { IcPrev, IcNext, IcExpand, IcCollapse } from '../ui/icons.jsx'
 
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
@@ -270,7 +270,7 @@ function Gallery({ onClose }) {
             <div className="mr-1 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
-            <BackControl onClick={onClose} />
+            <MenuControl onClick={onClose} />
           </div>
         </TopBar>
       </div>

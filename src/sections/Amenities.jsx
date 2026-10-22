@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
-import { TopBar, BackControl } from '../ui/controls.jsx'
+import { TopBar, MenuControl } from '../ui/controls.jsx'
 import pool from '../assets/amenities/swimming-pool.webp'
 
 // Placeholder page until the amenities content is provided: the pool edge to edge, and the
@@ -32,7 +32,7 @@ function Amenities({ onClose }) {
 
       <TopBar onBrand={onClose}>
         <span className="am-back">
-          <BackControl onClick={onClose} />
+          <MenuControl onClick={onClose} />
         </span>
       </TopBar>
 

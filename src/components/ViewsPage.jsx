@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Marzipano from 'marzipano'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { APP_DATA } from '../data'
-import { TopBar, BackControl, HomeControl, IconButton } from '../ui/controls.jsx'
+import { TopBar, MenuControl, HomeControl, IconButton } from '../ui/controls.jsx'
 import { IcSun, IcDusk, IcMoon, IcRotate, IcUp, IcDown } from '../ui/icons.jsx'
 
 // --- DATA MAPPING ---
@@ -245,7 +245,7 @@ const ViewsPage = ({ onClose, onHome }) => {
         <TopBar onBrand={onClose}>
           <div className="v-top flex items-center gap-4 md:gap-6">
             <HomeControl onClick={onHome} />
-            <BackControl onClick={onClose} />
+            <MenuControl onClick={onClose} />
           </div>
         </TopBar>
       </div>

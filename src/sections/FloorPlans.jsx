@@ -2,11 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
-import { Lockup } from '../ui/controls.jsx'
+import { Lockup, MenuControl } from '../ui/controls.jsx'
 import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
-
-const TBC = 'To be confirmed'
 
 // Floors that are shown on the tower but cannot be opened.
 const LOCKED_FLOORS = new Set(['_8th', '_9th'])
@@ -170,10 +168,11 @@ function FloorPlans({ onClose }) {
         <button type="button" onClick={onClose} aria-label="Back to menu" className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
           <Lockup dark />
         </button>
+        <MenuControl onClick={onClose} />
       </header>
 
       {/* ---------- Body: text sidebar, the tower/plan, the layout table ---------- */}
-      <div className="grid min-h-0 flex-1 gap-10 px-5 pb-28 pt-10 sm:px-10 lg:grid-cols-[17rem_minmax(0,1fr)_17rem] lg:items-center lg:gap-12 xl:grid-cols-[19rem_minmax(0,1fr)_19rem]">
+      <div className="grid min-h-0 flex-1 gap-8 px-5 pb-24 pt-6 sm:px-10 lg:grid-cols-[15rem_minmax(0,1fr)_14rem] lg:items-center lg:gap-10 xl:grid-cols-[17rem_minmax(0,1fr)_15rem]">
         {/* ---------- Left: what this is, and the unit types ---------- */}
         <aside className="fp2-aside-l">
           <span className="block font-sans text-[0.7rem] uppercase tracking-[0.24em] text-[var(--bronze-deep)]">Residences</span>
@@ -209,7 +208,7 @@ function FloorPlans({ onClose }) {
 
         {/* ---------- Middle: the tower, its floors as switches that open the plan page ---------- */}
         <div className="fp2-stage flex min-w-0 flex-col items-center">
-          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 13rem), 42rem)', maxHeight: '88%', width: '100%' }}>
+          <div className="relative flex shrink-0 items-center justify-center" style={{ height: 'min(calc(100svh - 9.5rem), 50rem)', maxHeight: '94%', width: '100%' }}>
             {/* ---- the tower on a wide parchment mat, its floors as clickable switches ---- */}
             <div className="absolute inset-0 overflow-hidden border border-[var(--bronze)]/25 bg-[var(--parchment)] p-3 shadow-[0_1.75rem_3.5rem_-1.75rem_rgba(42,28,18,0.35)]">
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
@@ -250,22 +249,20 @@ function FloorPlans({ onClose }) {
           </div>
         </div>
 
-        {/* ---------- Right: the layout table, stretched to match the tower/plan card's height ---------- */}
-        <aside className="fp2-aside-r flex min-w-0 flex-col lg:self-stretch">
-          <h2 className="fp2-swap font-serif text-[1.4rem] leading-tight text-[var(--ink)]">
-            {unit.label}
-            <br />
-            Flat Layout
-          </h2>
-          <span className="mt-5 block h-px w-full bg-[var(--ink)]/15" aria-hidden="true" />
-          <dl className="mt-2 flex flex-1 flex-col justify-between divide-y divide-[var(--ink)]/10">
-            {specRows.map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between gap-4 py-2.5">
-                <dt className="font-sans text-[0.8rem] text-[var(--ink-soft)]">{label}</dt>
-                <dd className={`fp2-swap font-serif text-[0.9rem] ${value ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]/70'}`}>{value ?? TBC}</dd>
-              </div>
-            ))}
-          </dl>
+        {/* ---------- Right: the layout, kept small and held in its own card ---------- */}
+        <aside className="fp2-aside-r min-w-0">
+          <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--parchment)_55%,transparent)] px-4 py-3.5">
+            <h2 className="fp2-swap font-serif text-[0.95rem] leading-none text-[var(--ink)]">{unit.label} Flat Layout</h2>
+            <span className="mt-3 block h-px w-full bg-[var(--ink)]/12" aria-hidden="true" />
+            <dl className="divide-y divide-[var(--ink)]/8">
+              {specRows.map(({ label, value }) => (
+                <div key={label} className="flex items-baseline justify-between gap-3 py-[0.42rem]">
+                  <dt className="font-sans text-[0.68rem] uppercase tracking-[0.06em] text-[var(--ink-soft)]">{label}</dt>
+                  <dd className={`fp2-swap shrink-0 font-sans text-[0.68rem] ${value ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]/60'}`}>{value ?? 'TBC'}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </aside>
       </div>
 
@@ -290,59 +287,58 @@ function FloorPlans({ onClose }) {
             aria-modal="true"
             aria-label={`${unit.label} ${planLabel}`}
           >
-            <header className="flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
-              <Lockup dark />
-              <button type="button" onClick={closeZoom} onPointerMove={glowAt} className="mn-glow tr-focus flex items-center gap-2.5 rounded-full border border-[var(--ink)]/20 bg-transparent px-4 py-2 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink)]">
-                <IcBack size={15} />
-                Back to the tower
+            {/* the plan fills the screen; everything else sits on top of it */}
+            <div className="fp2-big absolute inset-0">
+              {activeSrc ? (
+                <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="absolute inset-0 h-full w-full object-contain" draggable={false} />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
+                  <IcPlan size={26} className="text-[var(--ink-soft)]/50" />
+                  <span className="font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]/70">Coming soon</span>
+                  <p className="max-w-[16rem] font-serif text-[1rem] text-[var(--ink-soft)]">
+                    The {unit.label} {planLabel} is on its way.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <header className="relative z-10 flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
+              <button type="button" onClick={closeZoom} onPointerMove={glowAt} aria-label="Back to the tower" className="mn-glow tr-focus flex h-10 w-10 items-center justify-center rounded-full border border-[var(--ink)]/20 bg-[color-mix(in_srgb,var(--cream)_70%,transparent)] text-[var(--ink)] backdrop-blur-sm">
+                <IcBack size={16} />
               </button>
+              <MenuControl onClick={onClose} />
             </header>
 
-            <div className="flex min-h-0 flex-1 gap-8 px-5 pt-6 sm:px-10 lg:gap-14">
-              {/* the residence types */}
-              <aside className="flex w-[8.5rem] shrink-0 flex-col justify-center">
-                {floorName && <span className="block font-sans text-[0.65rem] uppercase tracking-[0.24em] text-[var(--bronze-deep)]">{floorName}</span>}
-                <ul className="mt-6 flex flex-col gap-5">
+            {/* the residence types, over the plan on the left */}
+            <aside className="relative z-10 mt-auto mb-auto w-fit px-5 sm:px-8 side:px-[2.9rem]">
+              <div className="rounded-lg border border-[var(--bronze)]/25 bg-[color-mix(in_srgb,var(--cream)_72%,transparent)] px-4 py-3 backdrop-blur-sm">
+                {floorName && <span className="block font-sans text-[0.6rem] uppercase tracking-[0.22em] text-[var(--bronze-deep)]">{floorName}</span>}
+                <ul className="mt-2.5 flex flex-col gap-2.5">
                   {UNITS.map((u, i) => {
                     const on = u.id === unitId
                     return (
-                      <li key={u.id} className="relative pl-4">
-                        {on && <span className="absolute left-0 top-[0.15em] h-[1.1em] w-[2px] bg-[var(--bronze-deep)]" aria-hidden="true" />}
+                      <li key={u.id} className="relative pl-3">
+                        {on && <span className="absolute left-0 top-[0.2em] h-[0.95em] w-[2px] bg-[var(--bronze-deep)]" aria-hidden="true" />}
                         <button
                           type="button"
                           onClick={() => setUnitId(u.id)}
                           onPointerMove={glowAt}
                           aria-pressed={on}
-                          className="mn-glow tr-focus flex touch-manipulation items-baseline gap-3 rounded-md border-none bg-transparent p-0 text-left"
+                          className="mn-glow tr-focus flex touch-manipulation items-baseline gap-2.5 rounded-md border-none bg-transparent p-0 text-left"
                         >
-                          <span className="font-sans text-[0.65rem] tabular-nums tracking-[0.1em] text-[var(--ink-soft)]">{String(i + 1).padStart(2, '0')}</span>
-                          <span className={`font-serif text-[1.15rem] leading-none transition-colors duration-300 ${on ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}>{u.label}</span>
+                          <span className="font-sans text-[0.6rem] tabular-nums tracking-[0.1em] text-[var(--ink-soft)]">{String(i + 1).padStart(2, '0')}</span>
+                          <span className={`font-serif text-[0.98rem] leading-none transition-colors duration-300 ${on ? 'text-[var(--ink)]' : 'text-[var(--ink-soft)]'}`}>{u.label}</span>
                         </button>
                       </li>
                     )
                   })}
                 </ul>
-              </aside>
-
-              {/* the plan, big */}
-              <div className="fp2-big flex min-w-0 flex-1 items-center justify-center">
-                {activeSrc ? (
-                  <img src={activeSrc} alt={`${unit.label} ${planLabel}`} className="h-full w-full object-contain" draggable={false} />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 border border-[var(--ink)]/12 bg-[color-mix(in_srgb,var(--cream)_60%,var(--parchment))] text-center">
-                    <IcPlan size={26} className="text-[var(--ink-soft)]/50" />
-                    <span className="font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]/70">Coming soon</span>
-                    <p className="max-w-[16rem] font-serif text-[1rem] text-[var(--ink-soft)]">
-                      The {unit.label} {planLabel} is on its way.
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
+            </aside>
 
-            {/* floor plan / isometric, underneath */}
-            <div className="flex justify-center pb-[max(1.75rem,var(--safe-b))] pt-5">
-              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 p-1">
+            {/* floor plan / isometric, over the plan at the foot - both fill the screen */}
+            <div className="relative z-10 flex justify-center pb-[max(1.5rem,var(--safe-b))]">
+              <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 bg-[color-mix(in_srgb,var(--cream)_72%,transparent)] p-1 backdrop-blur-sm">
                 {[
                   ['2d', 'Floor plan'],
                   ['iso', 'Isometric'],

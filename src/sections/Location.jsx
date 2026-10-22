@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
-import { TopBar, BackControl, Segmented } from '../ui/controls.jsx'
+import { TopBar, MenuControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
 import { T, alpha, mix } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
@@ -709,7 +709,7 @@ function Location({ onClose }) {
 
       <TopBar onBrand={onClose}>
         <span className="loc-back">
-          <BackControl onClick={onClose} />
+          <MenuControl onClick={onClose} />
         </span>
       </TopBar>
 

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { gsap, fx, PAGE_IN } from '../motion/index.js'
-import { BackControl, Lockup } from '../ui/controls.jsx'
+import { MenuControl, Lockup } from '../ui/controls.jsx'
 import { CORNER } from '../ui/layout.js'
 import RibbonStage from '../components/RibbonStage.jsx'
 import theatre from '../assets/amenities/theater.webp'
@@ -51,7 +51,7 @@ function Features({ onClose }) {
         }
       >
         <div className={`ft-top ${CORNER}`}>
-          <BackControl onClick={onClose} />
+          <MenuControl onClick={onClose} />
         </div>
       </RibbonStage>
     </div>
