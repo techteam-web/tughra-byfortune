@@ -267,7 +267,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
             {/* ---- the tower, on a wide torn white sheet - a deep white mat either side of the
                  building, same as the reference's card - with its floors as clickable switches ---- */}
             <div
-              className="fp2-tower-layer tr-torn absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
+              className="fp2-tower-layer absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
               style={{ visibility: stage === 'plan' ? 'hidden' : 'visible' }}
             >
               <div className="flex h-full w-full items-center justify-center overflow-hidden">
@@ -304,7 +304,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
                  the render matches its own shape (the isometrics are wide landscape photos), so
                  object-cover never has to crop into an unrepresentative sliver of the render ---- */}
             <div
-              className="fp2-plan-layer tr-torn absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
+              className="fp2-plan-layer absolute inset-0 overflow-hidden bg-white p-3 shadow-[0_1.75rem_3.5rem_-1.5rem_rgba(42,28,18,0.4)]"
               style={{ visibility: stage === 'tower' ? 'hidden' : 'visible' }}
             >
               <button
