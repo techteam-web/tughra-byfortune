@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
-import BrandMark from '../components/BrandMark.jsx'
-import { IcArrow, IcPrev, IcBack, IcClose, IcLayers as IcPlan } from '../ui/icons.jsx'
+import { Lockup } from '../ui/controls.jsx'
+import { IcArrow, IcPrev, IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
 const TBC = 'To be confirmed'
@@ -165,16 +165,11 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
 
   return (
     <section ref={rootRef} className="relative isolate flex min-h-svh w-full flex-col bg-[var(--cream)] text-[var(--ink)]">
-      {/* ---------- Top: menu, the seal, enquire ---------- */}
-      <header className="fp2-top flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-10 sm:pt-8">
-        <button type="button" onClick={onClose} onPointerMove={glowAt} className="mn-glow tr-focus flex items-center gap-2.5 rounded-md border-none bg-transparent p-1 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]">
-          <span className="flex flex-col gap-[3px]" aria-hidden="true">
-            <span className="block h-px w-4 bg-current" />
-            <span className="block h-px w-4 bg-current" />
-          </span>
-          Menu
+      {/* ---------- Top: the logo on the left (back to the menu, as on every page), enquire ---------- */}
+      <header className="fp2-top flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
+        <button type="button" onClick={onClose} aria-label="Back to menu" className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
+          <Lockup dark />
         </button>
-        <BrandMark tone="dark" size="seal" credit={false} seal />
         <button type="button" onClick={onEnquire} onPointerMove={glowAt} className="mn-glow tr-focus rounded-md bg-[var(--bronze-deep)] px-5 py-2.5 font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--cream)]">
           Enquire
         </button>
@@ -192,7 +187,7 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
             <br />
             to Inspire
           </h1>
-          <p className="mt-5 max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)]">3, 4, 5 &amp; 6 BHK residences, each with panoramic views over the city skyline and the sea.</p>
+          <p className="mt-5 max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)]">4, 5 &amp; 6 BHK residences, each with panoramic views over the city skyline and the sea.</p>
           <ul className="mt-9 flex flex-col gap-5">
             {UNITS.map((u, i) => {
               const on = u.id === unitId
@@ -309,14 +304,11 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
             aria-modal="true"
             aria-label={`${unit.label} ${planLabel}`}
           >
-            <header className="flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-10 sm:pt-8">
-              <button type="button" onClick={closeZoom} onPointerMove={glowAt} className="mn-glow tr-focus flex items-center gap-2.5 rounded-md border-none bg-transparent p-1 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+            <header className="flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
+              <Lockup dark />
+              <button type="button" onClick={closeZoom} onPointerMove={glowAt} className="mn-glow tr-focus flex items-center gap-2.5 rounded-full border border-[var(--ink)]/20 bg-transparent px-4 py-2 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink)]">
                 <IcBack size={15} />
                 Back to the tower
-              </button>
-              <BrandMark tone="dark" size="seal" credit={false} seal />
-              <button type="button" onClick={closeZoom} onPointerMove={glowAt} aria-label="Close" className="mn-glow tr-focus flex h-9 w-9 items-center justify-center rounded-full border border-[var(--ink)]/20 text-[var(--ink)]">
-                <IcClose size={15} />
               </button>
             </header>
 

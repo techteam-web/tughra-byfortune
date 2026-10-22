@@ -7,7 +7,6 @@ import iso6 from '../assets/gallery/iso/Fortune_6BHK_ISO.jpg'
 // shows an honest "coming soon" placeholder instead of a broken image.
 // Drop 2D plan renders into /public/assets/plans/ and they appear automatically.
 export const UNITS = [
-  { id: '3bhk', label: '3 BHK', bedrooms: 3, iso: null, plan2d: null, carpetArea: null },
   { id: '4bhk', label: '4 BHK', bedrooms: 4, iso: iso4, plan2d: null, carpetArea: null },
   { id: '5bhk', label: '5 BHK', bedrooms: 5, iso: iso5, plan2d: null, carpetArea: null },
   { id: '6bhk', label: '6 BHK', bedrooms: 6, iso: iso6, plan2d: null, carpetArea: null },

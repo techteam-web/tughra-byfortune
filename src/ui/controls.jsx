@@ -34,12 +34,13 @@ export const HomeControl = ({ onClick }) => (
   </IconButton>
 )
 
-// The seal and the name, side by side, as on the menu.
-export function Lockup({ className = '', compact = false }) {
+// The seal and the name, side by side, as on the menu. `dark` is the same lockup in ink, for
+// the beige pages.
+export function Lockup({ className = '', compact = false, dark = false }) {
   return (
     <span className={`flex items-center gap-4 ${className}`}>
-      <BrandMark tone="pale" size="seal" credit={false} seal />
-      <span className={`font-sans text-[1.05rem] font-normal uppercase leading-none tracking-[0.1em] text-cream side:text-[1.15rem] short:text-[0.85rem] ${compact ? 'hidden sm:inline' : ''}`}>Tughra Royale</span>
+      <BrandMark tone={dark ? 'dark' : 'pale'} size="seal" credit={false} seal />
+      <span className={`font-sans text-[1.05rem] font-normal uppercase leading-none tracking-[0.1em] side:text-[1.15rem] short:text-[0.85rem] ${dark ? 'text-[var(--ink)]' : 'text-cream'} ${compact ? 'hidden sm:inline' : ''}`}>Tughra Royale</span>
     </span>
   )
 }
