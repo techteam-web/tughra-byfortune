@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
+import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, BackControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
 import { T, alpha, mix } from '../theme/tokens.js'
@@ -323,6 +323,35 @@ function fetchRoute(place, signal) {
 const EMPTY = { type: 'FeatureCollection', features: [] }
 
 const OVERVIEW = { center: PROJECT, zoom: 15.2, pitch: 64, bearing: -25 }
+
+// Fishing boats on the water off Haji Ali, Breach Candy and in Back Bay [lng, lat]
+const BOATS = [
+  [72.8048, 18.9772],
+  [72.8012, 18.9705],
+  [72.8075, 18.9862],
+  [72.7985, 18.9800],
+  [72.8135, 18.9435],
+  [72.8075, 18.9488],
+]
+// a small koli fishing boat: a raised bow, a mast, a cream sail and a gold pennant
+const BOAT_SVG = `<svg viewBox="0 0 44 36" width="34" height="28" aria-hidden="true">
+  <ellipse cx="22" cy="31.5" rx="17" ry="2" fill="none" stroke="${T.goldPale}" stroke-opacity="0.35"/>
+  <path d="M2 21 Q5 22.5 9 23 L35 23 Q39 22.5 42 19.5 L37 28.5 Q22 30.5 8 28.5 Z" fill="${T.bronze}"/>
+  <path d="M8 26 L37 26" stroke="${T.espresso}" stroke-opacity="0.45"/>
+  <path d="M21 23 L21 4" stroke="${T.cream}" stroke-width="1.2"/>
+  <path d="M21 6 L33.5 21 L21 21 Z" fill="${T.cream}" fill-opacity="0.92"/>
+  <path d="M21 4 L27 5.6 L21 7.2 Z" fill="${T.gold}"/>
+</svg>`
+
+// birds in each flock: [x, y, size]
+const FLOCK = [
+  [0, 0, 1],
+  [26, 10, 0.85],
+  [-22, 13, 0.9],
+  [52, 22, 0.7],
+  [-46, 25, 0.75],
+  [16, 31, 0.6],
+]
 const TABS = PLACES.map((c) => ({ value: c.key, label: c.label }))
 
 function Location({ onClose }) {
@@ -421,6 +450,23 @@ function Location({ onClose }) {
     tower.innerHTML = '<div class="loc-tower"><span class="base"></span><img alt="" src="/assets/img/menu_crop.png" draggable="false" /></div>'
     new Marker({ element: tower, anchor: 'bottom', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat(PROJECT).addTo(map)
 
+    // Fishing boats out on the bay, each rocking and drifting on its own rhythm
+    const boatTweens = []
+    for (const at of BOATS) {
+      const el = document.createElement('div')
+      el.className = 'loc-boat-mk'
+      el.innerHTML = `<div class="loc-boat">${BOAT_SVG}</div>`
+      new Marker({ element: el, anchor: 'bottom', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat(at).addTo(map)
+      if (REDUCED) continue
+      const boat = el.firstChild
+      const r = () => gsap.utils.random(0, 2)
+      boatTweens.push(
+        gsap.fromTo(boat, { rotation: -3 }, { rotation: 3, duration: gsap.utils.random(1.8, 2.6), repeat: -1, yoyo: true, ease: 'sine.inOut', delay: r(), transformOrigin: '50% 85%' }),
+        gsap.fromTo(boat, { y: 0 }, { y: -2.5, duration: gsap.utils.random(1.3, 1.9), repeat: -1, yoyo: true, ease: 'sine.inOut', delay: r() }),
+        gsap.fromTo(boat, { x: -8 }, { x: 8, duration: gsap.utils.random(7, 11), repeat: -1, yoyo: true, ease: 'sine.inOut', delay: r() }),
+      )
+    }
+
     // The section mounts inside the page transition, so the container can still be
     // settling its final size when MapLibre first measures it — keep it in sync.
     const resizeObserver = new ResizeObserver(() => map.resize())
@@ -429,6 +475,7 @@ function Location({ onClose }) {
     return () => {
       cancelAnimationFrame(raf)
       cancelAnimationFrame(drawRef.current)
+      boatTweens.forEach((t) => t.kill())
       resizeObserver.disconnect()
       markers.clear()
       map.remove()
@@ -561,27 +608,15 @@ function Location({ onClose }) {
     return () => ctx.revert()
   }, [])
 
-  // A soft flyover while the camera settles into its tilt: a few clouds drift
-  // past at different speeds, and the menu's own line for this place sweeps
-  // across twice, once each direction. Decorative only - skipped entirely
-  // under reduced motion.
+  // Two small flocks cross the sky now and then, wings beating out of step. Decorative
+  // only - skipped entirely under reduced motion.
   useLayoutEffect(() => {
     if (REDUCED) return
     const ctx = gsap.context(() => {
-      gsap.set('.loc-fly', { opacity: 0 })
-      const tl = gsap.timeline({ delay: PAGE_IN + 0.3 })
-      tl.to('.loc-cloud', { opacity: 0.85, duration: 1.4 }, 0)
-      tl.fromTo('.loc-cloud--a', { x: '-35vw' }, { x: '135vw', duration: 11, ease: 'none' }, 0)
-      tl.fromTo('.loc-cloud--b', { x: '135vw' }, { x: '-35vw', duration: 13, ease: 'none' }, 0.6)
-      tl.to('.loc-cloud', { opacity: 0, duration: 2.2 }, 7.5)
-
-      const sweep = { keyframes: [
-        { x: '-8vw', opacity: 1, duration: 0.55 },
-        { x: '8vw', opacity: 1, duration: 1 },
-        { x: '55vw', opacity: 0, duration: 0.55 },
-      ], ease: EASE.move }
-      tl.fromTo('.loc-fly-1', { x: '-55vw', opacity: 0 }, sweep, 0.7)
-      tl.fromTo('.loc-fly-2', { x: '-55vw', opacity: 0 }, sweep, 3.4)
+      gsap.to('.loc-bird', { scaleY: 0.3, transformOrigin: '50% 70%', duration: 0.32, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: { each: 0.06, from: 'random' } })
+      gsap.fromTo('.loc-flock--a', { x: '-12vw' }, { x: '112vw', duration: 20, ease: 'none', repeat: -1, repeatDelay: 5, delay: PAGE_IN + 1.2 })
+      gsap.fromTo('.loc-flock--b', { x: '112vw' }, { x: '-12vw', duration: 27, ease: 'none', repeat: -1, repeatDelay: 7, delay: PAGE_IN + 8 })
+      gsap.to('.loc-flock', { y: -16, duration: 3.2, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: 1.4 })
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -656,19 +691,20 @@ function Location({ onClose }) {
         style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
       />
 
-      {/* a soft flyover as the camera settles: clouds drift by, and the menu's own
-          line for this place sweeps across twice */}
-      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden" aria-hidden="true">
-        <span className="loc-cloud loc-cloud--a" style={{ top: '9%', width: '20rem', height: '6.5rem' }} />
-        <span className="loc-cloud loc-cloud--b" style={{ top: '19%', width: '28rem', height: '8.5rem' }} />
-        <span className="loc-cloud loc-cloud--a" style={{ top: '14%', width: '15rem', height: '5rem' }} />
-        <span className="loc-cloud loc-cloud--b" style={{ top: '29%', width: '18rem', height: '6rem' }} />
-        <span className="loc-fly loc-fly-1 font-serif" style={{ top: '16%' }}>
-          A higher perspective
-        </span>
-        <span className="loc-fly loc-fly-2 font-serif" style={{ top: '24%' }}>
-          City, sea, opportunity
-        </span>
+      {/* birds crossing the sky */}
+      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-cream/80" aria-hidden="true">
+        {[
+          ['a', '11%', 1],
+          ['b', '21%', 0.7],
+        ].map(([k, top, s]) => (
+          <div key={k} className={`loc-flock loc-flock--${k} absolute left-0`} style={{ top }}>
+            {FLOCK.map(([x, y, size], i) => (
+              <svg key={i} className="loc-bird absolute" viewBox="0 0 24 10" style={{ left: x * s, top: y * s, width: 22 * size * s }}>
+                <path d="M1 7 Q6 1 12 7 Q18 1 23 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            ))}
+          </div>
+        ))}
       </div>
 
       <TopBar onBrand={onClose}>
