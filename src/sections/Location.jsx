@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, MenuControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
-import { T, alpha, mix } from '../theme/tokens.js'
+import { alpha, mix } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
 import './Location.css'
 
@@ -12,24 +12,30 @@ import './Location.css'
 // (dev serves it straight from node_modules, so no override is needed there).
 if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
-// The map in the brand's palette, every shade derived from the tokens:
-// espresso water, cocoa land, bronze roads, cream labels.
+// The city at dusk, as it really looks: deep sea-blue water, green parks and woods,
+// slate land and buildings. Roads take playful colours - rose, sky blue, lavender -
+// and never gold, bronze or yellow.
 const M = {
-  ground: mix(T.cocoa, T.espresso, 0.55),
-  land: T.cocoa,
-  park: mix(T.bronzeDeep, T.cocoa, 0.16),
-  water: T.espresso,
-  river: mix(T.bronzeDeep, T.espresso, 0.25),
-  building: mix(T.bronzeDeep, T.cocoa, 0.32),
-  major: T.bronze,
-  secondary: T.bronzeDeep,
-  minor: mix(T.bronze, T.cocoa, 0.3),
-  casing: T.espresso,
-  rail: mix(T.bronze, T.cocoa, 0.55),
-  boundary: mix(T.bronzeDeep, T.cocoa, 0.6),
-  label: T.cream,
-  halo: T.espresso,
-  clear: alpha(T.espresso, 0),
+  ground: '#1D2330',
+  land: '#232A37',
+  residential: '#28303F',
+  park: '#2D4A39',
+  wood: '#2A4535',
+  grass: '#31503D',
+  sand: '#4A4A48',
+  water: '#123A57',
+  river: '#1D5276',
+  building: '#333B4C',
+  // muted, so the drawn routes (full-strength colours) always read above the roads
+  major: '#B86A80',
+  secondary: '#4F7699',
+  minor: '#424B66',
+  casing: '#151A24',
+  rail: '#8C8FB0',
+  boundary: '#5A6079',
+  label: '#E9EEF6',
+  halo: '#141922',
+  clear: alpha('#141922', 0),
 }
 
 // Recolours the OpenFreeMap "liberty" style to the palette above instead of its default bright look.
@@ -83,12 +89,8 @@ function applyBrandTheme(map) {
 
   // Ground cover
   for (const id of [
-    'landuse_residential',
-    'landcover_wood',
-    'landcover_grass',
     'landcover_ice',
     'landcover_wetland',
-    'landcover_sand',
     'landuse_pitch',
     'landuse_track',
     'landuse_cemetery',
@@ -98,6 +100,11 @@ function applyBrandTheme(map) {
   ]) {
     set(id, 'fill-color', M.land)
   }
+  set('landuse_residential', 'fill-color', M.residential)
+  set('landcover_wood', 'fill-color', M.wood)
+  set('landcover_grass', 'fill-color', M.grass)
+  set('landcover_sand', 'fill-color', M.sand)
+  set('landuse_pitch', 'fill-color', M.grass)
   set('park', 'fill-color', M.park)
   set('park_outline', 'line-color', M.park)
 
@@ -110,7 +117,7 @@ function applyBrandTheme(map) {
   // Buildings
   set('building', 'fill-color', M.building)
 
-  // Roads — bronze for major routes, deeper bronze for secondary, a faint warm line for minor ones
+  // Roads — rose for major routes, sky blue for secondary, a soft lavender line for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
     set(id, 'line-color', M.major)
   }
@@ -183,7 +190,7 @@ function applyBrandTheme(map) {
     set(id, 'line-color', M.boundary)
   }
 
-  // Labels — cream text, espresso halo
+  // Labels — pale text, dark slate halo
   for (const id of [
     'water_name_point_label',
     'water_name_line_label',
@@ -217,7 +224,7 @@ function applyBrandTheme(map) {
   const isLight = (css) => {
     if (typeof css !== 'string' || !probe) return false
     probe.clearRect(0, 0, 1, 1)
-    probe.fillStyle = T.espresso
+    probe.fillStyle = M.ground
     probe.fillStyle = css
     probe.fillRect(0, 0, 1, 1)
     const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data
@@ -236,7 +243,8 @@ function applyBrandTheme(map) {
 }
 
 // Everything the "3D" feel needs beyond colors: taller, height-graded
-// buildings, a warm horizon, and an atmospheric sky.
+// buildings (slate, catching more light the higher they rise), a dusk horizon,
+// and an atmospheric sky.
 function applyDepth(map) {
   if (map.getLayer('building-3d')) {
     map.setPaintProperty('building-3d', 'fill-extrusion-color', [
@@ -244,21 +252,22 @@ function applyDepth(map) {
       ['linear'],
       ['get', 'render_height'],
       0,
-      mix(T.bronzeDeep, T.cocoa, 0.15),
+      '#363E52',
       40,
-      mix(T.bronzeDeep, T.cocoa, 0.4),
+      '#46506A',
       120,
-      T.bronzeDeep,
+      '#5B6888',
       300,
-      T.bronze,
+      '#7A89AE',
     ])
-    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.92)
+    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.94)
+    map.setPaintProperty('building-3d', 'fill-extrusion-vertical-gradient', true)
     map.setLayerZoomRange('building-3d', 13, 24)
   }
   try {
     map.setSky({
-      'sky-color': T.espresso,
-      'horizon-color': mix(T.bronzeDeep, T.espresso, 0.35),
+      'sky-color': '#0E1A2C',
+      'horizon-color': '#3A5378',
       'fog-color': M.ground,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
@@ -287,17 +296,20 @@ const CATEGORY_COLORS = {
 }
 const SHADE_KEEP = [1, 0.72, 0.5, 0.86, 0.6, 0.94, 0.4, 0.78]
 const colorOf = (category, i = 0) => {
-  const base = CATEGORY_COLORS[category] || T.goldPale
+  const base = CATEGORY_COLORS[category] || CATEGORY_COLORS.connectivity
   return mix(base, '#ffffff', SHADE_KEEP[((i % SHADE_KEEP.length) + SHADE_KEEP.length) % SHADE_KEEP.length])
 }
-const ROUTE_OFF = alpha(T.goldPale, 0)
+const ROUTE_DEFAULT = CATEGORY_COLORS.connectivity
+const ROUTE_OFF = alpha(ROUTE_DEFAULT, 0)
 // The route is revealed by masking a line-gradient (cheap) rather than re-sending
 // the geometry every frame (which re-parses and re-tiles it).
 function routeGradient(p, color) {
-  const edge = Math.min(Math.max(p, 0.0001), 0.9999)
+  const edge = Math.min(Math.max(p, 0.0001), 0.9998)
+  // fully drawn: one colour end to end (stops must stay strictly ascending)
+  if (p >= 0.9998) return ['interpolate', ['linear'], ['line-progress'], 0, color, 1, color]
   return ['interpolate', ['linear'], ['line-progress'], 0, color, edge, color, Math.min(edge + 0.0001, 1), ROUTE_OFF, 1, ROUTE_OFF]
 }
-function setRouteProgress(map, p, color = T.goldPale) {
+function setRouteProgress(map, p, color = ROUTE_DEFAULT) {
   if (!map.getLayer('route-line')) return
   map.setPaintProperty('route-glow', 'line-gradient', routeGradient(p, alpha(color, 0.6)))
   map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, color))
@@ -324,33 +336,29 @@ const EMPTY = { type: 'FeatureCollection', features: [] }
 
 const OVERVIEW = { center: PROJECT, zoom: 15.2, pitch: 64, bearing: -25 }
 
-// Fishing boats on the water off Haji Ali, Breach Candy and in Back Bay [lng, lat]
+// Three fishing boats on the water off Haji Ali, Breach Candy and in Back Bay [lng, lat]
 const BOATS = [
   [72.8048, 18.9772],
-  [72.8012, 18.9705],
-  [72.8075, 18.9862],
-  [72.7985, 18.9800],
+  [72.7985, 18.98],
   [72.8135, 18.9435],
-  [72.8075, 18.9488],
 ]
-// a small koli fishing boat: a raised bow, a mast, a cream sail and a gold pennant
-const BOAT_SVG = `<svg viewBox="0 0 44 36" width="34" height="28" aria-hidden="true">
-  <ellipse cx="22" cy="31.5" rx="17" ry="2" fill="none" stroke="${T.goldPale}" stroke-opacity="0.35"/>
-  <path d="M2 21 Q5 22.5 9 23 L35 23 Q39 22.5 42 19.5 L37 28.5 Q22 30.5 8 28.5 Z" fill="${T.bronze}"/>
-  <path d="M8 26 L37 26" stroke="${T.espresso}" stroke-opacity="0.45"/>
-  <path d="M21 23 L21 4" stroke="${T.cream}" stroke-width="1.2"/>
-  <path d="M21 6 L33.5 21 L21 21 Z" fill="${T.cream}" fill-opacity="0.92"/>
-  <path d="M21 4 L27 5.6 L21 7.2 Z" fill="${T.gold}"/>
+// a small koli fishing boat, painted the way they are on the Mumbai shore: a blue hull
+// with a red band, a raised bow, a mast, a white sail and a red pennant, on a faint wake
+const BOAT_SVG = `<svg viewBox="0 0 44 36" width="30" height="25" aria-hidden="true">
+  <path d="M5 31 Q14 29.5 22 31 T39 31" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-linecap="round"/>
+  <path d="M2 21 Q5 22.5 9 23 L35 23 Q39 22.5 42 19.5 L37 28.5 Q22 30.5 8 28.5 Z" fill="#2F7DC4"/>
+  <path d="M5.5 24.6 L38.8 24.6" stroke="#E5533F" stroke-width="1.6"/>
+  <path d="M21 23 L21 4" stroke="#F4F1EA" stroke-width="1.2"/>
+  <path d="M21 6 L33.5 21 L21 21 Z" fill="#F4F1EA" fill-opacity="0.95"/>
+  <path d="M21 4 L27 5.6 L21 7.2 Z" fill="#E5533F"/>
 </svg>`
 
-// birds in each flock: [x, y, size]
+// gulls in each flock, small and loose: [x, y, size]
 const FLOCK = [
   [0, 0, 1],
-  [26, 10, 0.85],
-  [-22, 13, 0.9],
-  [52, 22, 0.7],
-  [-46, 25, 0.75],
-  [16, 31, 0.6],
+  [18, 7, 0.85],
+  [-15, 9, 0.9],
+  [34, 15, 0.7],
 ]
 const TABS = PLACES.map((c) => ({ value: c.key, label: c.label }))
 
@@ -407,14 +415,14 @@ function Location({ onClose }) {
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 12, 'line-blur': 8, 'line-gradient': routeGradient(0, alpha(T.goldPale, 0.6)) },
+        paint: { 'line-width': 12, 'line-blur': 8, 'line-gradient': routeGradient(0, alpha(ROUTE_DEFAULT, 0.6)) },
       })
       map.addLayer({
         id: 'route-line',
         type: 'line',
         source: ROUTE_SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': 3.5, 'line-gradient': routeGradient(0, T.goldPale) },
+        paint: { 'line-width': 3.5, 'line-gradient': routeGradient(0, ROUTE_DEFAULT) },
       })
       setReady(true)
       // Arrival: a slow drop from a flat overview into the tilted view.
@@ -608,15 +616,19 @@ function Location({ onClose }) {
     return () => ctx.revert()
   }, [])
 
-  // Two small flocks cross the sky now and then, wings beating out of step. Decorative
-  // only - skipped entirely under reduced motion.
+  // Two small flocks of gulls cross the sky now and then: a few quick wingbeats, then a
+  // glide, each bird out of step with the next. Decorative only - skipped under reduced motion.
   useLayoutEffect(() => {
     if (REDUCED) return
     const ctx = gsap.context(() => {
-      gsap.to('.loc-bird', { scaleY: 0.3, transformOrigin: '50% 70%', duration: 0.32, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: { each: 0.06, from: 'random' } })
-      gsap.fromTo('.loc-flock--a', { x: '-12vw' }, { x: '112vw', duration: 20, ease: 'none', repeat: -1, repeatDelay: 5, delay: PAGE_IN + 1.2 })
-      gsap.fromTo('.loc-flock--b', { x: '112vw' }, { x: '-12vw', duration: 27, ease: 'none', repeat: -1, repeatDelay: 7, delay: PAGE_IN + 8 })
-      gsap.to('.loc-flock', { y: -16, duration: 3.2, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: 1.4 })
+      gsap.utils.toArray('.loc-bird').forEach((bird) => {
+        gsap
+          .timeline({ repeat: -1, delay: gsap.utils.random(0, 1.5), repeatDelay: gsap.utils.random(0.8, 2) })
+          .to(bird, { scaleY: 0.35, transformOrigin: '50% 60%', duration: 0.16, repeat: 5, yoyo: true, ease: 'sine.inOut' })
+      })
+      gsap.fromTo('.loc-flock--a', { x: '-8vw' }, { x: '108vw', duration: 30, ease: 'none', repeat: -1, repeatDelay: 6, delay: PAGE_IN + 1.2 })
+      gsap.fromTo('.loc-flock--b', { x: '108vw' }, { x: '-8vw', duration: 38, ease: 'none', repeat: -1, repeatDelay: 9, delay: PAGE_IN + 12 })
+      gsap.to('.loc-flock', { y: -10, duration: 4, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: 1.7 })
     }, rootRef)
     return () => ctx.revert()
   }, [])
@@ -685,22 +697,22 @@ function Location({ onClose }) {
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="h-full w-full" />
       </div>
-      {/* The edges fall away into espresso */}
+      {/* The edges fall away into the dusk */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
+        style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 45%, rgba(20,25,34,0.7) 100%), linear-gradient(180deg, rgba(20,25,34,0.75) 0%, transparent 22%)' }}
       />
 
-      {/* birds crossing the sky */}
-      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-cream/80" aria-hidden="true">
+      {/* gulls crossing the sky - small, a few at a time */}
+      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-[#EEF2F7]/75" aria-hidden="true">
         {[
-          ['a', '11%', 1],
-          ['b', '21%', 0.7],
+          ['a', '13%', 1],
+          ['b', '24%', 0.8],
         ].map(([k, top, s]) => (
           <div key={k} className={`loc-flock loc-flock--${k} absolute left-0`} style={{ top }}>
             {FLOCK.map(([x, y, size], i) => (
-              <svg key={i} className="loc-bird absolute" viewBox="0 0 24 10" style={{ left: x * s, top: y * s, width: 22 * size * s }}>
-                <path d="M1 7 Q6 1 12 7 Q18 1 23 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <svg key={i} className="loc-bird absolute" viewBox="0 0 24 10" style={{ left: x * s, top: y * s, width: 12 * size * s }}>
+                <path d="M1 6 Q4 2.5 8 4 Q10.5 5 12 7.5 Q13.5 5 16 4 Q20 2.5 23 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             ))}
           </div>
