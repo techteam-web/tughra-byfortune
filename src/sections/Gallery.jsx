@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, BackControl, IconButton, Segmented } from '../ui/controls.jsx'
-import { IcPrev, IcNext } from '../ui/icons.jsx'
-import { glowAt } from '../ui/glow.js'
+import { IcPrev, IcNext, IcExpand, IcCollapse } from '../ui/icons.jsx'
 
 import extDay from '../assets/gallery/exterior/fortune-day-view-1.webp'
 import extGolden from '../assets/gallery/exterior/cam-8-goldenhour-01-wm.webp'
@@ -21,8 +20,8 @@ import intPodium from '../assets/amenities/podium-cam-01.webp'
 import intPool from '../assets/amenities/swimming-pool.webp'
 import intTheatre from '../assets/amenities/theater.webp'
 
-// Add more entries to either list as renders come in - the tabs, the strip,
-// the rail and the counter all size themselves to the data.
+// Add more entries to either list as renders come in - the tabs, the counter and the
+// progress all size themselves to the data.
 const CATEGORIES = [
   {
     id: 'exterior',
@@ -59,33 +58,25 @@ const FLAT = CATEGORIES.flatMap((c, ci) => c.slides.map((s, i) => ({ ...s, ci, i
 const OFFSETS = CATEGORIES.map((c, ci) => CATEGORIES.slice(0, ci).reduce((n, x) => n + x.slides.length, 0))
 const TABS = CATEGORIES.map((c, i) => ({ value: i, label: c.label }))
 
-// The title, one masked span per word and one span per letter, so the letters can rise in turn.
-function SplitTitle({ text }) {
-  return text.split(' ').map((word, w) => (
-    <span key={w} className="mr-[0.28em] inline-block overflow-hidden pb-[0.08em] align-bottom last:mr-0">
-      {[...word].map((ch, c) => (
-        <span key={c} className="g-char inline-block will-change-transform">
-          {ch}
-        </span>
-      ))}
-    </span>
-  ))
-}
+// The frame the picture sits in on the page, and edge to edge in the full-screen view
+const FRAME = { top: '9.5rem', right: '2.9rem', bottom: '5.25rem', left: '2.9rem' }
+const BLEED = { top: '0rem', right: '0rem', bottom: '0rem', left: '0rem' }
 
-// A cinematic viewer: every render fills the screen, and each new one is wiped in over the
-// last while it settles from a slow zoom. The title rises letter by letter, a gold line counts
-// down to the next render, and the picture drifts a touch with the cursor.
+// A framed gallery: each render sits in a clean frame on the espresso ground, with a single
+// quiet line of words beneath it. A new render is uncovered by a panel that slides across
+// as the picture settles out of a slow zoom. One button lets the frame open out to the
+// whole screen, with nothing else on it.
 function Gallery({ onClose }) {
   const [cat, setCat] = useState(0)
   const [idx, setIdx] = useState(0)
-  const [hold, setHold] = useState(false) // autoplay paused while the pointer is on the controls
+  const [full, setFull] = useState(false)
   const rootRef = useRef(null)
-  const stageRef = useRef(null)
-  const stripRef = useRef(null)
+  const frameRef = useRef(null)
   const prevFlat = useRef(null)
   const dir = useRef(1)
   const touchX = useRef(0)
   const wheelAt = useRef(0)
+  const firstFull = useRef(true)
 
   const category = CATEGORIES[cat]
   const slides = category.slides
@@ -102,118 +93,79 @@ function Gallery({ onClose }) {
   )
   const step = useCallback((d) => go(idx + d, d), [go, idx])
 
-  // Arrival: an espresso curtain lifts off the first render as it settles from a deep zoom,
-  // then the words and controls come in.
+  // Arrival: the frame opens from a thin line, the picture settles, then the words come in
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      gsap.set(frameRef.current, FRAME)
       const tl = gsap.timeline({ delay: PAGE_IN })
       if (REDUCED) {
-        tl.set('.g-curtain', { autoAlpha: 0 })
-        tl.add(fx.show('.g-chrome', { stagger: 0.05 }), 0)
+        tl.add(fx.show('.g-frame, .g-ui'), 0)
         return
       }
-      tl.fromTo('.g-curtain', { scaleY: 1 }, { scaleY: 0, duration: 1.4, ease: 'expo.inOut' }, 0)
-      tl.fromTo('.g-curtain-line', { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: EASE.move }, 0)
-      tl.fromTo('.gv-zoom', { scale: 1.28 }, { scale: 1, duration: 2.6, ease: 'expo.out' }, 0.25)
-      tl.add(fx.fade('.tb-anim', { y: -12 }), 0.9)
-      tl.add(fx.fade('.g-chrome', { y: 18, stagger: 0.09, duration: 0.9 }), 1.0)
-      tl.fromTo('.g-tick', { scaleY: 0 }, { scaleY: 1, duration: 0.6, stagger: 0.04, ease: EASE.enter }, 1.1)
+      tl.fromTo('.g-frame', { clipPath: 'inset(50% 0% 50% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.5, ease: 'expo.inOut' }, 0)
+      tl.fromTo('.g-zoom', { scale: 1.18 }, { scale: 1, duration: 2.4, ease: 'expo.out' }, 0.3)
+      tl.add(fx.fade('.tb-anim', { y: -10 }), 0.9)
+      tl.add(fx.fade('.g-ui', { y: 10, stagger: 0.08 }), 1.1)
     }, rootRef)
     return () => ctx.revert()
   }, [])
 
-  // The change of render: the new one is wiped in from the side you are heading towards while
-  // it eases out of a zoom; the old one slides a little the other way under it.
+  // The change of render: a panel of the page's own espresso slides across, and the new
+  // picture is uncovered behind it while easing out of a slow zoom
   useLayoutEffect(() => {
     const root = rootRef.current
-    const all = root.querySelectorAll('[data-slide]')
     const inEl = root.querySelector(`[data-slide="${flat}"]`)
     const outEl = prevFlat.current === null ? null : root.querySelector(`[data-slide="${prevFlat.current}"]`)
     prevFlat.current = flat
     if (!inEl) return
-
-    all.forEach((el) => {
-      if (el !== inEl && el !== outEl) gsap.set(el, { autoAlpha: 0, zIndex: 0 })
-    })
     const inImg = inEl.querySelector('img')
 
     if (!outEl || outEl === inEl || REDUCED) {
-      gsap.set(inEl, { autoAlpha: 1, zIndex: 2, clipPath: 'inset(0% 0% 0% 0%)' })
-      if (outEl && outEl !== inEl) gsap.set(outEl, { autoAlpha: 0 })
-      if (!REDUCED) gsap.fromTo(inImg, { scale: 1.08 }, { scale: 1, duration: 9, ease: 'power1.out', overwrite: 'auto' })
+      root.querySelectorAll('[data-slide]').forEach((el) => gsap.set(el, { autoAlpha: el === inEl ? 1 : 0 }))
       return
     }
 
     const d = dir.current
-    gsap.set(outEl, { autoAlpha: 1, zIndex: 1 })
-    gsap.set(inEl, { autoAlpha: 1, zIndex: 2 })
-    const tl = gsap.timeline({
-      onComplete: () => {
-        gsap.set(outEl, { autoAlpha: 0, zIndex: 0 })
-        gsap.set(outEl.querySelector('img'), { xPercent: 0, scale: 1 })
-      },
+    const tl = gsap.timeline({ onComplete: () => gsap.set('.g-wipe', { autoAlpha: 0 }) })
+    tl.set('.g-wipe', { xPercent: d > 0 ? -101 : 101, autoAlpha: 1 })
+    tl.to('.g-wipe', { xPercent: 0, duration: 0.6, ease: 'power3.in' }, 0)
+    tl.add(() => {
+      gsap.set(outEl, { autoAlpha: 0 })
+      gsap.set(inEl, { autoAlpha: 1 })
     })
-    tl.fromTo(inEl, { clipPath: d > 0 ? 'inset(0% 0% 0% 100%)' : 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.35, ease: 'expo.inOut' }, 0)
-    tl.fromTo(inImg, { scale: 1.3, xPercent: d * 8 }, { scale: 1.06, xPercent: 0, duration: 1.8, ease: 'expo.out' }, 0.15)
-    tl.to(inImg, { scale: 1, duration: 8, ease: 'power1.out' }, 1.95)
-    tl.to(outEl.querySelector('img'), { xPercent: -d * 12, scale: 1.08, duration: 1.35, ease: 'expo.inOut' }, 0)
+    tl.to('.g-wipe', { xPercent: d > 0 ? 101 : -101, duration: 0.9, ease: 'expo.out' })
+    tl.fromTo(inImg, { scale: 1.12, xPercent: d * 3 }, { scale: 1, xPercent: 0, duration: 2.2, ease: 'expo.out' }, '<')
     return () => tl.progress(1).kill()
   }, [flat])
 
-  // The title rises letter by letter; the count rolls; the line under it follows.
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      if (REDUCED) {
-        fx.show('.g-char, .g-sub, .g-roll')
-        return
-      }
-      gsap.fromTo('.g-char', { yPercent: 115, rotate: 6 }, { yPercent: 0, rotate: 0, duration: 1.1, ease: 'expo.out', stagger: 0.022, delay: 0.35 })
-      gsap.fromTo('.g-roll', { yPercent: dir.current * 100 }, { yPercent: 0, duration: 0.9, ease: 'expo.out', delay: 0.2 })
-      gsap.fromTo('.g-sub', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.9, ease: EASE.soft, delay: 0.7 })
-      gsap.fromTo('.g-rule', { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: EASE.move, delay: 0.5 })
-    }, rootRef)
-    return () => ctx.revert()
-  }, [flat])
-
-  // A new collection: its thumbnails and rail ticks come in one after another
+  // The words beneath change with a short rise
   useLayoutEffect(() => {
     if (REDUCED) return
     const ctx = gsap.context(() => {
-      gsap.fromTo('.g-thumb', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.7, ease: EASE.enter, stagger: 0.05, delay: 0.15 })
+      gsap.fromTo('.g-caption > *', { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.7, ease: EASE.soft, stagger: 0.06, delay: 0.55 })
     }, rootRef)
     return () => ctx.revert()
-  }, [cat])
+  }, [flat])
 
-  // Autoplay: the gold line fills over six seconds, then the next render comes in
+  // Full screen: the frame opens out to the edges and everything else steps away
+  useLayoutEffect(() => {
+    if (firstFull.current) {
+      firstFull.current = false
+      return
+    }
+    const d = REDUCED ? 0 : 1.1
+    gsap.to(frameRef.current, { ...(full ? BLEED : FRAME), duration: d, ease: 'expo.inOut', overwrite: 'auto' })
+    gsap.to(rootRef.current.querySelectorAll('.g-chrome'), { autoAlpha: full ? 0 : 1, duration: full ? 0.35 : 0.6, delay: full ? 0 : d * 0.6, ease: EASE.soft, overwrite: 'auto' })
+    gsap.to(rootRef.current.querySelector('.g-exit'), { autoAlpha: full ? 1 : 0, duration: 0.5, delay: full ? d * 0.8 : 0, ease: EASE.soft, overwrite: 'auto' })
+  }, [full])
+
+  // Autoplay: a gold hairline fills under the picture, then the next render comes in
   useEffect(() => {
     const line = rootRef.current?.querySelector('.g-progress')
     if (!line) return
-    if (hold) return
     const t = gsap.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: AUTOPLAY, ease: 'none', onComplete: () => step(1) })
     return () => t.kill()
-  }, [flat, hold, step])
-
-  // keep the current thumbnail in view
-  useEffect(() => {
-    const strip = stripRef.current
-    const chip = strip?.querySelector('[aria-current="true"]')
-    if (!chip) return
-    const target = chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2
-    gsap.to(strip, { scrollLeft: Math.max(0, target), duration: REDUCED ? 0 : 0.7, ease: EASE.soft, overwrite: 'auto' })
-  }, [flat])
-
-  // the picture drifts a touch against the cursor
-  useEffect(() => {
-    if (REDUCED || !stageRef.current) return
-    const xTo = gsap.quickTo(stageRef.current, 'x', { duration: 1.4, ease: 'power3.out' })
-    const yTo = gsap.quickTo(stageRef.current, 'y', { duration: 1.4, ease: 'power3.out' })
-    const onMove = (e) => {
-      xTo((e.clientX / window.innerWidth - 0.5) * -26)
-      yTo((e.clientY / window.innerHeight - 0.5) * -18)
-    }
-    window.addEventListener('pointermove', onMove)
-    return () => window.removeEventListener('pointermove', onMove)
-  }, [])
+  }, [flat, step])
 
   // warm the cache so every render is ready when it is called
   useEffect(() => {
@@ -225,6 +177,8 @@ function Gallery({ onClose }) {
     const onKey = (e) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') step(1)
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') step(-1)
+      if (e.key === 'f' || e.key === 'F') setFull((v) => !v)
+      if (e.key === 'Escape') setFull(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -253,132 +207,78 @@ function Gallery({ onClose }) {
         step(e.deltaY > 0 ? 1 : -1)
       }}
     >
-      {/* ---------- every render, stacked edge to edge ---------- */}
-      {/* overflow-clip, not hidden: the stage is oversized for the cursor drift, and a hidden
-          overflow would let focus scroll the whole page sideways */}
-      <div className="gv-zoom absolute inset-0 overflow-clip">
-        <div ref={stageRef} className="absolute -inset-6" aria-live="polite">
+      {/* ---------- the frame, and every render stacked in it ---------- */}
+      <div ref={frameRef} className="g-frame absolute overflow-clip" aria-live="polite">
+        <div className="g-zoom absolute inset-0">
           {FLAT.map((s, i) => (
-            <div key={s.src} data-slide={i} className="absolute inset-0 overflow-hidden">
+            <div key={s.src} data-slide={i} className="invisible absolute inset-0 overflow-clip">
               <img src={s.src} alt={i === flat ? s.title : ''} className="absolute inset-0 h-full w-full object-cover will-change-transform" draggable={false} />
             </div>
           ))}
         </div>
+        {/* The panel that crosses between renders. Its transform is GSAP's alone - an inline
+            transform here would be re-applied on every render and fight the tween. */}
+        <span className="g-wipe pointer-events-none invisible absolute inset-0 z-10 bg-espresso" aria-hidden="true">
+          <span className="absolute inset-y-0 right-0 w-px bg-[var(--ribbon-main-gold)]/60" />
+        </span>
+        {/* in the full-screen view, the picture's halves step back and forth */}
+        {full && (
+          <>
+            <button type="button" aria-label="Previous render" onClick={() => step(-1)} className="absolute inset-y-0 left-0 z-20 w-1/3 cursor-w-resize border-none bg-transparent" />
+            <button type="button" aria-label="Next render" onClick={() => step(1)} className="absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize border-none bg-transparent" />
+          </>
+        )}
       </div>
 
-      {/* smoky shade where the words sit, with the faint grain */}
-      <div
-        className="pointer-events-none absolute inset-0 z-[3]"
-        style={{
-          backgroundImage:
-            'var(--grain), linear-gradient(180deg, color-mix(in srgb, var(--espresso) 72%, transparent) 0%, transparent 24%), linear-gradient(0deg, color-mix(in srgb, var(--espresso) 94%, transparent) 0%, color-mix(in srgb, var(--espresso) 55%, transparent) 26%, transparent 58%), linear-gradient(90deg, color-mix(in srgb, var(--espresso) 55%, transparent) 0%, transparent 45%)',
-        }}
-      />
-
-      {/* ---------- top: the seal, the collections, back ---------- */}
-      <div className="relative z-20">
+      {/* ---------- top: the logo, the collections, full screen, back ---------- */}
+      <div className="g-chrome relative z-30">
         <TopBar onBrand={onClose}>
-          <div className="g-chrome flex items-center gap-3">
-            <div className="mr-2 hidden md:block">
+          <div className="g-ui flex items-center gap-3">
+            <div className="mr-1 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
             </div>
+            <IconButton label="Full screen (F)" onClick={() => setFull(true)}>
+              <IcExpand size={17} />
+            </IconButton>
             <BackControl onClick={onClose} />
           </div>
         </TopBar>
-        <div className="g-chrome absolute inset-x-0 top-[6rem] flex justify-center px-5 md:hidden">
-          <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
-        </div>
       </div>
 
-      {/* ---------- the rail: one tick per render, the current one long and gold ---------- */}
-      <nav className="absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-end gap-2.5 sm:flex side:right-[2.9rem]" aria-label={`${category.label} renders`}>
-        {slides.map((s, i) => {
-          const on = i === idx
-          return (
-            <button
-              key={s.src}
-              type="button"
-              onClick={() => i !== idx && go(i, i > idx ? 1 : -1)}
-              aria-label={s.title}
-              aria-current={on}
-              className="g-tick tr-focus group flex h-3 origin-top items-center border-none bg-transparent p-0"
-            >
-              <span
-                className={`block h-px transition-[width,background-color] duration-500 ${on ? 'w-10 bg-[var(--ribbon-champagne)] shadow-[0_0_0.6rem_var(--ribbon-main-gold)]' : 'w-4 bg-cream/40 group-hover:w-6 group-hover:bg-cream/80'}`}
-              />
-            </button>
-          )
-        })}
-      </nav>
-
-      {/* ---------- foot: the caption, the arrows and the strip ---------- */}
-      <div className="absolute inset-x-0 bottom-0 z-20">
-        <div className="flex flex-col gap-6 px-5 pb-[max(1.6rem,var(--safe-b))] sm:px-8 md:flex-row md:items-end md:justify-between md:gap-10 side:px-[2.9rem] side:pb-[2.6rem]">
-          {/* caption */}
-          <div className="g-chrome min-w-0 md:max-w-[44rem]">
-            <span className="flex items-center gap-4">
-              <span className="inline-block h-[1.1em] overflow-hidden">
-                <span key={flat} className="g-roll tr-num inline-block text-[var(--ribbon-champagne)]">
-                  {pad(idx + 1)}
-                </span>
-              </span>
-              <span className="tr-dash" />
-              <span className="tr-num">{pad(total)}</span>
-              <span className="tr-label ml-2">{category.label}</span>
+      {/* ---------- beneath the frame: one quiet line, the arrows, the progress ---------- */}
+      <div className="g-chrome absolute inset-x-0 bottom-0 z-30 px-5 pb-[max(1.4rem,var(--safe-b))] sm:px-8 side:px-[2.9rem]" style={{ height: FRAME.bottom }}>
+        <span className="absolute inset-x-5 top-0 block h-px bg-cream/12 sm:inset-x-8 side:inset-x-[2.9rem]">
+          <span className="g-progress absolute inset-0 origin-left bg-[var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
+        </span>
+        <div className="g-ui flex h-full items-center justify-between gap-6">
+          <div className="g-caption flex min-w-0 items-baseline gap-4">
+            <span className="tr-num shrink-0 text-[var(--ribbon-champagne)]">
+              {pad(idx + 1)} <span className="text-cream/40">/ {pad(total)}</span>
             </span>
-            <h2 key={`t-${flat}`} className="tr-display mt-4 text-[clamp(2.4rem,5.2vw,5.4rem)] leading-[0.98] short:text-[1.8rem]">
-              <SplitTitle text={slide.title} />
-            </h2>
-            <span key={`r-${flat}`} className="g-rule mt-5 block h-px w-24 origin-left bg-[linear-gradient(90deg,var(--ribbon-champagne),var(--ribbon-main-gold),transparent)]" />
-            <p key={`s-${flat}`} className="g-sub tr-label mt-4 text-cream/80 short:hidden">
-              {slide.subtitle}
-            </p>
+            <span className="truncate font-serif text-[1.25rem] leading-none text-cream">{slide.title}</span>
+            <span className="hidden truncate font-sans text-[0.72rem] uppercase tracking-[0.18em] text-cream/55 lg:inline">{slide.subtitle}</span>
           </div>
-
-          {/* arrows and the strip */}
-          <div className="g-chrome flex shrink-0 items-end gap-4" onPointerEnter={() => setHold(true)} onPointerLeave={() => setHold(false)}>
-            <div className="flex gap-2">
-              <IconButton label="Previous render" onClick={() => step(-1)}>
-                <IcPrev size={18} />
-              </IconButton>
-              <IconButton label="Next render" onClick={() => step(1)}>
-                <IcNext size={18} />
-              </IconButton>
-            </div>
-            <div className="tr-panel rounded-[0.9rem] p-2 md:max-w-[min(28rem,40vw)]">
-              <div ref={stripRef} className="tr-noscroll flex gap-2 overflow-x-auto" role="tablist" aria-label={`${category.label} renders`}>
-                {slides.map((sl, i) => {
-                  const on = i === idx
-                  return (
-                    <button
-                      key={sl.src}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      aria-current={on}
-                      aria-label={sl.title}
-                      onClick={() => i !== idx && go(i, i > idx ? 1 : -1)}
-                      onPointerMove={glowAt}
-                      className={`g-thumb mn-glow tr-focus relative h-[3.2rem] w-[4.8rem] shrink-0 touch-manipulation overflow-hidden rounded-md border p-[3px] transition-[opacity,border-color,box-shadow] duration-300 short:h-[2.2rem] short:w-[3.2rem] ${on ? 'border-[var(--ribbon-champagne)] opacity-100 shadow-[0_0_1.1rem_color-mix(in_srgb,var(--ribbon-main-gold)_35%,transparent)]' : 'border-[color-mix(in_srgb,var(--ribbon-main-gold)_25%,transparent)] opacity-55 hover:opacity-100'}`}
-                    >
-                      <img src={sl.src} alt="" className="h-full w-full rounded-[3px] object-cover" draggable={false} />
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <IconButton label="Previous render" onClick={() => step(-1)} small>
+              <IcPrev size={15} />
+            </IconButton>
+            <IconButton label="Next render" onClick={() => step(1)} small>
+              <IcNext size={15} />
+            </IconButton>
           </div>
-        </div>
-
-        {/* the gold line counting down to the next render */}
-        <div className="g-chrome relative h-px w-full bg-cream/15">
-          <span className="g-progress absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,var(--ribbon-deep-bronze),var(--ribbon-main-gold),var(--ribbon-champagne))] shadow-[0_0_0.8rem_var(--ribbon-main-gold)]" style={{ transform: 'scaleX(0)' }} />
         </div>
       </div>
 
-      {/* ---------- the arrival curtain ---------- */}
-      <div className="g-curtain pointer-events-none absolute inset-0 z-40 origin-top bg-espresso" aria-hidden="true">
-        <span className="g-curtain-line tr-hair is-gold absolute inset-x-0 bottom-0 origin-center" />
+      {/* collections on small screens */}
+      <div className="g-chrome g-ui absolute inset-x-0 top-[5.25rem] z-30 flex justify-center md:hidden">
+        <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
+      </div>
+
+      {/* ---------- full screen: the only thing left is the way out ---------- */}
+      <div className="g-exit absolute right-4 top-[max(1rem,var(--safe-t))] z-40 opacity-0 sm:right-6" style={{ visibility: 'hidden' }}>
+        <IconButton label="Exit full screen (Esc)" onClick={() => setFull(false)}>
+          <IcCollapse size={17} />
+        </IconButton>
       </div>
     </div>
   )
