@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap, fx, PAGE_IN } from '../motion/index.js'
-import { BackControl, Lockup } from '../ui/controls.jsx'
+import { MenuControl, Lockup } from '../ui/controls.jsx'
 import { CORNER } from '../ui/layout.js'
 import { glowAt } from '../ui/glow.js'
 import RibbonStage from '../components/RibbonStage.jsx'
@@ -171,7 +171,7 @@ function Enquiry({ onClose }) {
         }
       >
         <div className={`eq-top ${CORNER}`}>
-          <BackControl onClick={onClose} />
+          <MenuControl onClick={onClose} />
         </div>
       </RibbonStage>
     </div>

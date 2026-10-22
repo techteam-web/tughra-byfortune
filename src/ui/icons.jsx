@@ -22,6 +22,9 @@ export function Icon({ size = 18, children, className, strokeWidth = 1.4 }) {
 export function IcBack(props) {
   return <Icon {...props}><path d="M19 12H5M11 6l-6 6 6 6" /></Icon>
 }
+export function IcMenu(props) {
+  return <Icon {...props}><path d="M5 8h14M5 12h14M5 16h14" /></Icon>
+}
 export function IcArrow(props) {
   return <Icon {...props}><path d="M5 12h14M13 6l6 6-6 6" /></Icon>
 }

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
 import { Lockup } from '../ui/controls.jsx'
-import { IcArrow, IcPrev, IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
+import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
 const TBC = 'To be confirmed'
@@ -42,7 +42,7 @@ const idToLabel = (id) => {
 // The reference's paper sidebar and layout table, with the tower in the middle. Clicking
 // a floor on the tower opens the plan page: a big plan, a small residence list on its
 // left, and the floor plan / isometric switch underneath - all on the same beige ground.
-function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
+function FloorPlans({ onClose }) {
   const [floors, setFloors] = useState([])
   const [selectedFloor, setSelectedFloor] = useState(null)
   const [hoveredFloor, setHoveredFloor] = useState(null)
@@ -165,13 +165,10 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
 
   return (
     <section ref={rootRef} className="relative isolate flex min-h-svh w-full flex-col bg-[var(--cream)] text-[var(--ink)]">
-      {/* ---------- Top: the logo on the left (back to the menu, as on every page), enquire ---------- */}
+      {/* ---------- Top: the logo on the left (back to the menu, as on every page) ---------- */}
       <header className="fp2-top flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
         <button type="button" onClick={onClose} aria-label="Back to menu" className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
           <Lockup dark />
-        </button>
-        <button type="button" onClick={onEnquire} onPointerMove={glowAt} className="mn-glow tr-focus rounded-md bg-[var(--bronze-deep)] px-5 py-2.5 font-sans text-[0.65rem] uppercase tracking-[0.2em] text-[var(--cream)]">
-          Enquire
         </button>
       </header>
 
@@ -229,12 +226,18 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
                               onClick: () => openFloor(floor.id),
                               onMouseEnter: () => setHoveredFloor(floor.id),
                               onMouseLeave: () => setHoveredFloor(null),
+                              // every floor reads as a faintly darkened band with a fine pale line
+                              // between floors; the one under the cursor and the chosen one warm to bronze
                               style: {
                                 cursor: 'pointer',
                                 pointerEvents: 'all',
-                                transition: 'fill-opacity 0.3s ease',
-                                fill: 'var(--bronze-deep)',
-                                fillOpacity: isSelected ? 0.4 : isHovered ? 0.22 : 0.012,
+                                transition: 'fill-opacity 0.3s ease, fill 0.3s ease',
+                                fill: isSelected || isHovered ? 'var(--bronze-deep)' : 'var(--espresso)',
+                                fillOpacity: isSelected ? 0.6 : isHovered ? 0.45 : 0.2,
+                                stroke: 'var(--cream)',
+                                strokeOpacity: 0.45,
+                                strokeWidth: 1,
+                                vectorEffect: 'non-scaling-stroke',
                               },
                             }
                         return floor.type === 'path' ? <path key={floor.id} d={floor.d} {...shapeProps} /> : <polygon key={floor.id} points={floor.points} {...shapeProps} />
@@ -263,33 +266,16 @@ function FloorPlans({ onClose, onEnquire, onPrev, onNext }) {
               </div>
             ))}
           </dl>
-          <button type="button" onClick={onEnquire} onPointerMove={glowAt} className="mn-glow tr-focus mt-7 w-full rounded-md bg-[var(--bronze-deep)] py-3 text-center font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--cream)]">
-            Request Price
-          </button>
         </aside>
       </div>
 
-      {/* ---------- Foot: where this sits, and the way through ---------- */}
-      <div className="fp2-foot absolute inset-x-0 bottom-0 z-10 flex items-center justify-between px-5 pb-[max(1.5rem,var(--safe-b))] sm:px-10">
+      {/* ---------- Foot: where this sits ---------- */}
+      <div className="fp2-foot absolute inset-x-0 bottom-0 z-10 flex items-center px-5 pb-[max(1.5rem,var(--safe-b))] sm:px-10">
         <span className="flex items-center gap-3 font-sans text-[0.7rem] uppercase tracking-[0.2em] text-[var(--ink-soft)]">
           <span className="tabular-nums text-[var(--ink)]">04</span>
           <span className="h-px w-6 bg-[var(--ink)]/25" aria-hidden="true" />
           <span className="tabular-nums">07</span>
           <span className="ml-1">Residences</span>
-        </span>
-        <span className="flex items-center gap-3">
-          <button type="button" onClick={onPrev} onPointerMove={glowAt} aria-label="Previous section" className="mn-glow tr-focus flex h-9 w-9 items-center justify-center rounded-full border border-[var(--ink)]/20 text-[var(--ink)]">
-            <IcPrev size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={onNext}
-            onPointerMove={glowAt}
-            className="mn-glow tr-focus flex items-center gap-2 rounded-full border border-[var(--ink)]/25 px-5 py-2 font-sans text-[0.7rem] uppercase tracking-[0.18em] text-[var(--ink)]"
-          >
-            Neighborhood
-            <IcArrow size={13} className="tr-arrow" />
-          </button>
         </span>
       </div>
 

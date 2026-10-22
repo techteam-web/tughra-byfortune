@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { gsap, glideTo, EASE, REDUCED } from '../motion/index.js'
 import BrandMark from '../components/BrandMark.jsx'
-import { IcBack, IcDiamond } from './icons.jsx'
+import { IcBack, IcDiamond, IcMenu } from './icons.jsx'
 import { glowAt } from './glow.js'
 
 // Round control, as on the menu: a dark circle with a gold icon and the golden hover.
@@ -33,14 +33,18 @@ export const HomeControl = ({ onClick }) => (
     <IcDiamond size={13} strokeWidth={1.6} />
   </IconButton>
 )
+export const MenuControl = ({ onClick }) => (
+  <IconButton label="Menu" onClick={onClick}>
+    <IcMenu size={18} />
+  </IconButton>
+)
 
-// The seal and the name, side by side, as on the menu. `dark` is the same lockup in ink, for
-// the beige pages.
-export function Lockup({ className = '', compact = false, dark = false }) {
+// The Tughra Royale logo as the preloader draws it: the seal with the name set beneath it.
+// `dark` is the same logo in ink, for the beige pages.
+export function Lockup({ className = '', dark = false }) {
   return (
-    <span className={`flex items-center gap-4 ${className}`}>
-      <BrandMark tone={dark ? 'dark' : 'pale'} size="seal" credit={false} seal />
-      <span className={`font-sans text-[1.05rem] font-normal uppercase leading-none tracking-[0.1em] side:text-[1.15rem] short:text-[0.85rem] ${dark ? 'text-[var(--ink)]' : 'text-cream'} ${compact ? 'hidden sm:inline' : ''}`}>Tughra Royale</span>
+    <span className={`flex items-center ${className}`}>
+      <BrandMark tone={dark ? 'dark' : 'pale'} size="crown" credit={false} />
     </span>
   )
 }
@@ -77,7 +81,7 @@ export function Segmented({ options, value, onChange, label, grid = 0, className
 
 // Top bar shared by every page: the lockup left (returns to the menu), round controls right.
 // On screens that scroll it turns to smoky glass with a gold hairline.
-export function TopBar({ onBrand, children, aside, sticky = false, fixed = false, compact = false, className = '', brandLabel = 'Back to menu' }) {
+export function TopBar({ onBrand, children, aside, sticky = false, fixed = false, className = '', brandLabel = 'Back to menu' }) {
   const barRef = useRef(null)
   const bgRef = useRef(null)
 
@@ -111,7 +115,7 @@ export function TopBar({ onBrand, children, aside, sticky = false, fixed = false
           content sitting in the same band (a card's own header row, say) stays clickable */}
       <div className="tb-anim pointer-events-auto flex min-w-0 items-center gap-5">
         <button type="button" onClick={onBrand} aria-label={brandLabel} className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
-          <Lockup compact={compact} />
+          <Lockup />
         </button>
         {aside}
       </div>

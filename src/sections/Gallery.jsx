@@ -277,7 +277,7 @@ function Gallery({ onClose }) {
 
       {/* ---------- top: the seal, the collections, back ---------- */}
       <div className="relative z-20">
-        <TopBar onBrand={onClose} compact>
+        <TopBar onBrand={onClose}>
           <div className="g-chrome flex items-center gap-3">
             <div className="mr-2 hidden md:block">
               <Segmented options={TABS} value={cat} onChange={switchCategory} label="Collections" />
