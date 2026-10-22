@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, MenuControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
-import { alpha, mix } from '../theme/tokens.js'
+import { T, alpha, mix } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
 import './Location.css'
 
@@ -12,30 +12,29 @@ import './Location.css'
 // (dev serves it straight from node_modules, so no override is needed there).
 if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
-// The city at dusk, as it really looks: deep sea-blue water, green parks and woods,
-// slate land and buildings. Roads take playful colours - rose, sky blue, lavender -
-// and never gold, bronze or yellow.
+// The map in the site's own palette, every shade derived from the tokens: espresso
+// water, cocoa land, darker cocoa parks, cream labels. Roads are quiet warm taupe
+// lines (not gold), so the routes in pink, blue, green and yellow sit clearly above them.
 const M = {
-  ground: '#1D2330',
-  land: '#232A37',
-  residential: '#28303F',
-  park: '#2D4A39',
-  wood: '#2A4535',
-  grass: '#31503D',
-  sand: '#4A4A48',
-  water: '#123A57',
-  river: '#1D5276',
-  building: '#333B4C',
-  // muted, so the drawn routes (full-strength colours) always read above the roads
-  major: '#B86A80',
-  secondary: '#4F7699',
-  minor: '#424B66',
-  casing: '#151A24',
-  rail: '#8C8FB0',
-  boundary: '#5A6079',
-  label: '#E9EEF6',
-  halo: '#141922',
-  clear: alpha('#141922', 0),
+  ground: mix(T.cocoa, T.espresso, 0.55),
+  land: mix(T.cream, T.cocoa, 0.04),
+  residential: mix(T.cream, T.cocoa, 0.06),
+  park: mix(T.cocoa, T.espresso, 0.75),
+  wood: mix(T.cocoa, T.espresso, 0.7),
+  grass: mix(T.cocoa, T.espresso, 0.65),
+  sand: mix(T.cream, T.cocoa, 0.12),
+  water: T.espresso,
+  river: mix(T.espresso, T.cocoa, 0.35),
+  building: mix(T.cream, T.cocoa, 0.1),
+  major: mix(T.cream, T.cocoa, 0.3),
+  secondary: mix(T.cream, T.cocoa, 0.2),
+  minor: mix(T.cream, T.cocoa, 0.11),
+  casing: T.espresso,
+  rail: mix(T.cream, T.cocoa, 0.25),
+  boundary: mix(T.cream, T.cocoa, 0.2),
+  label: T.cream,
+  halo: T.espresso,
+  clear: alpha(T.espresso, 0),
 }
 
 // Recolours the OpenFreeMap "liberty" style to the palette above instead of its default bright look.
@@ -117,7 +116,7 @@ function applyBrandTheme(map) {
   // Buildings
   set('building', 'fill-color', M.building)
 
-  // Roads — rose for major routes, sky blue for secondary, a soft lavender line for minor ones
+  // Roads — warm taupe, lighter for major routes, fading for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
     set(id, 'line-color', M.major)
   }
@@ -190,7 +189,7 @@ function applyBrandTheme(map) {
     set(id, 'line-color', M.boundary)
   }
 
-  // Labels — pale text, dark slate halo
+  // Labels — cream text, espresso halo
   for (const id of [
     'water_name_point_label',
     'water_name_line_label',
@@ -243,7 +242,7 @@ function applyBrandTheme(map) {
 }
 
 // Everything the "3D" feel needs beyond colors: taller, height-graded
-// buildings (slate, catching more light the higher they rise), a dusk horizon,
+// buildings (cocoa, catching more light the higher they rise), a warm horizon,
 // and an atmospheric sky.
 function applyDepth(map) {
   if (map.getLayer('building-3d')) {
@@ -252,13 +251,13 @@ function applyDepth(map) {
       ['linear'],
       ['get', 'render_height'],
       0,
-      '#363E52',
+      mix(T.cream, T.cocoa, 0.08),
       40,
-      '#46506A',
+      mix(T.cream, T.cocoa, 0.16),
       120,
-      '#5B6888',
+      mix(T.cream, T.cocoa, 0.26),
       300,
-      '#7A89AE',
+      mix(T.cream, T.cocoa, 0.38),
     ])
     map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.94)
     map.setPaintProperty('building-3d', 'fill-extrusion-vertical-gradient', true)
@@ -266,8 +265,8 @@ function applyDepth(map) {
   }
   try {
     map.setSky({
-      'sky-color': '#0E1A2C',
-      'horizon-color': '#3A5378',
+      'sky-color': T.espresso,
+      'horizon-color': mix(T.cocoa, T.espresso, 0.3),
       'fog-color': M.ground,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
@@ -281,18 +280,21 @@ function applyDepth(map) {
 const ROUTE_SRC = 'route'
 const ALL_SRC = 'routes-all'
 
-// Each category reads as its own colour family - never gold, bronze or yellow, so a
-// route is never mistaken for the map's own roads or the brand's accent. Within a
-// category, each place gets its own shade of that colour (lightened by a different
-// amount), so when several routes share the map at once (the overview) every route
-// still reads as its own line without leaving the category's hue.
+// Routes use only four colours: pink, blue, green and yellow. Each category takes one
+// of them. Within a category, each place gets its own shade of that colour (lightened
+// by a different amount), so when several routes share the map at once (the overview)
+// every route still reads as its own line without leaving the category's hue.
+const PINK = '#F06BA8'
+const BLUE = '#4D9BFF'
+const GREEN = '#4CD98A'
+const YELLOW = '#FFD23F'
 const CATEGORY_COLORS = {
-  connectivity: '#5B8DEF', // blue
-  healthcare: '#E8766A', // coral red
-  landmarks: '#4FB8A8', // teal
-  hospitality: '#E583B0', // pink
-  business: '#8F7FE0', // violet
-  education: '#6FBF73', // green
+  connectivity: BLUE,
+  healthcare: PINK,
+  landmarks: YELLOW,
+  hospitality: PINK,
+  business: YELLOW,
+  education: GREEN,
 }
 const SHADE_KEEP = [1, 0.72, 0.5, 0.86, 0.6, 0.94, 0.4, 0.78]
 const colorOf = (category, i = 0) => {
@@ -697,14 +699,14 @@ function Location({ onClose }) {
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="h-full w-full" />
       </div>
-      {/* The edges fall away into the dusk */}
+      {/* The edges fall away into espresso */}
       <div
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 45%, rgba(20,25,34,0.7) 100%), linear-gradient(180deg, rgba(20,25,34,0.75) 0%, transparent 22%)' }}
+        style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
       />
 
       {/* gulls crossing the sky - small, a few at a time */}
-      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-[#EEF2F7]/75" aria-hidden="true">
+      <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-cream/75" aria-hidden="true">
         {[
           ['a', '13%', 1],
           ['b', '24%', 0.8],

@@ -68,15 +68,15 @@
   height: 1.2rem;
   margin-left: -2.25rem;
   border-radius: 50%;
-  border: 1px solid rgba(125, 184, 236, 0.75);
-  background: rgba(125, 184, 236, 0.18);
+  border: 1px solid color-mix(in srgb, var(--ribbon-champagne) 70%, transparent);
+  background: color-mix(in srgb, var(--ribbon-main-gold) 22%, transparent);
 }
 .loc-tower .base::after {
   content: '';
   position: absolute;
   inset: -0.45rem -0.9rem;
   border-radius: 50%;
-  border: 1px solid rgba(125, 184, 236, 0.35);
+  border: 1px solid color-mix(in srgb, var(--ribbon-main-gold) 35%, transparent);
 }
 
 /* ---- MapLibre's zoom / compass buttons, as the menu's dark round controls ---- */
@@ -103,4 +103,4 @@
 
 /* ---- Fishing boats on the water (MapLibre owns the marker; the boat inside is what rocks) ---- */
 .loc-boat-mk { pointer-events: none; }
-.loc-boat { filter: drop-shadow(0 0.15rem 0.35rem rgba(10, 20, 32, 0.55)); }
+.loc-boat { filter: drop-shadow(0 0.15rem 0.35rem rgba(28, 19, 13, 0.55)); }
