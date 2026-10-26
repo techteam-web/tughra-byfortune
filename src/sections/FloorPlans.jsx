@@ -242,15 +242,18 @@ function FloorPlans({ onClose }) {
                   </span>
                 </div>
 
-                <div className="fp2-read my-auto flex flex-col items-start" aria-live="polite">
+                <div className="fp2-read my-auto ml-[clamp(2rem,5vw,5rem)] flex flex-col items-start" aria-live="polite">
                   <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
                   <span className="overflow-hidden">
                     <span key={readId} className="fp2-num block font-serif text-[clamp(5.5rem,9vw,9rem)] leading-[0.9] tracking-[-0.03em] text-[var(--bronze-deep)]">
                       {readNum}
                     </span>
                   </span>
-                  <span className="mt-6 font-serif text-[1.35rem] leading-tight text-[var(--ink)]">{readFloor?.label}</span>
-                  <span className="mt-2 max-w-[12.5rem] font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">Choose a floor on the tower to see its plans.</span>
+                  <span className="mt-6 font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">
+                    Choose a floor on the tower
+                    <br />
+                    to see its plans.
+                  </span>
                   <button
                     type="button"
                     onClick={() => readFloor && openFloor(readFloor.id)}
