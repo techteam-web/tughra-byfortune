@@ -12,28 +12,29 @@ import './Location.css'
 // (dev serves it straight from node_modules, so no override is needed there).
 if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
-// The map in the site's own palette, every shade derived from the tokens: espresso
-// water, cocoa land, darker cocoa parks, cream labels. Roads are quiet warm taupe
-// lines (not gold), so the routes in pink, blue, green and yellow sit clearly above them.
+// The map in the site's own palette: the city at night in espresso and cocoa, as if lit by
+// the tower's bronze. Water is the deepest espresso, land a step up in cocoa, parks a dark
+// olive, roads quiet bronze lines, and the buildings rise in bronze - darkest at the
+// street, catching the light towards their tops. The routes (pink, blue, green, yellow)
+// are the only bright colours on it.
 const M = {
-  ground: mix(T.cocoa, T.espresso, 0.55),
-  land: mix(T.cream, T.cocoa, 0.04),
-  residential: mix(T.cream, T.cocoa, 0.06),
-  park: mix(T.cocoa, T.espresso, 0.75),
-  wood: mix(T.cocoa, T.espresso, 0.7),
-  grass: mix(T.cocoa, T.espresso, 0.65),
-  sand: mix(T.cream, T.cocoa, 0.12),
-  water: T.espresso,
-  river: mix(T.espresso, T.cocoa, 0.35),
-  building: mix(T.cream, T.cocoa, 0.1),
-  major: mix(T.cream, T.cocoa, 0.3),
-  secondary: mix(T.cream, T.cocoa, 0.2),
-  minor: mix(T.cream, T.cocoa, 0.11),
-  casing: T.espresso,
-  rail: mix(T.cream, T.cocoa, 0.25),
-  boundary: mix(T.cream, T.cocoa, 0.2),
-  label: T.cream,
-  halo: T.espresso,
+  ground: '#21170F',
+  land: '#2E2017',
+  residential: '#33241A',
+  park: '#2C2916',
+  wood: '#29271A',
+  grass: '#302C18',
+  sand: '#3A2B1D',
+  water: '#0E0805',
+  river: '#1A110B',
+  coast: '#E4AA7A', // --ribbon-main-gold, as a faint glow along the shore
+  building: '#3A291C',
+  major: '#6E4B2D',
+  secondary: '#563A23',
+  minor: '#3E2B1D',
+  casing: '#160E09',
+  rail: '#4E3826',
+  boundary: '#4A3423',
   clear: alpha(T.espresso, 0),
 }
 
@@ -189,31 +190,12 @@ function applyBrandTheme(map) {
     set(id, 'line-color', M.boundary)
   }
 
-  // Labels — cream text, espresso halo
-  for (const id of [
-    'water_name_point_label',
-    'water_name_line_label',
-    'waterway_line_label',
-    'poi_r20',
-    'poi_r7',
-    'poi_r1',
-    'poi_transit',
-    'highway-name-path',
-    'highway-name-minor',
-    'highway-name-major',
-    'airport',
-    'label_other',
-    'label_village',
-    'label_town',
-    'label_state',
-    'label_city',
-    'label_city_capital',
-    'label_country_3',
-    'label_country_2',
-    'label_country_1',
-  ]) {
-    set(id, 'text-color', M.label)
-    set(id, 'text-halo-color', M.halo)
+  // The style's own labels can only be set in its glyph server's Noto Sans, so they are
+  // hidden and the map is named with markers in the site's own fonts instead (PLACE_NAMES).
+  // Textured fills (mangrove, wetland, ...) are sprite patterns in pale green that can't be
+  // recoloured, so they go too.
+  for (const layer of map.getStyle().layers) {
+    if (layer.type === 'symbol' || (layer.type === 'fill' && layer.paint?.['fill-pattern'])) hide(layer.id)
   }
 
   // Safety net: anything the lists above missed that is still light (white road
@@ -241,9 +223,8 @@ function applyBrandTheme(map) {
   }
 }
 
-// Everything the "3D" feel needs beyond colors: taller, height-graded
-// buildings (cocoa, catching more light the higher they rise), a warm horizon,
-// and an atmospheric sky.
+// Everything the "3D" feel needs beyond colors: height-graded bronze buildings shaded by a
+// low champagne light, a glow along the coastline, a warm horizon and an atmospheric sky.
 function applyDepth(map) {
   if (map.getLayer('building-3d')) {
     map.setPaintProperty('building-3d', 'fill-extrusion-color', [
@@ -251,22 +232,33 @@ function applyDepth(map) {
       ['linear'],
       ['get', 'render_height'],
       0,
-      mix(T.cream, T.cocoa, 0.08),
-      40,
-      mix(T.cream, T.cocoa, 0.16),
-      120,
-      mix(T.cream, T.cocoa, 0.26),
+      '#4A3220',
+      30,
+      '#5E3F25',
+      80,
+      '#7A4E28',
+      160,
+      T.bronzeDeep,
       300,
-      mix(T.cream, T.cocoa, 0.38),
+      T.bronze,
     ])
-    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.94)
+    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.96)
     map.setPaintProperty('building-3d', 'fill-extrusion-vertical-gradient', true)
     map.setLayerZoomRange('building-3d', 13, 24)
   }
+  // one low light: lit faces brighten, the rest fall into shade. White on purpose - a tinted
+  // light (or one anchored to the map) shades the darkest roofs blue; the warmth is in the bronze.
+  map.setLight({ anchor: 'viewport', color: '#ffffff', intensity: 0.45, position: [1.15, 210, 30] })
+  // the shoreline: a soft bronze glow where the land meets the water
+  if (map.getSource('openmaptiles') && !map.getLayer('coast-glow')) {
+    const before = map.getLayer('building') ? 'building' : undefined
+    map.addLayer({ id: 'coast-glow', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.3, 'line-width': 7, 'line-blur': 6 } }, before)
+    map.addLayer({ id: 'coast-line', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.4, 'line-width': 0.8 } }, before)
+  }
   try {
     map.setSky({
-      'sky-color': T.espresso,
-      'horizon-color': mix(T.cocoa, T.espresso, 0.3),
+      'sky-color': '#120B07',
+      'horizon-color': '#5A3420',
       'fog-color': M.ground,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
@@ -361,6 +353,27 @@ const FLOCK = [
   [18, 7, 0.85],
   [-15, 9, 0.9],
   [34, 15, 0.7],
+]
+// The map's names, set in the site's fonts: districts in Roboto Condensed, spaced capitals;
+// the sea and the bays in Marcellus. [name, lng, lat, kind]
+const PLACE_NAMES = [
+  ['Arabian Sea', 72.778, 18.962, 'sea'],
+  ['Haji Ali Bay', 72.8035, 18.9905, 'sea'],
+  ['Back Bay', 72.8155, 18.9395, 'sea'],
+  ['Worli', 72.8175, 19.0105, 'place'],
+  ['Lower Parel', 72.8305, 18.9985, 'place'],
+  ['Prabhadevi', 72.8275, 19.0165, 'place'],
+  ['Mahalaxmi', 72.8222, 18.9862, 'place'],
+  ['Tardeo', 72.8128, 18.9705, 'place'],
+  ['Byculla', 72.8335, 18.9785, 'place'],
+  ['Nagpada', 72.8275, 18.9665, 'place'],
+  ['Malabar Hill', 72.7985, 18.9555, 'place'],
+  ['Girgaon', 72.8165, 18.9545, 'place'],
+  ['Marine Drive', 72.8232, 18.9435, 'place'],
+  ['Fort', 72.8355, 18.9335, 'place'],
+  ['Colaba', 72.8155, 18.9105, 'place'],
+  ['Dadar', 72.8435, 19.0185, 'place'],
+  ['Bandra', 72.8325, 19.0555, 'place'],
 ]
 const TABS = PLACES.map((c) => ({ value: c.key, label: c.label }))
 
@@ -459,6 +472,17 @@ function Location({ onClose }) {
     tower.className = 'loc-tower-mk'
     tower.innerHTML = '<div class="loc-tower"><span class="base"></span><img alt="" src="/assets/img/menu_crop.png" draggable="false" /></div>'
     new Marker({ element: tower, anchor: 'bottom', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat(PROJECT).addTo(map)
+
+    // The map's names, in the site's fonts; districts give way when the map is far out
+    for (const [name, lng, lat, kind] of PLACE_NAMES) {
+      const el = document.createElement('div')
+      el.className = `loc-name loc-name--${kind}`
+      el.textContent = name
+      new Marker({ element: el, anchor: 'center', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat([lng, lat]).addTo(map)
+    }
+    const far = () => mapContainerRef.current?.classList.toggle('loc-far', map.getZoom() < 12.6)
+    map.on('zoom', far)
+    far()
 
     // Fishing boats out on the bay, each rocking and drifting on its own rhythm
     const boatTweens = []

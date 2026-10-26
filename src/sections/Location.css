@@ -104,3 +104,26 @@
 /* ---- Fishing boats on the water (MapLibre owns the marker; the boat inside is what rocks) ---- */
 .loc-boat-mk { pointer-events: none; }
 .loc-boat { filter: drop-shadow(0 0.15rem 0.35rem rgba(28, 19, 13, 0.55)); }
+
+/* ---- The map's names, in the site's fonts (the base style's own labels are hidden) ---- */
+.loc-name {
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 0 0.6rem rgba(18, 11, 7, 0.95), 0 0 0.2rem rgba(18, 11, 7, 0.9);
+  transition: opacity 0.6s var(--ease-silk);
+}
+.loc-name--place {
+  font-family: var(--sans);
+  font-size: 0.625rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cream) 72%, transparent);
+}
+.loc-name--sea {
+  font-family: var(--serif);
+  font-size: 1rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ribbon-champagne) 48%, transparent);
+}
+.loc-far .loc-name--place { opacity: 0; }
