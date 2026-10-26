@@ -232,36 +232,38 @@ function FloorPlans({ onClose }) {
             {/* ---- the tower on a parchment field - a step in tone, not an outline or a shadow -
                  with its floors as switches, and the floor under the cursor read out beside it ---- */}
             <div className="absolute inset-0 overflow-hidden bg-[var(--parchment)] p-3">
-              {/* top left: the tower in figures */}
-              <div className="fp2-strip absolute left-10 top-8 z-10 hidden flex-col lg:flex">
-                <span className="font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Elevation</span>
-                <span className="mt-1.5 font-serif text-[1.2rem] leading-none text-[var(--ink)]">
-                  {floors.length || ''} levels<span className="text-[var(--ink-soft)]"> · {openable || ''} to explore</span>
-                </span>
+              {/* the left of the card: the tower in figures at the top, then the read-out - the
+                  floor number at poster size, live as the cursor moves, its name and the way in */}
+              <div className="absolute inset-y-8 left-10 z-10 hidden w-[44%] flex-col lg:flex">
+                <div className="fp2-strip flex flex-col">
+                  <span className="font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Elevation</span>
+                  <span className="mt-1.5 font-serif text-[1.2rem] leading-none text-[var(--ink)]">
+                    {floors.length || ''} levels<span className="text-[var(--ink-soft)]"> · {openable || ''} to explore</span>
+                  </span>
+                </div>
+
+                <div className="fp2-read my-auto flex flex-col items-start" aria-live="polite">
+                  <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
+                  <span className="overflow-hidden">
+                    <span key={readId} className="fp2-num block font-serif text-[clamp(5.5rem,9vw,9rem)] leading-[0.9] tracking-[-0.03em] text-[var(--bronze-deep)]">
+                      {readNum}
+                    </span>
+                  </span>
+                  <span className="mt-6 font-serif text-[1.35rem] leading-tight text-[var(--ink)]">{readFloor?.label}</span>
+                  <span className="mt-2 max-w-[12.5rem] font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">Choose a floor on the tower to see its plans.</span>
+                  <button
+                    type="button"
+                    onClick={() => readFloor && openFloor(readFloor.id)}
+                    onPointerMove={glowAt}
+                    className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
+                  >
+                    Open plans
+                  </button>
+                </div>
               </div>
 
-              {/* the read-out: the floor number at poster size, live as the cursor moves */}
-              <div className="fp2-read pointer-events-none absolute bottom-10 left-10 hidden flex-col lg:flex" aria-live="polite">
-                <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
-                <span className="overflow-hidden">
-                  <span key={readId} className="fp2-num block font-serif text-[clamp(5.5rem,9vw,9rem)] leading-[0.9] tracking-[-0.03em] text-[var(--bronze-deep)]">
-                    {readNum}
-                  </span>
-                </span>
-              </div>
-              <div className="fp2-read absolute bottom-10 right-10 hidden max-w-[12rem] flex-col items-end text-right lg:flex">
-                <span className="font-serif text-[1.35rem] leading-tight text-[var(--ink)]">{readFloor?.label}</span>
-                <span className="mt-2 font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">Choose a floor on the tower to see its plans.</span>
-                <button
-                  type="button"
-                  onClick={() => readFloor && openFloor(readFloor.id)}
-                  onPointerMove={glowAt}
-                  className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
-                >
-                  Open plans
-                </button>
-              </div>
-              <div className="flex h-full w-full items-center justify-center overflow-hidden">
+              {/* the tower: centred on small screens, on the right of the card from lg */}
+              <div className="flex h-full w-full items-center justify-center overflow-hidden lg:justify-end lg:pr-[8%]">
                 <div className="fp2-tower relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
                   <div style={innerStyle}>
                     <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
