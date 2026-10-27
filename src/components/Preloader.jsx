@@ -1,70 +1,60 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { gsap, REDUCED } from '../motion/index.js'
-import { cssRgb } from '../theme/tokens.js'
-import { FORTUNE } from './logoPaths.js'
+import { TUGHRA, FORTUNE } from './logoPaths.js'
 
-// The Tughra Royale logo is drawn from the original artwork, not a traced outline: the small
-// "Emperor's Seal" lettering around the seal is too fine to trace and broke apart. The PNG
-// (brown on white) is turned gold once in a canvas - darkness becomes opacity - at a size that
-// stays sharp on large and high-density screens.
-const TUGHRA_PNG = '/assets/logo/tughra.png'
-const TUGHRA_RATIO = 3300 / 2550
+// Both marks are accurate outlines traced from the logo artwork (logoPaths.js), so GSAP's
+// DrawSVG draws every contour of each one - the seal, the calligraphy, the small "Emperor's
+// Seal" lettering and the name - all together, the way a pen would trace them. Once a mark is
+// drawn the fill settles in behind and the pen lines fade. Then a gold hairline opens across
+// the screen and the espresso curtain parts along it. Waits for `play` (the full-screen tap).
 
-function TughraMark({ className }) {
-  const [src, setSrc] = useState(null)
-  useEffect(() => {
-    let live = true
-    const img = new Image()
-    img.onload = () => {
-      const w = 2200
-      const h = Math.round(w / TUGHRA_RATIO)
-      const c = document.createElement('canvas')
-      c.width = w
-      c.height = h
-      const ctx = c.getContext('2d', { willReadFrequently: true })
-      ctx.drawImage(img, 0, 0, w, h)
-      const data = ctx.getImageData(0, 0, w, h)
-      const px = data.data
-      const [r, g, b] = cssRgb('--gold')
-      for (let i = 0; i < px.length; i += 4) {
-        const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
-        px[i + 3] = Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
-        px[i] = r
-        px[i + 1] = g
-        px[i + 2] = b
-      }
-      ctx.putImageData(data, 0, 0)
-      if (live) setSrc(c.toDataURL('image/png'))
-    }
-    img.src = TUGHRA_PNG
-    return () => {
-      live = false
-    }
-  }, [])
-  return (
-    <span className={`block ${className}`} style={{ aspectRatio: `${TUGHRA_RATIO}` }} aria-hidden="true">
-      {src && <img src={src} alt="" draggable={false} className="h-full w-full select-none" />}
-    </span>
-  )
+// a contour's bounding box, in the mark's own units
+const bbox = (d) => {
+  const n = d.match(/-?\d+\.?\d*/g).map(Number)
+  const xs = n.filter((_, i) => i % 2 === 0)
+  const ys = n.filter((_, i) => i % 2 === 1)
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) }
 }
 
-// Each mark rises into view whole - a soft wipe from its foot up, with a fade - so it is
-// never seen part-drawn. Then a gold hairline opens across the screen and the
-// espresso curtain parts along it. Waits for `play` (the full-screen tap) before it starts.
+// Splits a mark into the large strokes (drawn with the pen) and the small lettering - the seal's
+// "Emperor's Seal" - grouped letter by letter, each letter with its counters (O, R, P, A) cut out.
+function splitMark(logo) {
+  const boxes = logo.d.map(bbox)
+  const small = boxes.map((b) => Math.max(b.x1 - b.x0, b.y1 - b.y0) < logo.w * 0.025)
+  const inside = (a, b) => a.x0 >= b.x0 && a.y0 >= b.y0 && a.x1 <= b.x1 && a.y1 <= b.y1
+  const letters = []
+  logo.d.forEach((d, i) => {
+    if (!small[i]) return
+    const host = logo.d.findIndex((_, j) => j !== i && small[j] && inside(boxes[i], boxes[j]))
+    if (host === -1) letters.push({ i, d: [d] })
+  })
+  logo.d.forEach((d, i) => {
+    if (!small[i]) return
+    const host = logo.d.findIndex((_, j) => j !== i && small[j] && inside(boxes[i], boxes[j]))
+    if (host !== -1) letters.find((l) => l.i === host)?.d.push(d)
+  })
+  return { strokes: logo.d.filter((_, i) => !small[i]), letters: letters.map((l) => l.d.join(' ')) }
+}
 
 function Mark({ tag, logo, className, style }) {
   // One combined path carries the solid mark: even-odd keeps the counters and
   // the inside of every stroke open, exactly as the artwork has them.
   const solid = logo.d.join(' ')
-  const pen = Math.round(logo.w / 340)
+  const pen = logo.w / 210
+  const { strokes, letters } = splitMark(logo)
   return (
     <svg viewBox={`0 0 ${logo.w} ${logo.h}`} className={className} style={style} aria-hidden="true">
       <path className={`${tag}-fill`} d={solid} fill="currentColor" fillRule="evenodd" fillOpacity="0" />
       <g fill="none" stroke="currentColor" strokeWidth={pen} strokeLinecap="round" strokeLinejoin="round">
-        {logo.d.map((d, i) => (
+        {strokes.map((d, i) => (
           <path key={i} className={`${tag}-ink`} d={d} />
         ))}
       </g>
+      {/* the small lettering is written with its own fine pen - each letter traced with DrawSVG,
+          one after another around the seal - then filled, so it stays crisp at small sizes */}
+      {letters.map((d, i) => (
+        <path key={i} className={`${tag}-letter`} d={d} fill="currentColor" fillOpacity="0" fillRule="evenodd" stroke="currentColor" strokeWidth={logo.w / 1400} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
     </svg>
   )
 }
@@ -78,30 +68,38 @@ function Preloader({ onComplete, play = true }) {
   useLayoutEffect(() => {
     if (!play) return
     const ctx = gsap.context(() => {
-      // the marks are shown whole, never as part-drawn outlines: the outline strokes stay hidden
-      gsap.set('.pf-ink', { opacity: 0 })
-      gsap.set('.pf-fill', { fillOpacity: 1 })
-      gsap.set(['.pl-tughra', '.pl-fortune'], { opacity: 0, clipPath: 'inset(100% 0% 0% 0%)', y: 10 })
-      gsap.set('.pl-by', { opacity: 0 })
+      gsap.set(['.pt-ink', '.pf-ink', '.pt-letter', '.pf-letter'], { drawSVG: '0%' })
+      gsap.set(['.pt-fill', '.pf-fill'], { fillOpacity: 0 })
+      gsap.set(['.pl-fortune', '.pl-by'], { opacity: 0 })
       gsap.set(lineRef.current, { drawSVG: '50% 50%' })
 
       const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' }, onComplete: () => onComplete?.() })
       if (REDUCED) tl.timeScale(2.5)
 
-      // 1. The seal rises into view whole: a soft wipe from the foot up, with a fade
-      tl.to('.pl-tughra', { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.4, ease: 'power3.out' }, 0.3)
+      // 1. The Tughra Royale mark is drawn: every outline traced at once, from top to bottom
+      tl.to('.pt-ink', { drawSVG: '100%', duration: 1.8, ease: 'power1.inOut', stagger: { each: 0.025 } }, 0.3)
+      // the seal's small lettering is written in, letter by letter, while the strokes draw
+      tl.to('.pt-letter', { drawSVG: '100%', duration: 0.45, ease: 'power1.inOut', stagger: 0.07 }, 0.6)
+      tl.to('.pt-letter', { fillOpacity: 1, duration: 0.3, ease: 'power2.out', stagger: 0.07 }, 0.95)
+      tl.to('.pt-fill', { fillOpacity: 1, duration: 1, ease: 'power1.inOut' }, '-=0.9')
+      tl.to('.pt-ink', { opacity: 0, duration: 0.6 }, '<0.2')
 
       // 2. It holds, then clears
-      tl.to('.pl-tughra', { opacity: 0, y: -16, duration: 0.6 }, '+=0.55')
+      tl.to('.pl-tughra', { opacity: 0, y: -16, duration: 0.6 }, '+=0.6')
 
       // 3. "An initiative by"
       tl.to('.pl-by', { opacity: 1, duration: 0.6 }, '-=0.2')
 
-      // 4. Fortune Square rises into view the same way
-      tl.to('.pl-fortune', { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.2, ease: 'power3.out' }, '-=0.1')
+      // 4. Fortune Square is drawn the same way
+      tl.set('.pl-fortune', { opacity: 1 })
+      tl.to('.pf-ink', { drawSVG: '100%', duration: 1.5, ease: 'power1.inOut', stagger: { each: 0.03 } }, '-=0.1')
+      tl.to('.pf-letter', { drawSVG: '100%', duration: 0.45, ease: 'power1.inOut', stagger: 0.07 }, '<0.3')
+      tl.to('.pf-letter', { fillOpacity: 1, duration: 0.3, stagger: 0.07 }, '<0.35')
+      tl.to('.pf-fill', { fillOpacity: 1, duration: 0.9, ease: 'power1.inOut' }, '-=0.8')
+      tl.to('.pf-ink', { opacity: 0, duration: 0.5 }, '<0.2')
 
       // 5. A gold hairline opens out from the centre of the screen
-      tl.to('.pl-stage', { opacity: 0, duration: 0.5 }, '+=0.5')
+      tl.to('.pl-stage', { opacity: 0, duration: 0.5 }, '+=0.6')
       tl.to(lineRef.current, { drawSVG: '0% 100%', duration: 0.9 }, '-=0.3')
 
       // 6. The curtain parts along that line
@@ -126,7 +124,7 @@ function Preloader({ onComplete, play = true }) {
       </svg>
 
       <div className="pl-stage absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-gold" style={{ visibility: play ? 'visible' : 'hidden' }}>
-        <TughraMark className="pl-tughra absolute w-[clamp(14rem,62vw,22rem)] md:w-[clamp(13rem,32vw,22rem)]" />
+        <Mark tag="pt" logo={TUGHRA} className="pl-tughra absolute h-auto w-[clamp(14.7rem,65vw,23.1rem)] md:w-[clamp(13.65rem,33.6vw,23.1rem)]" />
 
         <span className="pl-by tr-label md:text-[0.75rem]">An initiative by</span>
         <Mark tag="pf" logo={FORTUNE} className="pl-fortune h-auto w-[clamp(10rem,46vw,14rem)] md:w-[clamp(9rem,21vw,14rem)]" />
