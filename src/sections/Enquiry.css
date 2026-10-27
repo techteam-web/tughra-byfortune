@@ -1,0 +1,102 @@
+/* Enquire: the form as glass boxes with an icon each, on the left of a dusk photograph, under a
+   gold curve frame (public/assets/fortuneenquire.png). One filled gold element: the send button.
+   Hover and focus are CSS; every entrance is GSAP. */
+
+.eq-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: max(2.2rem, 42px);
+  padding: 0 0.95rem;
+  border: var(--hairline) solid color-mix(in srgb, var(--cream) 38%, transparent);
+  border-radius: 3px;
+  background: rgba(16, 15, 22, 0.42);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  color: var(--cream);
+  transition: border-color var(--dur-micro) var(--ease-silk), box-shadow var(--dur-micro) var(--ease-silk), background-color var(--dur-micro) var(--ease-silk);
+}
+.eq-box:hover { border-color: color-mix(in srgb, var(--cream) 62%, transparent); }
+.eq-box:focus-within {
+  border-color: var(--gold-pale);
+  background: rgba(16, 15, 22, 0.58);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold-pale) 16%, transparent);
+}
+.eq-box.is-invalid { border-color: var(--alert); }
+.eq-box.is-tall { align-items: flex-start; padding-top: 0.6rem; padding-bottom: 0.45rem; }
+.eq-box svg { flex: 0 0 auto; }
+
+.eq-input {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--sans);
+  font-size: max(0.8125rem, 16px); /* 16px or more, or iPhones zoom in on focus */
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  outline: none;
+}
+.eq-input::placeholder { color: color-mix(in srgb, var(--cream) 82%, transparent); }
+.eq-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--cream);
+  box-shadow: inset 0 0 0 40px var(--cocoa);
+  caret-color: var(--cream);
+}
+textarea.eq-input { resize: none; padding: 0; min-height: 2.2rem; }
+select.eq-input {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 2rem;
+}
+select.eq-input.is-empty { color: color-mix(in srgb, var(--cream) 82%, transparent); }
+select.eq-input option { background: var(--cocoa); color: var(--cream); }
+.eq-chevron { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+
+/* the one filled gold element on the page */
+.eq-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: max(2.3rem, 42px);
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #E9C79A 0%, #DDB07A 55%, #D2A06A 100%);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: max(0.75rem, 12px);
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-silk), transform var(--dur-micro) var(--ease-silk);
+}
+.eq-send:hover { background: linear-gradient(90deg, #F0D3AA 0%, #E6BE8C 55%, #DBAD78 100%); }
+.eq-send:active { transform: scale(0.985); }
+.eq-send:disabled { opacity: 0.6; cursor: default; }
+.eq-send svg { transition: transform var(--dur-micro) var(--ease-silk); }
+.eq-send:hover svg { transform: translateX(0.25rem); }
+.eq-send:focus-visible { outline: var(--hairline) solid var(--ribbon-champagne); outline-offset: 3px; }
+
+/* the form column scrolls on its own when a short screen cannot hold the whole form */
+.eq-col { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.eq-col::-webkit-scrollbar { display: none; }
+
+/* phones held sideways: a tighter form */
+@media (max-height: 520px) and (orientation: landscape) {
+  .eq-box { min-height: 2.5rem; padding: 0 0.8rem; gap: 0.6rem; }
+  .eq-input { font-size: 1rem; padding: 0.4rem 0; }
+  textarea.eq-input { min-height: 2.6rem; }
+  .eq-send { min-height: 2.6rem; }
+}

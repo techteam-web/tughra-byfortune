@@ -14,7 +14,7 @@ import { panelClip } from './glassRibbonGeometry.js'
 //   panel      the content inside the panel (a <nav>, a form …)
 //   children   anything over the photograph (Home, Back …)
 
-export const RIBBON_RX = '[--rx:86vw] sm:[--rx:76vw] side:[--rx:max(23rem,28.6vw)] short:[--rx:21.5rem]'
+export const RIBBON_RX = '[--rx:86vw] sm:[--rx:76vw] side:[--rx:max(20rem,24.5vw)] short:[--rx:19.5rem]'
 export const PANEL_PAD =
   'px-6 pb-[max(1.5rem,var(--safe-b))] pt-[max(1.5rem,var(--safe-t))] sm:px-10 side:pb-[6.8svh] side:pl-[2.9rem] side:pr-6 side:pt-[3.4rem] short:pb-3 short:pl-6 short:pt-3'
 

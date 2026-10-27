@@ -7,8 +7,18 @@ import IsoTurntable from '../components/IsoTurntable.jsx'
 import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 
-// Floors that are shown on the tower but cannot be opened.
-const LOCKED_FLOORS = new Set(['_8th', '_9th'])
+// What each level of the tower is. Only residences open the plans (floor plan and isometric);
+// parking, refuge and the terrace show their name when pointed at, and nothing else.
+const PARKING = new Set(['Ground', '_1st', '_2nd', '_3rd', '_4th', '_5th', '_6th'])
+const REFUGE = new Set(['_8th', '_9th'])
+const kindOf = (id) => (PARKING.has(id) ? 'parking' : REFUGE.has(id) ? 'refuge' : id === 'terrase' ? 'terrace' : 'residence')
+const isResidence = (id) => kindOf(id) === 'residence'
+const KIND_LABEL = { parking: 'Parking', refuge: 'Refuge floor', terrace: 'Terrace', residence: 'Floor' }
+const KIND_NOTE = {
+  parking: 'Car parking for residents. No residences on this level.',
+  refuge: 'A refuge floor, kept open for safety. No residences on this level.',
+  terrace: 'The terrace, above the residences.',
+}
 const DEFAULT_FLOOR = '_17th'
 
 const TOWER_IMG = '/assets/menu.png'
@@ -92,7 +102,7 @@ function FloorPlans({ onClose }) {
         if (cancelled) return
 
         setFloors(parsed)
-        setSelectedFloor((cur) => cur || (parsed.some((f) => f.id === DEFAULT_FLOOR) ? DEFAULT_FLOOR : parsed.find((f) => !LOCKED_FLOORS.has(f.id))?.id))
+        setSelectedFloor((cur) => cur || (parsed.some((f) => f.id === DEFAULT_FLOOR) ? DEFAULT_FLOOR : parsed.find((f) => isResidence(f.id))?.id))
       })
       .catch(() => {})
 
@@ -121,7 +131,8 @@ function FloorPlans({ onClose }) {
   const readId = hoveredFloor ?? selectedFloor
   const readFloor = floors.find((f) => f.id === readId)
   const readNum = readFloor ? (/^\d+$/.test(readFloor.num) ? String(parseInt(readFloor.num, 10)) : readFloor.num) : ''
-  const openable = floors.filter((f) => !LOCKED_FLOORS.has(f.id)).length
+  const openable = floors.filter((f) => isResidence(f.id)).length
+  const readKind = readFloor ? kindOf(readFloor.id) : 'residence'
 
   // moving between floors, the numeral rolls over to the new one
   useLayoutEffect(() => {
@@ -137,6 +148,7 @@ function FloorPlans({ onClose }) {
   }, [unitId, planView])
 
   const openFloor = (id) => {
+    if (!isResidence(id)) return
     setSelectedFloor(id)
     setPlanView('2d')
     setZoomOpen(true)
@@ -180,8 +192,8 @@ function FloorPlans({ onClose }) {
 
   return (
     <section ref={rootRef} className="relative isolate flex h-svh w-full flex-col overflow-hidden bg-[var(--cream)] text-[var(--ink)]">
-      {/* ---------- Top: the logo on the left (back to the menu, as on every page) ---------- */}
-      <header className="fp2-top flex items-center justify-between px-5 pt-[max(1.25rem,var(--safe-t))] sm:px-8 side:px-[2.9rem] side:pt-[2.7rem] short:px-5 short:pt-3">
+      {/* ---------- Top: the logo on the left exactly where the home page has it (back to the menu) ---------- */}
+      <header className="fp2-top flex items-start justify-between px-6 pt-6 md:px-12 md:pt-10">
         <button type="button" onClick={onClose} aria-label="Back to menu" className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
           <Lockup dark />
         </button>
@@ -202,7 +214,7 @@ function FloorPlans({ onClose }) {
             to Inspire
           </h1>
           {/* the line of copy gives way to the tower on small screens */}
-          <p className="mt-5 hidden max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)] lg:block">4, 5 &amp; 6 BHK residences, each with panoramic views over the city skyline and the sea.</p>
+          <p className="mt-5 hidden max-w-[18rem] font-sans text-[0.85rem] leading-relaxed text-[var(--ink-soft)] lg:block">4 &amp; 5 BHK residences, each with panoramic views over the city skyline and the sea.</p>
           <ul className="mt-4 flex flex-row flex-wrap gap-x-6 gap-y-2 lg:mt-9 lg:flex-col lg:gap-5">
             {UNITS.map((u, i) => {
               const on = u.id === unitId
@@ -243,25 +255,31 @@ function FloorPlans({ onClose }) {
                 </div>
 
                 <div className="fp2-read my-auto ml-[clamp(2rem,5vw,5rem)] flex flex-col items-start" aria-live="polite">
-                  <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readFloor?.num === 'T' ? 'Terrace' : readFloor?.num === 'G' ? 'Ground' : 'Floor'}</span>
+                  <span className="font-sans text-[0.9rem] text-[var(--ink-soft)]">{readKind === 'residence' ? 'Floor' : KIND_LABEL[readKind]}</span>
                   <span className="overflow-hidden">
                     <span key={readId} className="fp2-num block font-serif text-[clamp(5.5rem,9vw,9rem)] leading-[0.9] tracking-[-0.03em] text-[var(--bronze-deep)]">
                       {readNum}
                     </span>
                   </span>
-                  <span className="mt-6 font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">
-                    Choose a floor on the tower
-                    <br />
-                    to see its plans.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => readFloor && openFloor(readFloor.id)}
-                    onPointerMove={glowAt}
-                    className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
-                  >
-                    Open plans
-                  </button>
+                  {readKind === 'residence' ? (
+                    <>
+                      <span className="mt-6 font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">
+                        Choose a floor on the tower
+                        <br />
+                        to see its plans.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => readFloor && openFloor(readFloor.id)}
+                        onPointerMove={glowAt}
+                        className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
+                      >
+                        Open plans
+                      </button>
+                    </>
+                  ) : (
+                    <span className="mt-6 max-w-[15rem] font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">{KIND_NOTE[readKind]}</span>
+                  )}
                 </div>
               </div>
 
@@ -274,8 +292,13 @@ function FloorPlans({ onClose }) {
                       {floors.map((floor) => {
                         const isHovered = hoveredFloor === floor.id
                         const isSelected = selectedFloor === floor.id
-                        const shapeProps = LOCKED_FLOORS.has(floor.id)
-                          ? { style: { pointerEvents: 'none', fill: 'transparent' } }
+                        // parking, refuge and the terrace: pointing at them reads out their name, nothing opens
+                        const shapeProps = !isResidence(floor.id)
+                          ? {
+                              onMouseEnter: () => setHoveredFloor(floor.id),
+                              onMouseLeave: () => setHoveredFloor(null),
+                              style: { cursor: 'default', pointerEvents: 'all', transition: 'fill-opacity 0.3s ease', fill: 'var(--espresso)', fillOpacity: isHovered ? 0.18 : 0, stroke: 'none' },
+                            }
                           : {
                               onClick: () => openFloor(floor.id),
                               onMouseEnter: () => setHoveredFloor(floor.id),

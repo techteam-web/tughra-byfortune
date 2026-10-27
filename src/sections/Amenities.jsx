@@ -24,11 +24,7 @@ function Amenities({ onClose }) {
 
   return (
     <section ref={rootRef} className="relative h-svh w-full overflow-hidden bg-espresso text-cream">
-      <img src={pool} alt="" className="am-photo absolute inset-0 h-full w-full object-cover will-change-transform" draggable={false} />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ backgroundImage: 'var(--grain), radial-gradient(ellipse 70% 60% at 50% 50%, color-mix(in srgb, var(--espresso) 72%, transparent) 0%, color-mix(in srgb, var(--espresso) 88%, transparent) 100%)' }}
-      />
+ 
 
       <TopBar onBrand={onClose}>
         <span className="am-back">

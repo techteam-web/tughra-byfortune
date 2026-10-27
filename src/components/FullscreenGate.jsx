@@ -100,7 +100,7 @@ export default function FullscreenGate({ onEnter }) {
         </span>
         <span className="fg-copy tr-label mt-6">Tap anywhere to enter full screen</span>
         <span className="fg-copy mt-3 max-w-[22rem] text-[0.8125rem] leading-relaxed text-cream/70">
-          Tughra Royale is designed to be seen full screen.
+          Tughra Holding is designed to be seen full screen.
         </span>
       </div>
     </div>

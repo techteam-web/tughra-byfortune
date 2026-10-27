@@ -152,3 +152,20 @@ export function IcDeck(props) {
 export function IcDiamond(props) {
   return <Icon {...props}><path d="M12 6.5 17.5 12 12 17.5 6.5 12z" /></Icon>
 }
+
+// form fields (Enquire)
+export function IcUser(props) {
+  return <Icon {...props}><circle cx="12" cy="8.5" r="3.5" /><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" /></Icon>
+}
+export function IcPhone(props) {
+  return <Icon {...props}><path d="M6.6 4h3l1.4 3.8-1.9 1.3a10.5 10.5 0 0 0 4.8 4.8l1.3-1.9 3.8 1.4v3c0 .9-.7 1.6-1.6 1.6C10.7 18 6 13.3 6 5.6 6 4.7 6.2 4 6.6 4z" /></Icon>
+}
+export function IcMail(props) {
+  return <Icon {...props}><rect x="3.5" y="5.5" width="17" height="13" rx="2" /><path d="m4 7 8 6 8-6" /></Icon>
+}
+export function IcChat(props) {
+  return <Icon {...props}><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16H11l-4.5 3.5V16H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5z" /><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" /></Icon>
+}
+export function IcBuilding(props) {
+  return <Icon {...props}><path d="M4 9.5 12 5l8 4.5M5 9.5h14M6.5 9.5v8M10 9.5v8M14 9.5v8M17.5 9.5v8M4.5 17.5h15M3.5 20h17" /></Icon>
+}

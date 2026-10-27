@@ -9,7 +9,7 @@ const FG_URL = '/assets/mainpano/fg/{f}.webp'
 
 // Where the home pano starts, in degrees. Yaw turns left/right (positive = right),
 // pitch tilts up/down (positive = up), fov is the zoom (smaller = closer).
-const START_VIEW = { yaw: 45, pitch: 0, fov: 90 }
+const START_VIEW = { yaw: 60, pitch: 0, fov: 90 }
 const rad = (deg) => (deg * Math.PI) / 180
 
 // `copy` is an optional DOM element that lives inside the scene itself, between the

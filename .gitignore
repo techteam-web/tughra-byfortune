@@ -28,3 +28,6 @@ public/assets/Amenties/
 public/assets/galleryexteriorrender/
 public/assets/galleryinteriorrender/
 public/assets/iso/
+
+# Full render sequences for the floor-plan turntables (the app uses the WebP frames in public/isoframes)
+renders-source/

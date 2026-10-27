@@ -1,10 +1,55 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, REDUCED } from '../motion/index.js'
-import { TUGHRA, FORTUNE } from './logoPaths.js'
+import { cssRgb } from '../theme/tokens.js'
+import { FORTUNE } from './logoPaths.js'
 
-// Both marks are traced outlines, so DrawSVG inks them contour by contour, in reading
-// order, the way a hand would write them. Once a mark is written its strokes soften and
-// the fill settles in behind. Then a gold hairline opens across the screen and the
+// The Tughra Royale logo is drawn from the original artwork, not a traced outline: the small
+// "Emperor's Seal" lettering around the seal is too fine to trace and broke apart. The PNG
+// (brown on white) is turned gold once in a canvas - darkness becomes opacity - at a size that
+// stays sharp on large and high-density screens.
+const TUGHRA_PNG = '/assets/logo/tughra.png'
+const TUGHRA_RATIO = 3300 / 2550
+
+function TughraMark({ className }) {
+  const [src, setSrc] = useState(null)
+  useEffect(() => {
+    let live = true
+    const img = new Image()
+    img.onload = () => {
+      const w = 2200
+      const h = Math.round(w / TUGHRA_RATIO)
+      const c = document.createElement('canvas')
+      c.width = w
+      c.height = h
+      const ctx = c.getContext('2d', { willReadFrequently: true })
+      ctx.drawImage(img, 0, 0, w, h)
+      const data = ctx.getImageData(0, 0, w, h)
+      const px = data.data
+      const [r, g, b] = cssRgb('--gold')
+      for (let i = 0; i < px.length; i += 4) {
+        const lum = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
+        px[i + 3] = Math.min(255, (255 - lum) * 1.6) * (px[i + 3] / 255)
+        px[i] = r
+        px[i + 1] = g
+        px[i + 2] = b
+      }
+      ctx.putImageData(data, 0, 0)
+      if (live) setSrc(c.toDataURL('image/png'))
+    }
+    img.src = TUGHRA_PNG
+    return () => {
+      live = false
+    }
+  }, [])
+  return (
+    <span className={`block ${className}`} style={{ aspectRatio: `${TUGHRA_RATIO}` }} aria-hidden="true">
+      {src && <img src={src} alt="" draggable={false} className="h-full w-full select-none" />}
+    </span>
+  )
+}
+
+// Each mark rises into view whole - a soft wipe from its foot up, with a fade - so it is
+// never seen part-drawn. Then a gold hairline opens across the screen and the
 // espresso curtain parts along it. Waits for `play` (the full-screen tap) before it starts.
 
 function Mark({ tag, logo, className, style }) {
@@ -33,18 +78,18 @@ function Preloader({ onComplete, play = true }) {
   useLayoutEffect(() => {
     if (!play) return
     const ctx = gsap.context(() => {
-      gsap.set(['.pt-ink', '.pf-ink'], { drawSVG: '0%' })
-      gsap.set(['.pt-fill', '.pf-fill'], { fillOpacity: 0 })
-      gsap.set(['.pl-fortune', '.pl-by'], { opacity: 0 })
+      // the marks are shown whole, never as part-drawn outlines: the outline strokes stay hidden
+      gsap.set('.pf-ink', { opacity: 0 })
+      gsap.set('.pf-fill', { fillOpacity: 1 })
+      gsap.set(['.pl-tughra', '.pl-fortune'], { opacity: 0, clipPath: 'inset(100% 0% 0% 0%)', y: 10 })
+      gsap.set('.pl-by', { opacity: 0 })
       gsap.set(lineRef.current, { drawSVG: '50% 50%' })
 
       const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' }, onComplete: () => onComplete?.() })
       if (REDUCED) tl.timeScale(2.5)
 
-      // 1. The seal is written, contour by contour
-      tl.to('.pt-ink', { drawSVG: '100%', duration: 0.5, stagger: 0.055 }, 0.3)
-      tl.to('.pt-fill', { fillOpacity: 1, duration: 0.7 }, '-=0.5')
-      tl.to('.pt-ink', { opacity: 0, duration: 0.5 }, '<')
+      // 1. The seal rises into view whole: a soft wipe from the foot up, with a fade
+      tl.to('.pl-tughra', { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.4, ease: 'power3.out' }, 0.3)
 
       // 2. It holds, then clears
       tl.to('.pl-tughra', { opacity: 0, y: -16, duration: 0.6 }, '+=0.55')
@@ -52,11 +97,8 @@ function Preloader({ onComplete, play = true }) {
       // 3. "An initiative by"
       tl.to('.pl-by', { opacity: 1, duration: 0.6 }, '-=0.2')
 
-      // 4. Fortune Square is written the same way
-      tl.set('.pl-fortune', { opacity: 1 })
-      tl.to('.pf-ink', { drawSVG: '100%', duration: 0.45, stagger: 0.05 }, '-=0.1')
-      tl.to('.pf-fill', { fillOpacity: 1, duration: 0.6 }, '-=0.45')
-      tl.to('.pf-ink', { opacity: 0, duration: 0.45 }, '<')
+      // 4. Fortune Square rises into view the same way
+      tl.to('.pl-fortune', { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.2, ease: 'power3.out' }, '-=0.1')
 
       // 5. A gold hairline opens out from the centre of the screen
       tl.to('.pl-stage', { opacity: 0, duration: 0.5 }, '+=0.5')
@@ -84,7 +126,7 @@ function Preloader({ onComplete, play = true }) {
       </svg>
 
       <div className="pl-stage absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-gold" style={{ visibility: play ? 'visible' : 'hidden' }}>
-        <Mark tag="pt" logo={TUGHRA} className="pl-tughra absolute h-auto w-[clamp(14rem,62vw,22rem)] md:w-[clamp(13rem,32vw,22rem)]" />
+        <TughraMark className="pl-tughra absolute w-[clamp(14rem,62vw,22rem)] md:w-[clamp(13rem,32vw,22rem)]" />
 
         <span className="pl-by tr-label md:text-[0.75rem]">An initiative by</span>
         <Mark tag="pf" logo={FORTUNE} className="pl-fortune h-auto w-[clamp(10rem,46vw,14rem)] md:w-[clamp(9rem,21vw,14rem)]" />

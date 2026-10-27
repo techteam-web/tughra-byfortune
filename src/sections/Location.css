@@ -2,49 +2,60 @@
 
 .loc-list { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ribbon-main-gold) 40%, transparent) transparent; }
 
-/* ---- Map pins: bronze, the chosen one gold; no pulsing ---- */
-.loc-mk { width: 0.75rem; height: 0.75rem; cursor: pointer; }
+/* ---- Map pins: a round head with the name beside it, on a thin stick down to the place ---- */
+.loc-mk { cursor: pointer; }
 .loc-pin {
   position: relative;
-  width: 0.75rem;
-  height: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.loc-pin__head {
+  position: relative;
+  width: 0.85rem;
+  height: 0.85rem;
   border-radius: 50%;
   background: var(--pin, var(--ribbon-main-gold));
-  border: 2px solid var(--espresso);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pin, var(--ribbon-main-gold)) 70%, transparent);
-  transition: transform 0.4s var(--ease-silk), background-color 0.3s var(--ease-silk);
+  box-shadow: 0 0 0 2px var(--cream), 0 0 0.9rem color-mix(in srgb, var(--pin, var(--ribbon-main-gold)) 70%, transparent);
+  transition: transform 0.4s var(--ease-silk);
 }
-.loc-pin span {
+.loc-pin__name {
   position: absolute;
-  left: 50%;
-  bottom: 1.35rem;
-  transform: translate(-50%, 0.35rem);
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ribbon-main-gold) 50%, transparent);
-  background: color-mix(in srgb, var(--espresso) 80%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  left: calc(100% + 0.55rem);
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--cream);
   font-family: var(--sans);
-  font-size: 0.6875rem;
-  letter-spacing: 0.04em;
+  font-size: max(0.75rem, 12px);
+  line-height: 1.15;
   white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s var(--ease-silk), transform 0.35s var(--ease-silk);
+  text-shadow: 0 0 0.5rem rgba(8, 5, 3, 0.95), 0 0 0.15rem rgba(8, 5, 3, 0.9);
+  transition: color 0.3s var(--ease-silk);
 }
-.loc-mk:hover .loc-pin { transform: scale(1.25); }
-.loc-mk:hover .loc-pin span,
-.loc-mk.is-on .loc-pin span { opacity: 1; transform: translate(-50%, 0); }
-.loc-mk.is-on .loc-pin { transform: scale(1.35); }
-.loc-mk.is-on .loc-pin::after {
-  content: '';
-  position: absolute;
-  inset: -0.3rem;
+.loc-pin__stem {
+  display: block;
+  width: 1px;
+  height: 0.85rem;
+  background: color-mix(in srgb, var(--cream) 85%, transparent);
+  transition: height 0.4s var(--ease-silk);
+}
+.loc-pin__foot {
+  display: block;
+  width: 0.32rem;
+  height: 0.32rem;
+  margin-top: -0.16rem;
   border-radius: 50%;
-  border: 1px solid var(--pin, var(--ribbon-champagne));
+  background: var(--cream);
+  box-shadow: 0 0 0.5rem color-mix(in srgb, var(--cream) 70%, transparent);
 }
+.loc-mk:hover .loc-pin__head { transform: scale(1.2); }
+.loc-mk:hover .loc-pin__name,
+.loc-mk.is-on .loc-pin__name { color: var(--ribbon-champagne); }
+.loc-mk.is-on .loc-pin__head { transform: scale(1.3); }
+.loc-mk.is-on .loc-pin__stem { height: 3.6rem; }
+.loc-mk:hover .loc-pin__stem { height: 1.4rem; }
+.loc-mk.is-on:hover .loc-pin__stem { height: 3.6rem; }
+.loc-mk.is-on { z-index: 2; }
 
 /* ---- The project tower, standing on a bronze footprint ---- */
 .loc-tower-mk { pointer-events: none; }
@@ -124,6 +135,18 @@
   font-size: 1rem;
   letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--ribbon-champagne) 48%, transparent);
+  color: color-mix(in srgb, var(--ribbon-main-gold) 55%, transparent);
 }
 .loc-far .loc-name--place { opacity: 0; }
+
+/* ---- The left card: the app's smoky glass and copper edge (.tr-panel), deeper and more frosted
+   than on other pages, with a soft lift, so it stands clearly off the busy map behind it ---- */
+.loc-panel.loc-card {
+  background:
+    var(--grain),
+    linear-gradient(180deg, color-mix(in srgb, var(--ribbon-main-gold) 9%, transparent) 0%, transparent 40%),
+    color-mix(in srgb, #2E2219 88%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  backdrop-filter: blur(22px) saturate(1.1);
+  box-shadow: 0 1.5rem 3rem rgba(6, 4, 3, 0.55);
+}

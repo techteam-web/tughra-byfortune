@@ -23,7 +23,7 @@ function Copy({ mode, onExplore }) {
           <span className="hr-line hr-copper inline-block">A World</span>
         </span>
         <span className="block overflow-hidden px-2 pb-3">
-          <span className="hr-line hr-copper inline-block italic">Without Ordinary</span>
+          <span className="hr-line hr-copper inline-block italic">Away From Ordinary</span>
         </span>
       </h1>
 

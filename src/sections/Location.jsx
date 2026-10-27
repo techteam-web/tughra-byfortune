@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Map as MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
+import { Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap, fx, PAGE_IN, REDUCED } from '../motion/index.js'
 import { TopBar, MenuControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
-import { T, alpha, mix } from '../theme/tokens.js'
+import { T, alpha } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
 import './Location.css'
 
@@ -12,29 +12,36 @@ import './Location.css'
 // (dev serves it straight from node_modules, so no override is needed there).
 if (import.meta.env.PROD) setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`)
 
-// The map in the site's own palette: the city at night in espresso and cocoa, as if lit by
-// the tower's bronze. Water is the deepest espresso, land a step up in cocoa, parks a dark
-// olive, roads quiet bronze lines, and the buildings rise in bronze - darkest at the
-// street, catching the light towards their tops. The routes (pink, blue, green, yellow)
-// are the only bright colours on it.
+// The map in the app's own colours, kept to a few:
+// - main: copper - the ribbon's copper for the avenues and the shoreline, its deeper bronze for
+//   the streets, the rails and the lit tops of the buildings
+// - secondary: deep espresso for the land and the blocks, and a deep navy for the sea
+// - accent: blue, for the routes and the pins only (see BLUE)
+// No yellow gold anywhere on the map.
+const COPPER = '#E4AA7A' // --ribbon-main-gold
+const COPPER_MID = '#C98B62' // the home page's copper
+const COPPER_DEEP = '#8C4D2C' // --ribbon-deep-bronze
+const NAVY = '#0C1A2A'
 const M = {
-  ground: '#21170F',
-  land: '#2E2017',
-  residential: '#33241A',
-  park: '#2C2916',
-  wood: '#29271A',
-  grass: '#302C18',
-  sand: '#3A2B1D',
-  water: '#0E0805',
-  river: '#1A110B',
-  coast: '#E4AA7A', // --ribbon-main-gold, as a faint glow along the shore
-  building: '#3A291C',
-  major: '#6E4B2D',
-  secondary: '#563A23',
-  minor: '#3E2B1D',
-  casing: '#160E09',
-  rail: '#4E3826',
-  boundary: '#4A3423',
+  ground: '#17110C',
+  land: '#17110C',
+  residential: '#1E160F',
+  park: '#1A1610',
+  parkEdge: '#1A1610',
+  wood: '#1A1610',
+  grass: '#1A1610',
+  sand: '#1E160F',
+  water: NAVY,
+  river: NAVY,
+  coast: COPPER,
+  building: '#241A12',
+  major: COPPER,
+  secondary: COPPER_MID,
+  minor: COPPER_DEEP,
+  glow: COPPER_MID,
+  casing: '#0F0B08',
+  rail: COPPER_DEEP,
+  boundary: COPPER_DEEP,
   clear: alpha(T.espresso, 0),
 }
 
@@ -120,9 +127,11 @@ function applyBrandTheme(map) {
   // Roads — warm taupe, lighter for major routes, fading for minor ones
   for (const id of ['road_motorway', 'road_trunk_primary', 'bridge_motorway', 'bridge_trunk_primary', 'tunnel_motorway', 'tunnel_trunk_primary']) {
     set(id, 'line-color', M.major)
+    set(id, 'line-opacity', 0.95)
   }
   for (const id of ['road_secondary_tertiary', 'bridge_secondary_tertiary', 'tunnel_secondary_tertiary']) {
     set(id, 'line-color', M.secondary)
+    set(id, 'line-opacity', 0.7)
   }
   for (const id of [
     'road_minor',
@@ -139,6 +148,7 @@ function applyBrandTheme(map) {
     'tunnel_path_pedestrian',
   ]) {
     set(id, 'line-color', M.minor)
+    set(id, 'line-opacity', 0.55)
   }
   for (const id of [
     'road_motorway_casing',
@@ -161,6 +171,7 @@ function applyBrandTheme(map) {
   }
   for (const id of ['road_major_rail', 'road_transit_rail', 'bridge_major_rail', 'bridge_transit_rail', 'tunnel_major_rail', 'tunnel_transit_rail']) {
     set(id, 'line-color', M.rail)
+    set(id, 'line-opacity', 0.45)
   }
 
   // Layers the base style draws in white / light grey / yellow that would
@@ -170,9 +181,11 @@ function applyBrandTheme(map) {
   set('aeroway_fill', 'fill-opacity', 0.3)
   for (const id of ['tunnel_service_track', 'bridge_service_track', 'tunnel_minor']) {
     set(id, 'line-color', M.minor)
+    set(id, 'line-opacity', 0.55)
   }
   for (const id of ['road_motorway_link', 'bridge_motorway_link', 'tunnel_motorway_link']) {
     set(id, 'line-color', M.secondary)
+    set(id, 'line-opacity', 0.7)
   }
   for (const id of [
     'road_motorway_link_casing',
@@ -188,6 +201,7 @@ function applyBrandTheme(map) {
   // Boundaries
   for (const id of ['boundary_2', 'boundary_3', 'boundary_disputed']) {
     set(id, 'line-color', M.boundary)
+    set(id, 'line-opacity', 0.25)
   }
 
   // The style's own labels can only be set in its glyph server's Noto Sans, so they are
@@ -215,6 +229,7 @@ function applyBrandTheme(map) {
     const { id, type } = layer
     if (type === 'line' && !touched.has(id + 'line-color') && isLight(map.getPaintProperty(id, 'line-color'))) {
       set(id, 'line-color', M.minor)
+    set(id, 'line-opacity', 0.55)
     }
     if (type === 'fill') {
       if (!touched.has(id + 'fill-color') && isLight(map.getPaintProperty(id, 'fill-color'))) set(id, 'fill-color', M.land)
@@ -227,38 +242,40 @@ function applyBrandTheme(map) {
 // low champagne light, a glow along the coastline, a warm horizon and an atmospheric sky.
 function applyDepth(map) {
   if (map.getLayer('building-3d')) {
-    map.setPaintProperty('building-3d', 'fill-extrusion-color', [
-      'interpolate',
-      ['linear'],
-      ['get', 'render_height'],
-      0,
-      '#4A3220',
-      30,
-      '#5E3F25',
-      80,
-      '#7A4E28',
-      160,
-      T.bronzeDeep,
-      300,
-      T.bronze,
-    ])
-    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.96)
+    map.setPaintProperty('building-3d', 'fill-extrusion-color', ['interpolate', ['linear'], ['get', 'render_height'], 0, '#2A1E15', 40, '#3A281B', 100, '#5C3A24', 180, COPPER_DEEP, 300, COPPER_MID])
+    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 1)
     map.setPaintProperty('building-3d', 'fill-extrusion-vertical-gradient', true)
     map.setLayerZoomRange('building-3d', 13, 24)
   }
   // one low light: lit faces brighten, the rest fall into shade. White on purpose - a tinted
   // light (or one anchored to the map) shades the darkest roofs blue; the warmth is in the bronze.
   map.setLight({ anchor: 'viewport', color: '#ffffff', intensity: 0.45, position: [1.15, 210, 30] })
-  // the shoreline: a soft bronze glow where the land meets the water
+  // a soft copper glow under the avenues
+  if (map.getSource('openmaptiles') && !map.getLayer('road-glow')) {
+    const firstRoad = map.getStyle().layers.find((l) => /^(tunnel|road|bridge)_/.test(l.id))?.id
+    map.addLayer(
+      {
+        id: 'road-glow',
+        type: 'line',
+        source: 'openmaptiles',
+        'source-layer': 'transportation',
+        filter: ['in', ['get', 'class'], ['literal', ['motorway', 'trunk', 'primary']]],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': M.glow, 'line-blur': ['interpolate', ['linear'], ['zoom'], 10, 4, 16, 12], 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 5, 16, 24], 'line-opacity': 0.35 },
+      },
+      firstRoad,
+    )
+  }
+  // the shoreline: a soft glow where the land meets the water
   if (map.getSource('openmaptiles') && !map.getLayer('coast-glow')) {
     const before = map.getLayer('building') ? 'building' : undefined
-    map.addLayer({ id: 'coast-glow', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.3, 'line-width': 7, 'line-blur': 6 } }, before)
-    map.addLayer({ id: 'coast-line', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.4, 'line-width': 0.8 } }, before)
+    map.addLayer({ id: 'coast-glow', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.28, 'line-width': 8, 'line-blur': 7 } }, before)
+    map.addLayer({ id: 'coast-line', type: 'line', source: 'openmaptiles', 'source-layer': 'water', paint: { 'line-color': M.coast, 'line-opacity': 0.6, 'line-width': 0.9 } }, before)
   }
   try {
     map.setSky({
-      'sky-color': '#120B07',
-      'horizon-color': '#5A3420',
+      'sky-color': '#0F0B08',
+      'horizon-color': '#3A2316',
       'fog-color': M.ground,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.8,
@@ -272,27 +289,17 @@ function applyDepth(map) {
 const ROUTE_SRC = 'route'
 const ALL_SRC = 'routes-all'
 
-// Routes use only four colours: pink, blue, green and yellow. Each category takes one
-// of them. Within a category, each place gets its own shade of that colour (lightened
-// by a different amount), so when several routes share the map at once (the overview)
-// every route still reads as its own line without leaving the category's hue.
-const PINK = '#F06BA8'
+// Routes are the accent: one blue, the only colour on the map outside copper, espresso and the sea.
 const BLUE = '#4D9BFF'
-const GREEN = '#4CD98A'
-const YELLOW = '#FFD23F'
 const CATEGORY_COLORS = {
   connectivity: BLUE,
-  healthcare: PINK,
-  landmarks: YELLOW,
-  hospitality: PINK,
-  business: YELLOW,
-  education: GREEN,
+  healthcare: BLUE,
+  landmarks: BLUE,
+  hospitality: BLUE,
+  business: BLUE,
+  education: BLUE,
 }
-const SHADE_KEEP = [1, 0.72, 0.5, 0.86, 0.6, 0.94, 0.4, 0.78]
-const colorOf = (category, i = 0) => {
-  const base = CATEGORY_COLORS[category] || CATEGORY_COLORS.connectivity
-  return mix(base, '#ffffff', SHADE_KEEP[((i % SHADE_KEEP.length) + SHADE_KEEP.length) % SHADE_KEEP.length])
-}
+const colorOf = () => BLUE
 const ROUTE_DEFAULT = CATEGORY_COLORS.connectivity
 const ROUTE_OFF = alpha(ROUTE_DEFAULT, 0)
 // The route is revealed by masking a line-gradient (cheap) rather than re-sending
@@ -328,7 +335,7 @@ function fetchRoute(place, signal) {
 }
 const EMPTY = { type: 'FeatureCollection', features: [] }
 
-const OVERVIEW = { center: PROJECT, zoom: 15.2, pitch: 64, bearing: -25 }
+const OVERVIEW = { center: PROJECT, zoom: 14.85, pitch: 62, bearing: -25 }
 
 // Three fishing boats on the water off Haji Ali, Breach Candy and in Back Bay [lng, lat]
 const BOATS = [
@@ -339,12 +346,10 @@ const BOATS = [
 // a small koli fishing boat, painted the way they are on the Mumbai shore: a blue hull
 // with a red band, a raised bow, a mast, a white sail and a red pennant, on a faint wake
 const BOAT_SVG = `<svg viewBox="0 0 44 36" width="30" height="25" aria-hidden="true">
-  <path d="M5 31 Q14 29.5 22 31 T39 31" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-linecap="round"/>
-  <path d="M2 21 Q5 22.5 9 23 L35 23 Q39 22.5 42 19.5 L37 28.5 Q22 30.5 8 28.5 Z" fill="#2F7DC4"/>
-  <path d="M5.5 24.6 L38.8 24.6" stroke="#E5533F" stroke-width="1.6"/>
-  <path d="M21 23 L21 4" stroke="#F4F1EA" stroke-width="1.2"/>
-  <path d="M21 6 L33.5 21 L21 21 Z" fill="#F4F1EA" fill-opacity="0.95"/>
-  <path d="M21 4 L27 5.6 L21 7.2 Z" fill="#E5533F"/>
+  <path d="M5 31 Q14 29.5 22 31 T39 31" fill="none" stroke="${COPPER}" stroke-opacity="0.3" stroke-linecap="round"/>
+  <path d="M2 21 Q5 22.5 9 23 L35 23 Q39 22.5 42 19.5 L37 28.5 Q22 30.5 8 28.5 Z" fill="${COPPER}"/>
+  <path d="M21 23 L21 4" stroke="${COPPER}" stroke-width="1.2"/>
+  <path d="M21 6 L33.5 21 L21 21 Z" fill="${COPPER}" fill-opacity="0.85"/>
 </svg>`
 
 // gulls in each flock, small and loose: [x, y, size]
@@ -416,7 +421,6 @@ function Location({ onClose }) {
     map.boxZoom.disable()
     map.touchZoomRotate.disable()
     map.keyboard.disable()
-    map.addControl(new NavigationControl({ visualizePitch: true, showZoom: false }), 'bottom-right')
 
     map.on('load', () => {
       applyBrandTheme(map)
@@ -527,17 +531,17 @@ function Location({ onClose }) {
       const el = document.createElement('div')
       el.className = 'loc-mk'
       el.style.setProperty('--pin', colorOf(category, i))
+      // as in the reference: a round head with the name beside it, on a thin stick down to the place
       const pin = document.createElement('div')
       pin.className = 'loc-pin'
-      const label = document.createElement('span')
-      label.textContent = p.name
-      pin.appendChild(label)
+      pin.innerHTML = '<span class="loc-pin__head"><span class="loc-pin__name"></span></span><i class="loc-pin__stem"></i><i class="loc-pin__foot"></i>'
+      pin.querySelector('.loc-pin__name').textContent = p.name
       el.appendChild(pin)
       el.addEventListener('click', (e) => {
         e.stopPropagation()
         setSelected((s) => (s === p.id ? null : p.id))
       })
-      placed.push(new Marker({ element: el }).setLngLat(p.at).addTo(map))
+      placed.push(new Marker({ element: el, anchor: 'bottom', pitchAlignment: 'viewport', rotationAlignment: 'viewport' }).setLngLat(p.at).addTo(map))
       markers.set(p.id, el)
     })
     return () => {
@@ -753,24 +757,24 @@ function Location({ onClose }) {
 
       {/* Location table */}
       <aside
-        className="loc-panel tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-0 md:left-8 md:top-0 md:my-auto md:h-fit md:max-h-[70svh] md:w-[23rem] md:p-6 side:left-[2.9rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:my-0 short:h-auto short:max-h-none short:w-[16rem] short:p-3"
+        className="loc-panel loc-card tr-panel absolute inset-x-3 bottom-[max(0.75rem,var(--safe-b))] z-10 flex max-h-[46svh] flex-col p-4 opacity-0 md:inset-x-auto md:bottom-auto md:left-8 md:top-[9.25rem] md:my-0 md:h-fit md:max-h-[calc(100svh-11.5rem)] md:w-[19.5rem] md:p-4 side:left-[2.9rem] short:inset-x-auto short:bottom-3 short:left-4 short:top-[4.25rem] short:my-0 short:h-auto short:max-h-none short:w-[16rem] short:p-3"
       >
         <span className="loc-rise flex items-center gap-4 short:hidden">
           <span className="tr-num">05</span>
           <span className="tr-dash" />
           <span className="tr-label">Mumbai Central</span>
         </span>
-        <h2 className="loc-rise tr-display mt-3 text-[1.6rem] leading-none md:text-[2.1rem] short:mt-0 short:text-[1.15rem]">Location Highlights</h2>
-        <i className="loc-hair tr-hair mt-4 short:mt-2" />
+        <h2 className="loc-rise tr-display mt-2 text-[1.4rem] leading-none md:text-[1.55rem] short:mt-0 short:text-[1.15rem]">Location Highlights</h2>
+        <i className="loc-hair tr-hair mt-3 short:mt-2" />
 
-        <div className="loc-rise mt-4 hidden md:block short:mt-2">
+        <div className="loc-rise mt-3 hidden md:block short:mt-2">
           <Segmented options={TABS} value={category} onChange={pickCategory} label="Categories" grid={2} className="w-full" />
         </div>
         <div className="loc-rise tr-noscroll -mx-1 mt-3 overflow-x-auto px-1 md:hidden">
           <Segmented options={TABS} value={category} onChange={pickCategory} label="Categories" />
         </div>
 
-        <ul className="loc-list -mx-1.5 mt-3 min-h-0 flex-1 overflow-y-auto px-1.5">
+        <ul className="loc-list -mx-1.5 mt-2 min-h-0 flex-1 overflow-y-auto px-1.5">
           {current.places.map((p, i) => {
             const on = p.id === selected
             return (
@@ -780,7 +784,7 @@ function Location({ onClose }) {
                   type="button"
                   aria-pressed={on}
                   onPointerMove={glowAt}
-                  className={`mn-glow tr-focus group flex w-full touch-manipulation items-center gap-3 rounded-lg border-none bg-transparent px-2.5 py-2.5 text-left font-sans text-[0.75rem] uppercase tracking-[0.14em] transition-colors duration-300 short:py-1 short:text-[0.6875rem] ${on ? 'is-on text-[var(--ribbon-champagne)]' : 'text-cream hover:text-[var(--ribbon-champagne)]'}`}
+                  className={`mn-glow tr-focus group flex w-full touch-manipulation items-center gap-3 rounded-lg border-none bg-transparent px-2.5 py-1.5 text-left font-sans text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-300 short:py-1 short:text-[0.6875rem] ${on ? 'is-on text-[var(--ribbon-champagne)]' : 'text-cream hover:text-[var(--ribbon-champagne)]'}`}
                   onClick={() => setSelected((s) => (s === p.id ? null : p.id))}
                 >
                   <span className="tr-num w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
@@ -799,7 +803,7 @@ function Location({ onClose }) {
           onClick={overview}
           style={{ borderColor: CATEGORY_COLORS[category] }}
           onPointerMove={glowAt}
-          className="tr-btn tr-btn--outline mn-glow absolute right-16 top-28 z-10 md:bottom-8 md:right-[5.75rem] md:top-auto short:bottom-3 short:right-16 short:top-auto"
+          className="tr-btn tr-btn--outline mn-glow absolute right-3 top-[max(5.2rem,calc(var(--safe-t)+4.2rem))] z-30 min-h-0 px-4 py-2.5 sm:right-6 side:right-[2.8rem] side:top-[6.9rem] short:right-4 short:top-[3.9rem]"
         >
           Overview
         </button>

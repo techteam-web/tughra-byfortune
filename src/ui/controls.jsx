@@ -39,13 +39,26 @@ export const MenuControl = ({ onClick }) => (
   </IconButton>
 )
 
-// The Tughra Royale logo as the preloader draws it: the seal with the name set beneath it.
-// `dark` is the same logo in ink, for the beige pages.
+// The Tughra Royale logo exactly as the home page sets it: the seal and name with "An Initiative
+// by Fortune Square" beneath, the same size on every page. `dark` is the same logo in ink, for
+// the cream pages (white would vanish there).
 export function Lockup({ className = '', dark = false }) {
   return (
     <span className={`flex items-center ${className}`}>
-      <BrandMark tone={dark ? 'dark' : 'pale'} size="crown" credit={false} />
+      <BrandMark tone={dark ? 'dark' : 'light'} size="hero" />
     </span>
+  )
+}
+
+// Where the home page puts its logo; every page puts it in the same spot.
+export const BRAND_SPOT = 'absolute left-6 top-6 z-30 md:left-12 md:top-10'
+
+// The logo in that spot, as a button back to the menu.
+export function BrandCorner({ onClick, dark = false, label = 'Back to menu', className = '' }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} className={`tr-focus border-none bg-transparent p-0 text-left ${BRAND_SPOT} ${className}`}>
+      <Lockup dark={dark} />
+    </button>
   )
 }
 
@@ -113,12 +126,14 @@ export function TopBar({ onBrand, children, aside, sticky = false, fixed = false
       )}
       {/* the bar itself lets clicks through everywhere except its own content, so page
           content sitting in the same band (a card's own header row, say) stays clickable */}
-      <div className="tb-anim pointer-events-auto flex min-w-0 items-center gap-5">
+      {/* the logo sits where the home page puts it; the bar keeps only the controls in its flow */}
+      <div className={`tb-anim pointer-events-auto flex min-w-0 items-start gap-5 ${BRAND_SPOT}`}>
         <button type="button" onClick={onBrand} aria-label={brandLabel} className="tr-focus shrink-0 border-none bg-transparent p-0 text-left">
           <Lockup />
         </button>
         {aside}
       </div>
+      <span aria-hidden="true" />
       <div className="pointer-events-auto flex items-center">{children}</div>
     </header>
   )

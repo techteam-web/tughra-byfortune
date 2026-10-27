@@ -36,7 +36,7 @@ const CATEGORIES = [
   },
   {
     id: 'amenities',
-    label: 'Amenities',
+    label: 'Luxurious Amenities',
     slides: [
       { src: intPool, title: 'Swimming Pool', subtitle: 'Laps above the city' },
       { src: intGym1, title: 'Fitness Centre', subtitle: 'Train with a view' },
