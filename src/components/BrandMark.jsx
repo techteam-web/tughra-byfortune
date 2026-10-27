@@ -8,7 +8,7 @@ const TUGHRA = '/assets/logo/tughra.png'
 
 // tone 'light' = the home page's logo, frozen as it was; 'gold' = every other page; 'dark' = on cream
 const TONE = {
-  light: { token: '--hero-logo', caption: 'text-hero-cream/80' },
+  light: { token: '--hero-logo', caption: 'text-[var(--hero-logo)]' },
   gold: { token: '--gold', caption: 'text-gold-pale/80' },
   pale: { token: '--gold-pale', caption: 'text-gold-pale/80' },
   dark: { token: '--ink', caption: 'text-ink' },
