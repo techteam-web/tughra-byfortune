@@ -31,3 +31,8 @@ public/assets/iso/
 
 # Full render sequences for the floor-plan turntables (the app uses the WebP frames in public/isoframes)
 renders-source/
+
+# Full render sequence for the floor-plans tower orbit, TIFF passes (the app uses the WebP frames in public/towerframes)
+public/fortunebuildingframes/
+# World position pass for the tower floor maps (tools/tower-floor-maps.mjs; the app uses public/towerframes/floors)
+public/world pass/

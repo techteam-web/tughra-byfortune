@@ -4,56 +4,39 @@ import { gsap, fx, EASE, PAGE_IN, REDUCED } from '../motion/index.js'
 import { glowAt } from '../ui/glow.js'
 import { Lockup, MenuControl } from '../ui/controls.jsx'
 import IsoTurntable from '../components/IsoTurntable.jsx'
+import TowerFloorPicker from '../components/TowerFloorPicker.jsx'
 import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
+import { TOWER_FLOORS } from '../components/towerFloors.js'
 
-// What each level of the tower is. Only residences open the plans (floor plan and isometric);
-// parking, refuge and the terrace show their name when pointed at, and nothing else.
-const PARKING = new Set(['Ground', '_1st', '_2nd', '_3rd', '_4th', '_5th', '_6th'])
-const REFUGE = new Set(['_8th', '_9th'])
-const kindOf = (id) => (PARKING.has(id) ? 'parking' : REFUGE.has(id) ? 'refuge' : id === 'terrase' ? 'terrace' : 'residence')
-const isResidence = (id) => kindOf(id) === 'residence'
-const KIND_LABEL = { parking: 'Parking', refuge: 'Refuge floor', terrace: 'Terrace', residence: 'Floor' }
+// What each level of the tower is comes from towerFloors.js. Only residences open the plans
+// (floor plan and isometric); the lobby, parking, amenities and the terrace show their name
+// when pointed at, and nothing else.
+const isResidence = (floor) => floor?.kind === 'residence'
+const KIND_LABEL = { lobby: 'Entrance', parking: 'Parking', amenity: 'Amenities', terrace: 'Terrace', residence: 'Floor' }
 const KIND_NOTE = {
+  lobby: 'The entrance lobby. No residences on this level.',
   parking: 'Car parking for residents. No residences on this level.',
-  refuge: 'A refuge floor, kept open for safety. No residences on this level.',
+  amenity: 'Amenities for residents. No residences on this level.',
   terrace: 'The terrace, above the residences.',
 }
 const DEFAULT_FLOOR = '_17th'
 
-const TOWER_IMG = '/assets/menu.png'
-const BUILDING_SVG_URL = '/assets/svg/Building.svg'
-
-// Native size of TOWER_IMG - Building.svg's shapes are traced against this
-// exact coordinate space, so the overlay <svg> shares the same viewBox.
-const CANVAS = { width: 1672, height: 941 }
-
-// The tower render sits inside a much wider, mostly-empty canvas. This crop
-// window (in canvas pixels) frames just the building, and drives the
-// percentage-based oversized-inner-box trick below so the image and the
-// clickable overlay stay pixel-aligned at any display size.
-const CROP = { x: 750, y: 150, width: 500, height: 790 }
-
-const idToNum = (id) => {
-  if (id === 'terrase') return 'T'
-  if (id === 'Ground') return 'G'
-  const clean = id.replace(/^_/, '')
-  const digits = clean.match(/^\d+/)?.[0]
-  return digits ? digits.padStart(2, '0') : clean
-}
-
-const idToLabel = (id) => {
-  if (id === 'terrase') return 'Terrace'
-  if (id === 'Ground') return 'Ground Floor'
-  return `${id.replace(/^_/, '')} Floor`
-}
+// The tower as an orbit: /public/towerframes/001.webp ... 100.webp, the beauty pass of the
+// "Fortune Day view" render (0000-0099; 0100 repeats 0000), at 1600px as WebP with the sky
+// left transparent so the parchment shows behind it. Drag or scroll to fly round it; its
+// floors are picked through the per-frame floor maps (see TowerFloorPicker).
+const TOWER_FRAMES = Array.from({ length: 100 }, (_, i) => `/towerframes/${String(i + 1).padStart(3, '0')}.webp`)
+// It never spins round and round: from the first frame it turns half way round either way, to the
+// back of the tower, and stops there - one full turn end to end - so from either end it turns back
+const TOWER_TURN = [-TOWER_FRAMES.length / 2, TOWER_FRAMES.length / 2]
 
 // The reference's paper sidebar and layout table, with the tower in the middle. Clicking
 // a floor on the tower opens the plan page: a big plan, a small residence list on its
 // left, and the floor plan / isometric switch underneath - all on the same beige ground.
 function FloorPlans({ onClose }) {
-  const [floors, setFloors] = useState([])
-  const [selectedFloor, setSelectedFloor] = useState(null)
+  const floors = TOWER_FLOORS
+  const [selectedFloor, setSelectedFloor] = useState(DEFAULT_FLOOR)
   const [hoveredFloor, setHoveredFloor] = useState(null)
   const [unitId, setUnitId] = useState(UNITS.find((u) => u.iso)?.id ?? UNITS[0].id)
   const [planView, setPlanView] = useState('2d') // '2d' (floor plan) or 'iso' (isometric)
@@ -63,53 +46,6 @@ function FloorPlans({ onClose }) {
   const unit = UNITS.find((u) => u.id === unitId)
   const activeSrc = unit[planView === '2d' ? 'plan2d' : 'iso']
   const planLabel = planView === '2d' ? 'floor plan' : 'isometric plan'
-
-  // Load Building.svg itself and measure each floor shape's real bounding
-  // box, rather than keeping a hand-copied duplicate of its path data - any
-  // future edit to the file is picked up automatically.
-  useEffect(() => {
-    let cancelled = false
-
-    fetch(BUILDING_SVG_URL)
-      .then((res) => res.text())
-      .then((svgText) => {
-        if (cancelled) return
-        const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
-        const shapeEls = [...doc.querySelectorAll('path, polygon')]
-
-        const measureSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        measureSvg.setAttribute('style', 'position:absolute; width:0; height:0; overflow:hidden')
-        document.body.appendChild(measureSvg)
-
-        const parsed = shapeEls.map((el) => {
-          const clone = el.cloneNode()
-          measureSvg.appendChild(clone)
-          const b = clone.getBBox()
-          const id = el.id
-          return {
-            id,
-            type: el.tagName.toLowerCase(),
-            d: el.getAttribute('d'),
-            points: el.getAttribute('points'),
-            num: idToNum(id),
-            label: idToLabel(id),
-            y0: b.y,
-            y1: b.y + b.height,
-          }
-        })
-
-        document.body.removeChild(measureSvg)
-        if (cancelled) return
-
-        setFloors(parsed)
-        setSelectedFloor((cur) => cur || (parsed.some((f) => f.id === DEFAULT_FLOOR) ? DEFAULT_FLOOR : parsed.find((f) => isResidence(f.id))?.id))
-      })
-      .catch(() => {})
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   // Entrance: the tower rises from the ground up, as it was built; then its floor reads out
   useLayoutEffect(() => {
@@ -130,9 +66,9 @@ function FloorPlans({ onClose }) {
   // The floor read-out: the floor under the cursor, or the one last chosen
   const readId = hoveredFloor ?? selectedFloor
   const readFloor = floors.find((f) => f.id === readId)
-  const readNum = readFloor ? (/^\d+$/.test(readFloor.num) ? String(parseInt(readFloor.num, 10)) : readFloor.num) : ''
-  const openable = floors.filter((f) => isResidence(f.id)).length
-  const readKind = readFloor ? kindOf(readFloor.id) : 'residence'
+  const readNum = readFloor?.num ?? ''
+  const openable = floors.filter(isResidence).length
+  const readKind = readFloor?.kind ?? 'residence'
 
   // moving between floors, the numeral rolls over to the new one
   useLayoutEffect(() => {
@@ -148,7 +84,7 @@ function FloorPlans({ onClose }) {
   }, [unitId, planView])
 
   const openFloor = (id) => {
-    if (!isResidence(id)) return
+    if (!isResidence(floors.find((f) => f.id === id))) return
     setSelectedFloor(id)
     setPlanView('2d')
     setZoomOpen(true)
@@ -177,18 +113,6 @@ function FloorPlans({ onClose }) {
     { label: 'Balcony' },
   ]
   const specRows = [{ label: 'Carpet area', value: unit.carpetArea }, ...roomRows.map((r) => ({ ...r, value: null }))]
-
-  // The inner box is oversized relative to the cropped wrapper so that, once
-  // clipped by overflow:hidden, only the CROP window is visible - and since
-  // both the image and the svg fill this same oversized box, they always
-  // stay pixel-aligned regardless of how large the wrapper renders.
-  const innerStyle = {
-    position: 'absolute',
-    width: `${(CANVAS.width / CROP.width) * 100}%`,
-    height: `${(CANVAS.height / CROP.height) * 100}%`,
-    left: `${-(CROP.x / CROP.width) * 100}%`,
-    top: `${-(CROP.y / CROP.height) * 100}%`,
-  }
 
   return (
     <section ref={rootRef} className="relative isolate flex h-svh w-full flex-col overflow-hidden bg-[var(--cream)] text-[var(--ink)]">
@@ -245,8 +169,9 @@ function FloorPlans({ onClose }) {
                  with its floors as switches, and the floor under the cursor read out beside it ---- */}
             <div className="absolute inset-0 overflow-hidden bg-[var(--parchment)] p-3">
               {/* the left of the card: the tower in figures at the top, then the read-out - the
-                  floor number at poster size, live as the cursor moves, its name and the way in */}
-              <div className="absolute inset-y-8 left-10 z-10 hidden w-[44%] flex-col lg:flex">
+                  floor number at poster size, live as the cursor moves, its name and the way in; the
+                  hand passes through it to the tower, which runs in under its right side, bar the button */}
+              <div className="pointer-events-none absolute inset-y-8 left-10 z-10 hidden w-[44%] flex-col lg:flex">
                 <div className="fp2-strip flex flex-col">
                   <span className="font-sans text-[0.68rem] uppercase tracking-[0.2em] text-[var(--bronze-deep)]">Elevation</span>
                   <span className="mt-1.5 font-serif text-[1.2rem] leading-none text-[var(--ink)]">
@@ -272,55 +197,44 @@ function FloorPlans({ onClose }) {
                         type="button"
                         onClick={() => readFloor && openFloor(readFloor.id)}
                         onPointerMove={glowAt}
-                        className="mn-glow tr-focus mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
+                        className="mn-glow tr-focus pointer-events-auto mt-5 rounded-full bg-[var(--ink)] px-5 py-2.5 font-sans text-[0.85rem] text-[var(--cream)] transition-colors duration-300 hover:bg-[var(--bronze-deep)]"
                       >
                         Open plans
                       </button>
                     </>
                   ) : (
-                    <span className="mt-6 max-w-[15rem] font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">{KIND_NOTE[readKind]}</span>
+                    <span className="mt-6 max-w-[12rem] font-sans text-[0.9rem] leading-snug text-[var(--ink-soft)]">{KIND_NOTE[readKind]}</span>
                   )}
                 </div>
               </div>
 
               {/* the tower: centred on small screens, on the right of the card from lg */}
-              <div className="flex h-full w-full items-center justify-center overflow-hidden lg:justify-end lg:pr-[8%]">
-                <div className="fp2-tower relative h-full select-none overflow-hidden" style={{ aspectRatio: `${CROP.width} / ${CROP.height}` }}>
-                  <div style={innerStyle}>
-                    <img src={TOWER_IMG} alt="Tughra tower elevation" className="pointer-events-none absolute inset-0 h-full w-full select-none" draggable={false} />
-                    <svg viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} className="absolute inset-0 h-full w-full">
-                      {floors.map((floor) => {
-                        const isHovered = hoveredFloor === floor.id
-                        const isSelected = selectedFloor === floor.id
-                        // parking, refuge and the terrace: pointing at them reads out their name, nothing opens
-                        const shapeProps = !isResidence(floor.id)
-                          ? {
-                              onMouseEnter: () => setHoveredFloor(floor.id),
-                              onMouseLeave: () => setHoveredFloor(null),
-                              style: { cursor: 'default', pointerEvents: 'all', transition: 'fill-opacity 0.3s ease', fill: 'var(--espresso)', fillOpacity: isHovered ? 0.18 : 0, stroke: 'none' },
-                            }
-                          : {
-                              onClick: () => openFloor(floor.id),
-                              onMouseEnter: () => setHoveredFloor(floor.id),
-                              onMouseLeave: () => setHoveredFloor(null),
-                              // every floor reads as a faintly darkened band with a fine pale line
-                              // between floors; the one under the cursor and the chosen one warm to bronze
-                              style: {
-                                cursor: 'pointer',
-                                pointerEvents: 'all',
-                                transition: 'fill-opacity 0.3s ease, fill 0.3s ease',
-                                fill: isSelected || isHovered ? 'var(--bronze-deep)' : 'var(--espresso)',
-                                fillOpacity: isSelected ? 0.6 : isHovered ? 0.45 : 0.2,
-                                stroke: 'var(--cream)',
-                                strokeOpacity: 0.45,
-                                strokeWidth: 1,
-                                vectorEffect: 'non-scaling-stroke',
-                              },
-                            }
-                        return floor.type === 'path' ? <path key={floor.id} d={floor.d} {...shapeProps} /> : <polygon key={floor.id} points={floor.points} {...shapeProps} />
-                      })}
-                    </svg>
-                  </div>
+              <div className="flex h-full w-full items-center justify-center overflow-hidden lg:justify-end lg:pr-[11%]">
+                {/* the city around the tower fades out at the sides and below rather than stopping at a
+                    hard edge; from lg the tower is lifted a little, its street dissolving into the card,
+                    and its field kept to the right of the read-out - narrowing it only trims the city */}
+                <div
+                  className="fp2-tower relative h-full max-w-full select-none overflow-hidden lg:max-w-[56%] lg:-translate-y-[5%]"
+                  style={{
+                    aspectRatio: '3 / 4',
+                    maskImage: 'linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, #000 82%, transparent)',
+                    maskComposite: 'intersect',
+                    WebkitMaskComposite: 'source-in',
+                  }}
+                >
+                  <TowerFloorPicker
+                    frames={TOWER_FRAMES}
+                    range={TOWER_TURN}
+                    floors={floors}
+                    selected={selectedFloor}
+                    hovered={hoveredFloor}
+                    pickable={isResidence}
+                    onHover={setHoveredFloor}
+                    onPick={openFloor}
+                    alt="Tughra tower"
+                    fill="var(--parchment)"
+                    className="h-full w-full"
+                  />
                 </div>
               </div>
             </div>
