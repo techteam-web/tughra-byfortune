@@ -16,12 +16,20 @@ const bbox = (d) => {
   return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) }
 }
 
-// Splits a mark into the large strokes (drawn with the pen) and the small lettering - the seal's
-// "Emperor's Seal" - grouped letter by letter, each letter with its counters (O, R, P, A) cut out.
-function splitMark(logo) {
+// Splits a mark into the large strokes (drawn with the pen), the small lettering - the seal's
+// "Emperor's Seal" - and, where `nameFrom` says the name starts (a fraction of the mark's height),
+// the name's letters. Lettering is grouped letter by letter, each letter with its counters (O, R, P,
+// A) cut out, so a letter is drawn, and filled, whole - never its counter filled in.
+function splitMark(logo, nameFrom = null) {
   const boxes = logo.d.map(bbox)
-  const small = boxes.map((b) => Math.max(b.x1 - b.x0, b.y1 - b.y0) < logo.w * 0.025)
   const inside = (a, b) => a.x0 >= b.x0 && a.y0 >= b.y0 && a.x1 <= b.x1 && a.y1 <= b.y1
+  const isName = boxes.map((b) => nameFrom !== null && b.y0 >= logo.h * nameFrom)
+  // the name: each glyph with the counters inside it, in reading order (the lines, then left to right)
+  const hosts = logo.d.map((_, i) => i).filter((i) => isName[i] && !logo.d.some((_, j) => j !== i && isName[j] && inside(boxes[i], boxes[j])))
+  const lineOf = (i) => Math.round((boxes[i].y0 + boxes[i].y1) / 2 / (logo.h * 0.09))
+  hosts.sort((a, b) => lineOf(a) - lineOf(b) || boxes[a].x0 - boxes[b].x0)
+  const name = hosts.map((h) => logo.d.filter((_, i) => i === h || (isName[i] && inside(boxes[i], boxes[h]))).join(' '))
+  const small = boxes.map((b, i) => !isName[i] && Math.max(b.x1 - b.x0, b.y1 - b.y0) < logo.w * 0.025)
   const letters = []
   logo.d.forEach((d, i) => {
     if (!small[i]) return
@@ -33,15 +41,15 @@ function splitMark(logo) {
     const host = logo.d.findIndex((_, j) => j !== i && small[j] && inside(boxes[i], boxes[j]))
     if (host !== -1) letters.find((l) => l.i === host)?.d.push(d)
   })
-  return { strokes: logo.d.filter((_, i) => !small[i]), letters: letters.map((l) => l.d.join(' ')) }
+  return { strokes: logo.d.filter((_, i) => !small[i] && !isName[i]), letters: letters.map((l) => l.d.join(' ')), name }
 }
 
-function Mark({ tag, logo, className, style }) {
+function Mark({ tag, logo, nameFrom, className, style }) {
   // One combined path carries the solid mark: even-odd keeps the counters and
   // the inside of every stroke open, exactly as the artwork has them.
   const solid = logo.d.join(' ')
   const pen = logo.w / 210
-  const { strokes, letters } = splitMark(logo)
+  const { strokes, letters, name } = splitMark(logo, nameFrom)
   return (
     <svg viewBox={`0 0 ${logo.w} ${logo.h}`} className={className} style={style} aria-hidden="true">
       <path className={`${tag}-fill`} d={solid} fill="currentColor" fillRule="evenodd" fillOpacity="0" />
@@ -54,6 +62,10 @@ function Mark({ tag, logo, className, style }) {
           one after another around the seal - then filled, so it stays crisp at small sizes */}
       {letters.map((d, i) => (
         <path key={i} className={`${tag}-letter`} d={d} fill="currentColor" fillOpacity="0" fillRule="evenodd" stroke="currentColor" strokeWidth={logo.w / 1400} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+      {/* the name is written glyph by glyph in a fine pen, then each glyph is filled - counters left open */}
+      {name.map((d, i) => (
+        <path key={i} className={`${tag}-name`} d={d} fill="currentColor" fillOpacity="0" fillRule="evenodd" stroke="currentColor" strokeWidth={logo.w / 800} strokeLinecap="round" strokeLinejoin="round" />
       ))}
     </svg>
   )
@@ -68,7 +80,7 @@ function Preloader({ onComplete, play = true }) {
   useLayoutEffect(() => {
     if (!play) return
     const ctx = gsap.context(() => {
-      gsap.set(['.pt-ink', '.pf-ink', '.pt-letter', '.pf-letter'], { drawSVG: '0%' })
+      gsap.set(['.pt-ink', '.pf-ink', '.pt-letter', '.pf-letter', '.pt-name'], { drawSVG: '0%' })
       gsap.set(['.pt-fill', '.pf-fill'], { fillOpacity: 0 })
       gsap.set(['.pl-fortune', '.pl-by'], { opacity: 0 })
       gsap.set(lineRef.current, { drawSVG: '50% 50%' })
@@ -81,7 +93,10 @@ function Preloader({ onComplete, play = true }) {
       // the seal's small lettering is written in, letter by letter, while the strokes draw
       tl.to('.pt-letter', { drawSVG: '100%', duration: 0.45, ease: 'power1.inOut', stagger: 0.07 }, 0.6)
       tl.to('.pt-letter', { fillOpacity: 1, duration: 0.3, ease: 'power2.out', stagger: 0.07 }, 0.95)
-      tl.to('.pt-fill', { fillOpacity: 1, duration: 1, ease: 'power1.inOut' }, '-=0.9')
+      // then the name, TUGHRA and ROYALE, written letter by letter - each glyph traced, then filled
+      tl.to('.pt-name', { drawSVG: '100%', duration: 0.6, ease: 'power1.inOut', stagger: 0.1 }, 1.2)
+      tl.to('.pt-name', { fillOpacity: 1, duration: 0.35, ease: 'power2.out', stagger: 0.1 }, 1.65)
+      tl.to('.pt-fill', { fillOpacity: 1, duration: 1, ease: 'power1.inOut' }, '>-0.3')
       tl.to('.pt-ink', { opacity: 0, duration: 0.6 }, '<0.2')
 
       // 2. It holds, then clears
@@ -124,7 +139,7 @@ function Preloader({ onComplete, play = true }) {
       </svg>
 
       <div className="pl-stage absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-gold" style={{ visibility: play ? 'visible' : 'hidden' }}>
-        <Mark tag="pt" logo={TUGHRA} className="pl-tughra absolute h-auto w-[clamp(14.7rem,65vw,23.1rem)] md:w-[clamp(13.65rem,33.6vw,23.1rem)]" />
+        <Mark tag="pt" logo={TUGHRA} nameFrom={0.62} className="pl-tughra absolute h-auto w-[clamp(14.7rem,65vw,23.1rem)] md:w-[clamp(13.65rem,33.6vw,23.1rem)]" />
 
         <span className="pl-by tr-label md:text-[0.75rem]">An initiative by</span>
         <Mark tag="pf" logo={FORTUNE} className="pl-fortune h-auto w-[clamp(10rem,46vw,14rem)] md:w-[clamp(9rem,21vw,14rem)]" />

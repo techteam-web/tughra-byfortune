@@ -132,17 +132,17 @@ function App() {
         <img
             src="/assets/Brainwinglogo/Brainwing-logo.webp"
             alt="Brainwing"
-            className="fixed bottom-2 right-2 w-24 z-2 pointer-events-none opacity-95
-             [@media(max-height:480px)]:bottom-2 [@media(max-height:480px)]:right-2 [@media(max-height:480px)]:w-24
-             sm:bottom-4 sm:right-4 sm:w-42
-             md:bottom-5 md:right-5 md:w-48
-             lg:bottom-2 lg:right-6 lg:w-56
-             xl:bottom-3 xl:right-7 xl:w-58
-             2xl:bottom-4 2xl:right-8 2xl:w-64
-             3xl:bottom-5 3xl:right-10 3xl:w-60
-             4xl:bottom-12 4xl:right-12 4xl:w-70
-             5xl:bottom-16 5xl:right-16 5xl:w-86
-             6xl:bottom-20 6xl:right-20 6xl:w-100"
+            className="fixed bottom-2 right-2 w-20 z-2 pointer-events-none opacity-95
+             [@media(max-height:480px)]:bottom-2 [@media(max-height:480px)]:right-2 [@media(max-height:480px)]:w-20
+             sm:bottom-4 sm:right-4 sm:w-34
+             md:bottom-5 md:right-5 md:w-38
+             lg:bottom-2 lg:right-6 lg:w-44
+             xl:bottom-3 xl:right-7 xl:w-46
+             2xl:bottom-4 2xl:right-8 2xl:w-50
+             3xl:bottom-5 3xl:right-10 3xl:w-48
+             4xl:bottom-12 4xl:right-12 4xl:w-56
+             5xl:bottom-16 5xl:right-16 5xl:w-68
+             6xl:bottom-20 6xl:right-20 6xl:w-80"
           />
     </>
   )

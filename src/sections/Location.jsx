@@ -6,6 +6,7 @@ import { TopBar, MenuControl, Segmented } from '../ui/controls.jsx'
 import { glowAt } from '../ui/glow.js'
 import { T, alpha } from '../theme/tokens.js'
 import { PROJECT, PLACES, bearingDeg, arcBetween, distanceKm } from './locationData.js'
+import BAKED_ROUTES from './placeRoutes.json'
 import './Location.css'
 
 // In production the worker is shipped by the maplibreWorker plugin in vite.config.js
@@ -316,22 +317,55 @@ function setRouteProgress(map, p, color = ROUTE_DEFAULT) {
   map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, color))
 }
 
-// road route from the project to a place (an arc when offline or rate-limited), cached per place
+// The way from the project to a place, by car or on foot, the shortest by distance: its line,
+// its length in km and its minutes. Google's shortest routes are worked out ahead of time
+// (tools/place-routes.mjs -> placeRoutes.json), so they are there the moment a place is picked,
+// with no request. A place not in that file is routed live - the shortest of the roads OSRM offers
+// for the mode, or an arc when offline. Cached per place and mode. The page is shown only the
+// shortest of the two ways (by car, on foot) - see fetchRoute below.
+const MODES = [
+  { value: 'drive', label: 'Car', osrm: 'https://routing.openstreetmap.de/routed-car/route/v1/driving', kmh: 28 },
+  { value: 'walk', label: 'Walk', osrm: 'https://routing.openstreetmap.de/routed-foot/route/v1/foot', kmh: 4.8 },
+]
 const routeCache = new globalThis.Map()
-function fetchRoute(place, signal) {
-  if (routeCache.has(place.id)) return routeCache.get(place.id)
-  const t = setTimeout(() => signal?.abort?.(), 7000)
-  const pr = fetch(`https://router.project-osrm.org/route/v1/driving/${PROJECT.join(',')};${place.at.join(',')}?overview=full&geometries=geojson`)
+const sameSpot = (a, b) => Math.abs(a[0] - b[0]) < 1e-4 && Math.abs(a[1] - b[1]) < 1e-4
+function fetchWay(place, mode) {
+  const key = `${mode}:${place.id}`
+  if (routeCache.has(key)) return routeCache.get(key)
+  const baked = BAKED_ROUTES[place.id]
+  if (baked && sameSpot(baked.to, place.at) && baked[mode]) {
+    const pr = Promise.resolve(baked[mode])
+    routeCache.set(key, pr)
+    return pr
+  }
+  const m = MODES.find((x) => x.value === mode)
+  const controller = new AbortController()
+  const t = setTimeout(() => controller.abort(), 5000)
+  const pr = fetch(`${m.osrm}/${PROJECT.join(',')};${place.at.join(',')}?overview=full&geometries=geojson&alternatives=true`, { signal: controller.signal })
     .then((r) => r.json())
     .then((json) => {
-      const coords = json.routes?.[0]?.geometry?.coordinates
-      if (!coords || coords.length < 2) throw new Error('no route')
-      return coords
+      const best = (json.routes ?? []).filter((r) => r.geometry?.coordinates?.length > 1).sort((a, b) => a.distance - b.distance)[0]
+      if (!best) throw new Error('no route')
+      return { coords: best.geometry.coordinates, km: best.distance / 1000, minutes: Math.max(1, Math.round(best.duration / 60)) }
     })
-    .catch(() => arcBetween(PROJECT, place.at))
+    .catch(() => {
+      const km = distanceKm(PROJECT, place.at) * 1.3
+      return { coords: arcBetween(PROJECT, place.at), km, minutes: Math.max(1, Math.round((km / m.kmh) * 60)), approx: true }
+    })
     .finally(() => clearTimeout(t))
-  routeCache.set(place.id, pr)
+  routeCache.set(key, pr)
   return pr
+}
+// the shortest way from the project to a place, by distance: the better of the car and the walking route
+const shortestCache = new globalThis.Map()
+function fetchRoute(place) {
+  if (!shortestCache.has(place.id)) {
+    shortestCache.set(
+      place.id,
+      Promise.all(MODES.map((m) => fetchWay(place, m.value))).then((ways) => ways.reduce((a, b) => (a.approx !== b.approx ? (a.approx ? b : a) : b.km < a.km ? b : a))), // an estimated arc never beats a real road
+    )
+  }
+  return shortestCache.get(place.id)
 }
 const EMPTY = { type: 'FeatureCollection', features: [] }
 
@@ -392,10 +426,12 @@ function Location({ onClose }) {
   const [ready, setReady] = useState(false)
   const [category, setCategory] = useState(PLACES[0].key)
   const [selected, setSelected] = useState(null)
+  const [way, setWay] = useState(null) // the selected place's shortest route: its length and time
   const [late, setLate] = useState(false) // the map is slow or offline: show the table anyway
   const panelOn = ready || late
 
   const current = PLACES.find((c) => c.key === category)
+  const shown = way?.id === selected ? way : null // only the chosen place's own, never the last one's
   const selectedPlace = selected && current.places.find((p) => p.id === selected)
 
   // --- Map setup ---
@@ -550,6 +586,11 @@ function Location({ onClose }) {
     }
   }, [ready, current, category])
 
+  // the category's routes are fetched as soon as it opens, so a pick draws at once
+  useEffect(() => {
+    if (ready) current.places.forEach((p) => fetchRoute(p))
+  }, [ready, current])
+
   // --- Selection: highlight, fetch the road route, then drive the camera along it ---
   useEffect(() => {
     const map = mapRef.current
@@ -566,7 +607,6 @@ function Location({ onClose }) {
     const orbit = orbitRef.current
     orbit.paused = true
     let cancelled = false
-    const controller = new AbortController()
     const desktop = window.innerWidth >= 768
     const sideways = window.innerHeight < 520 && window.innerWidth > window.innerHeight
     const padding = sideways
@@ -576,22 +616,10 @@ function Location({ onClose }) {
         : { top: 100, bottom: Math.round(window.innerHeight * 0.48), left: 40, right: 40 }
     const { at } = selectedPlace
 
-    // Fetch the road route (falls back to an arc offline / rate-limited).
-    const timeout = setTimeout(() => controller.abort(), 7000)
-    const routed = fetch(`https://router.project-osrm.org/route/v1/driving/${PROJECT.join(',')};${at.join(',')}?overview=full&geometries=geojson`, {
-      signal: controller.signal,
-    })
-      .then((r) => r.json())
-      .then((json) => {
-        const coords = json.routes?.[0]?.geometry?.coordinates
-        if (!coords || coords.length < 2) throw new Error('no route')
-        return coords
-      })
-      .catch(() => arcBetween(PROJECT, at))
-      .finally(() => clearTimeout(timeout))
-
-    routed.then((coords) => {
+    // the shortest road there (already in hand if it was warmed up when the category opened)
+    fetchRoute(selectedPlace).then(({ coords, km, minutes }) => {
       if (cancelled) return
+      setWay({ id: selectedPlace.id, km, minutes })
       const cum = [0]
       for (let i = 1; i < coords.length; i++) cum.push(cum[i - 1] + distanceKm(coords[i - 1], coords[i]))
       const total = cum[cum.length - 1] || 0.001
@@ -631,8 +659,6 @@ function Location({ onClose }) {
 
     return () => {
       cancelled = true
-      clearTimeout(timeout)
-      controller.abort()
       cancelAnimationFrame(drawRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -693,7 +719,7 @@ function Location({ onClose }) {
     if (!map) return
     setSelected(null)
     orbitRef.current.paused = true
-    const lines = await Promise.all(current.places.map((pl, i) => fetchRoute(pl).then((coords) => ({ coords, id: pl.id, color: colorOf(category, i) }))))
+    const lines = await Promise.all(current.places.map((pl, i) => fetchRoute(pl).then(({ coords }) => ({ coords, id: pl.id, color: colorOf(category, i) }))))
     if (!mapRef.current || mapRef.current !== map) return
     map.getSource(ROUTE_SRC)?.setData(EMPTY)
     map.getSource(ALL_SRC)?.setData({
@@ -732,6 +758,7 @@ function Location({ onClose }) {
         className="pointer-events-none absolute inset-0"
         style={{ background: 'radial-gradient(ellipse 85% 75% at 60% 55%, transparent 40%, var(--scrim) 100%), linear-gradient(180deg, var(--scrim) 0%, transparent 22%)' }}
       />
+      
 
       {/* gulls crossing the sky - small, a few at a time */}
       <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden text-cream/75" aria-hidden="true">
@@ -785,12 +812,20 @@ function Location({ onClose }) {
                   aria-pressed={on}
                   onPointerMove={glowAt}
                   className={`mn-glow tr-focus group flex w-full touch-manipulation items-center gap-3 rounded-lg border-none bg-transparent px-2.5 py-1.5 text-left font-sans text-[0.6875rem] uppercase tracking-[0.14em] transition-colors duration-300 short:py-1 short:text-[0.6875rem] ${on ? 'is-on text-[var(--ribbon-champagne)]' : 'text-cream hover:text-[var(--ribbon-champagne)]'}`}
-                  onClick={() => setSelected((s) => (s === p.id ? null : p.id))}
+                  onClick={() => {
+                    setSelected((s) => (s === p.id ? null : p.id))
+                  }}
                 >
                   <span className="tr-num w-6 shrink-0">{String(i + 1).padStart(2, '0')}</span>
                   <span className="min-w-0 flex-1 truncate">{p.name}</span>
                   <span className="shrink-0 tabular-nums tracking-[0.06em] text-[color-mix(in_srgb,var(--ribbon-champagne)_80%,transparent)]">{p.km.toFixed(1)} km</span>
                 </button>
+                {/* under the chosen place: the shortest way there, its road length and time */}
+                {on && (
+                  <p className="loc-trip mx-1 mb-1.5 mt-0.5 pl-[2.2rem] font-sans text-[0.625rem] uppercase tabular-nums tracking-[0.14em] text-[color-mix(in_srgb,var(--ribbon-champagne)_80%,transparent)]">
+                    {shown ? `Shortest route · ${shown.km.toFixed(1)} km · ${shown.minutes} min` : 'Finding the shortest route…'}
+                  </p>
+                )}
               </li>
             )
           })}
