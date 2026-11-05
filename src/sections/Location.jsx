@@ -317,46 +317,58 @@ function setRouteProgress(map, p, color = ROUTE_DEFAULT) {
   map.setPaintProperty('route-line', 'line-gradient', routeGradient(p, color))
 }
 
-// The way from the project to a place, by car or on foot, the shortest by distance: its line,
-// its length in km and its minutes. Google's shortest routes are worked out ahead of time
-// (tools/place-routes.mjs -> placeRoutes.json), so they are there the moment a place is picked,
-// with no request. A place not in that file is routed live - the shortest of the roads OSRM offers
-// for the mode, or an arc when offline. Cached per place and mode. The page is shown only the
-// shortest of the two ways (by car, on foot) - see fetchRoute below.
+// The way from the project to a place, by car or on foot, the shortest by road distance: its line,
+// its length in km and its minutes. Every route runs between the coordinates in locationData.js
+// exactly as written - PROJECT at one end, the place's own `at` at the other. The shortest ways are
+// worked out ahead of time (tools/place-routes.mjs -> placeRoutes.json), so they are there the moment
+// a place is picked, with no request. A place not in that file is routed live - the shortest of the
+// roads OSRM offers for the mode - and only with no network at all does it fall back to an arc.
+// Cached per place and mode. The page is shown only the shortest of the two ways - see fetchRoute.
 const MODES = [
-  { value: 'drive', label: 'Car', osrm: 'https://routing.openstreetmap.de/routed-car/route/v1/driving', kmh: 28 },
-  { value: 'walk', label: 'Walk', osrm: 'https://routing.openstreetmap.de/routed-foot/route/v1/foot', kmh: 4.8 },
+  { value: 'drive', label: 'Car', osrm: 'https://routing.openstreetmap.de/routed-car/route/v1/driving', kmh: 28, gapKmh: 12 },
+  { value: 'walk', label: 'Walk', osrm: 'https://routing.openstreetmap.de/routed-foot/route/v1/foot', kmh: 4.8, gapKmh: 4.8 },
 ]
 const routeCache = new globalThis.Map()
 const sameSpot = (a, b) => Math.abs(a[0] - b[0]) < 1e-4 && Math.abs(a[1] - b[1]) < 1e-4
+// OSRM snaps both ends to the nearest road. Put the given points back on, and count the hop, so the
+// line runs from the tower to the pin and never stops short of either.
+function pinEnds(coords, to, gapKmh) {
+  const head = distanceKm(PROJECT, coords[0])
+  const tail = distanceKm(coords[coords.length - 1], to)
+  const line = [...coords]
+  if (!sameSpot(line[0], PROJECT)) line.unshift(PROJECT)
+  if (!sameSpot(line[line.length - 1], to)) line.push(to)
+  return { coords: line, extraKm: head + tail, extraMin: ((head + tail) / gapKmh) * 60 }
+}
 function fetchWay(place, mode) {
   const key = `${mode}:${place.id}`
   if (routeCache.has(key)) return routeCache.get(key)
   const baked = BAKED_ROUTES[place.id]
   if (baked && sameSpot(baked.to, place.at) && baked[mode]) {
-    const pr = Promise.resolve(baked[mode])
+    const pr = Promise.resolve({ ...baked[mode], mode })
     routeCache.set(key, pr)
     return pr
   }
   const m = MODES.find((x) => x.value === mode)
   const controller = new AbortController()
-  const t = setTimeout(() => controller.abort(), 5000)
-  const pr = fetch(`${m.osrm}/${PROJECT.join(',')};${place.at.join(',')}?overview=full&geometries=geojson&alternatives=true`, { signal: controller.signal })
+  const t = setTimeout(() => controller.abort(), 8000)
+  const pr = fetch(`${m.osrm}/${PROJECT.join(',')};${place.at.join(',')}?overview=full&geometries=geojson&alternatives=3`, { signal: controller.signal })
     .then((r) => r.json())
     .then((json) => {
       const best = (json.routes ?? []).filter((r) => r.geometry?.coordinates?.length > 1).sort((a, b) => a.distance - b.distance)[0]
       if (!best) throw new Error('no route')
-      return { coords: best.geometry.coordinates, km: best.distance / 1000, minutes: Math.max(1, Math.round(best.duration / 60)) }
+      const { coords, extraKm, extraMin } = pinEnds(best.geometry.coordinates, place.at, m.gapKmh)
+      return { coords, km: best.distance / 1000 + extraKm, minutes: Math.max(1, Math.round(best.duration / 60 + extraMin)), mode }
     })
     .catch(() => {
       const km = distanceKm(PROJECT, place.at) * 1.3
-      return { coords: arcBetween(PROJECT, place.at), km, minutes: Math.max(1, Math.round((km / m.kmh) * 60)), approx: true }
+      return { coords: arcBetween(PROJECT, place.at), km, minutes: Math.max(1, Math.round((km / m.kmh) * 60)), mode, approx: true }
     })
     .finally(() => clearTimeout(t))
   routeCache.set(key, pr)
   return pr
 }
-// the shortest way from the project to a place, by distance: the better of the car and the walking route
+// the shortest way from the project to a place, by road distance: the shorter of the car and the walking route
 const shortestCache = new globalThis.Map()
 function fetchRoute(place) {
   if (!shortestCache.has(place.id)) {
@@ -617,9 +629,9 @@ function Location({ onClose }) {
     const { at } = selectedPlace
 
     // the shortest road there (already in hand if it was warmed up when the category opened)
-    fetchRoute(selectedPlace).then(({ coords, km, minutes }) => {
+    fetchRoute(selectedPlace).then(({ coords, km, minutes, mode }) => {
       if (cancelled) return
-      setWay({ id: selectedPlace.id, km, minutes })
+      setWay({ id: selectedPlace.id, km, minutes, mode })
       const cum = [0]
       for (let i = 1; i < coords.length; i++) cum.push(cum[i - 1] + distanceKm(coords[i - 1], coords[i]))
       const total = cum[cum.length - 1] || 0.001
@@ -823,7 +835,7 @@ function Location({ onClose }) {
                 {/* under the chosen place: the shortest way there, its road length and time */}
                 {on && (
                   <p className="loc-trip mx-1 mb-1.5 mt-0.5 pl-[2.2rem] font-sans text-[0.625rem] uppercase tabular-nums tracking-[0.14em] text-[color-mix(in_srgb,var(--ribbon-champagne)_80%,transparent)]">
-                    {shown ? `Shortest route · ${shown.km.toFixed(1)} km · ${shown.minutes} min` : 'Finding the shortest route…'}
+                    {shown ? `Shortest · ${shown.km.toFixed(1)} km · ${shown.minutes} min ${shown.mode === 'walk' ? 'on foot' : 'by car'}` : 'Finding the shortest route…'}
                   </p>
                 )}
               </li>

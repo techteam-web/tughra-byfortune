@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cssRgb } from '../theme/tokens.js'
 
 // Top-left brand lockup: the Tughra logo, with a small developer credit beneath. The PNG is
@@ -25,8 +25,14 @@ const cache = {}
 
 const SEAL_CUT = 0.605
 
-function tintedLogo(src, tone, sealOnly = false) {
-  const key = src + tone + (sealOnly ? ':seal' : '')
+// The artwork is hairline-thin. Drawn at the size the lockup actually occupies, a stroke covers
+// well under a pixel, so whatever sits behind it - the hero's blue sky - bleeds through and the
+// white mark reads blue. So it is rasterised at exactly the pixels it will take up, and the
+// coverage is then lifted, so a thin stroke still prints as white rather than as a wash of sky.
+const SOLIDITY = 2.8
+
+function tintedLogo(src, tone, sealOnly = false, targetH = 0) {
+  const key = src + tone + (sealOnly ? ':seal' : '') + ':' + targetH
   if (cache[key]) return cache[key]
   cache[key] = new Promise((resolve, reject) => {
     const img = new Image()
@@ -67,7 +73,33 @@ function tintedLogo(src, tone, sealOnly = false) {
       out.width = cw
       out.height = ch
       out.getContext('2d').drawImage(c, minX, minY, cw, ch, 0, 0, cw, ch)
-      resolve({ url: out.toDataURL('image/png'), ratio: cw / ch })
+
+      const ratio = cw / ch
+      if (!targetH || targetH >= ch) {
+        resolve({ url: out.toDataURL('image/png'), ratio })
+        return
+      }
+
+      // down to the exact pixels it is drawn at, then the coverage lifted back to full tone
+      const fh = Math.max(1, Math.round(targetH))
+      const fw = Math.max(1, Math.round(fh * ratio))
+      const fin = document.createElement('canvas')
+      fin.width = fw
+      fin.height = fh
+      const fctx = fin.getContext('2d', { willReadFrequently: true })
+      fctx.imageSmoothingEnabled = true
+      fctx.imageSmoothingQuality = 'high'
+      fctx.drawImage(out, 0, 0, fw, fh)
+      const fd = fctx.getImageData(0, 0, fw, fh)
+      const fpx = fd.data
+      for (let i = 0; i < fpx.length; i += 4) {
+        fpx[i] = tint[0]
+        fpx[i + 1] = tint[1]
+        fpx[i + 2] = tint[2]
+        fpx[i + 3] = Math.round(255 * (1 - Math.pow(1 - fpx[i + 3] / 255, SOLIDITY)))
+      }
+      fctx.putImageData(fd, 0, 0)
+      resolve({ url: fin.toDataURL('image/png'), ratio })
     }
     img.onerror = reject
     img.src = src
@@ -76,20 +108,41 @@ function tintedLogo(src, tone, sealOnly = false) {
 }
 
 function BrandMark({ tone = 'light', size = 'hero', credit = true, seal = false }) {
+  const boxRef = useRef(null)
   const [logo, setLogo] = useState(null)
+  // the height the mark is actually drawn at, in device pixels
+  const [px, setPx] = useState(0)
 
   useEffect(() => {
+    const box = boxRef.current
+    if (!box) return undefined
+    const read = () => {
+      const h = box.getBoundingClientRect().height
+      if (h) setPx(Math.round(h * (window.devicePixelRatio || 1)))
+    }
+    read()
+    const ro = new ResizeObserver(read)
+    ro.observe(box)
+    window.addEventListener('resize', read)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', read)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!px) return undefined
     let live = true
-    tintedLogo(TUGHRA, tone, seal).then((l) => live && setLogo(l), () => {})
+    tintedLogo(TUGHRA, tone, seal, px).then((l) => live && setLogo(l), () => {})
     return () => {
       live = false
     }
-  }, [tone, seal])
+  }, [tone, seal, px])
 
   return (
     <span className="flex flex-col items-center gap-1">
       <span className="flex items-end">
-        <span className={`block ${SIZE[size]}`} style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
+        <span ref={boxRef} className={`block ${SIZE[size]}`} style={{ aspectRatio: logo ? logo.ratio : 0.75 }}>
           {logo && <img src={logo.url} alt={seal ? '' : 'Tughra Royale'} className="h-full w-full object-contain" draggable={false} />}
         </span>
       </span>
