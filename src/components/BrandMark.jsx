@@ -29,7 +29,11 @@ const SEAL_CUT = 0.605
 // well under a pixel, so whatever sits behind it - the hero's blue sky - bleeds through and the
 // white mark reads blue. So it is rasterised at exactly the pixels it will take up, and the
 // coverage is then lifted, so a thin stroke still prints as white rather than as a wash of sky.
-const SOLIDITY = 2.8
+// The mark is grown at this multiple of its final size, so a stroke gains a quarter of a
+// finished pixel on each side: enough to carry a hairline, not enough to close up the seal.
+const SUPER = 4
+// how hard the coverage left after that is pushed back towards full tone
+const SOLIDITY = 3
 
 function tintedLogo(src, tone, sealOnly = false, targetH = 0) {
   const key = src + tone + (sealOnly ? ':seal' : '') + ':' + targetH
@@ -83,13 +87,57 @@ function tintedLogo(src, tone, sealOnly = false, targetH = 0) {
       // down to the exact pixels it is drawn at, then the coverage lifted back to full tone
       const fh = Math.max(1, Math.round(targetH))
       const fw = Math.max(1, Math.round(fh * ratio))
+
+      // First a working copy a few times the final size, where every stroke is grown by one of
+      // those pixels, so that no line ends up thinner than the pixel it has to print on and
+      // left half sky - while the growth stays small enough not to clog the seal.
+      const mw = fw * SUPER
+      const mh = fh * SUPER
+      const mid = document.createElement('canvas')
+      mid.width = mw
+      mid.height = mh
+      const mctx = mid.getContext('2d', { willReadFrequently: true })
+      mctx.imageSmoothingEnabled = true
+      mctx.imageSmoothingQuality = 'high'
+      mctx.drawImage(out, 0, 0, mw, mh)
+      const md = mctx.getImageData(0, 0, mw, mh)
+      const mpx = md.data
+      const n = mw * mh
+      const src0 = new Uint8ClampedArray(n)
+      const row = new Uint8ClampedArray(n)
+      for (let j = 0; j < n; j++) src0[j] = mpx[j * 4 + 3]
+      for (let y = 0; y < mh; y++) {
+        const o = y * mw
+        for (let x = 0; x < mw; x++) {
+          const j = o + x
+          let v = src0[j]
+          if (x > 0 && src0[j - 1] > v) v = src0[j - 1]
+          if (x < mw - 1 && src0[j + 1] > v) v = src0[j + 1]
+          row[j] = v
+        }
+      }
+      for (let y = 0; y < mh; y++) {
+        const o = y * mw
+        for (let x = 0; x < mw; x++) {
+          const j = o + x
+          let v = row[j]
+          if (y > 0 && row[j - mw] > v) v = row[j - mw]
+          if (y < mh - 1 && row[j + mw] > v) v = row[j + mw]
+          mpx[j * 4] = tint[0]
+          mpx[j * 4 + 1] = tint[1]
+          mpx[j * 4 + 2] = tint[2]
+          mpx[j * 4 + 3] = v
+        }
+      }
+      mctx.putImageData(md, 0, 0)
+
       const fin = document.createElement('canvas')
       fin.width = fw
       fin.height = fh
       const fctx = fin.getContext('2d', { willReadFrequently: true })
       fctx.imageSmoothingEnabled = true
       fctx.imageSmoothingQuality = 'high'
-      fctx.drawImage(out, 0, 0, fw, fh)
+      fctx.drawImage(mid, 0, 0, fw, fh)
       const fd = fctx.getImageData(0, 0, fw, fh)
       const fpx = fd.data
       for (let i = 0; i < fpx.length; i += 4) {

@@ -12,9 +12,26 @@ export const T = {
   ink: '#2A1C12',
 }
 
-const rgb = (hex) => {
-  const n = parseInt(hex.slice(1), 16)
-  return [n >> 16, (n >> 8) & 255, n & 255]
+// A colour as [r, g, b]. It has to take whatever a stylesheet hands back, not just the
+// six-digit hex these tokens are written in: the build minifies #ffffff to #fff, and a
+// browser may return a colour as rgb(...) - read either as six digits and white came back
+// blue, which is how the Tughra mark on the home page turned blue once built.
+const rgb = (colour) => {
+  const s = String(colour).trim()
+  if (s[0] === '#') {
+    const h = s.slice(1)
+    const six = h.length < 6 ? h.slice(0, 3).replace(/./g, (d) => d + d) : h.slice(0, 6)
+    const n = parseInt(six, 16)
+    return Number.isNaN(n) ? [255, 255, 255] : [n >> 16, (n >> 8) & 255, n & 255]
+  }
+  const parts = s.match(/[\d.]+%?/g)
+  if (parts && parts.length >= 3) {
+    return parts.slice(0, 3).map((v) => {
+      const f = parseFloat(v)
+      return Math.max(0, Math.min(255, Math.round(v.endsWith('%') ? (f * 255) / 100 : f)))
+    })
+  }
+  return [255, 255, 255]
 }
 
 // a token at an opacity, as an rgba() string
