@@ -10,17 +10,18 @@ import { UNITS } from '../components/floorUnits.js'
 import { TOWER_FLOORS } from '../components/towerFloors.js'
 
 // What each level of the tower is comes from towerFloors.js, which follows the architect's
-// east elevation: the office is the 10th, the residences the 11th to the 27th. Only residences open the plans
-// (isometric and floor plan); the ground, retail, podium, service and terrace levels show their name
+// east elevation: the office is the 08th and 09th, the amenities the 10th, the residences the
+// 11th to the 27th. Only residences open the plans
+// (isometric and floor plan); the ground, retail, podium, office, amenity and terrace levels show their name
 // when pointed at, and nothing else.
 const isResidence = (floor) => floor?.kind === 'residence'
-const KIND_LABEL = { lobby: 'Entrance', retail: 'Retail', podium: 'Podium', office: 'Office', service: 'Service', terrace: 'Terrace', residence: 'Floor' }
+const KIND_LABEL = { lobby: 'Entrance', retail: 'Retail', podium: 'Podium', office: 'Office', amenity: 'Amenities', terrace: 'Terrace', residence: 'Floor' }
 const KIND_NOTE = {
   lobby: 'The entrance lobby. No residences on this level.',
   retail: 'The retail level, at the street. No residences on this level.',
   podium: 'A podium level. No residences on this level.',
-  office: 'The office floor. No residences on this level.',
-  service: 'A service floor. No residences on this level.',
+  office: 'An office level. No residences on this level.',
+  amenity: 'Amenities for residents. No residences on this level.',
   terrace: 'The terrace, above the residences.',
 }
 const DEFAULT_FLOOR = '_17th'
