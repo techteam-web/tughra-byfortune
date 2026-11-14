@@ -146,7 +146,7 @@ function PlanPanel({ unit }) {
   )
 }
 
-const floorTitle = (f) => (f.num === 'G' ? 'Ground Floor' : f.num === 'T' ? 'Terrace' : `Floor ${parseInt(f.num, 10)}`)
+const floorTitle = (f) => (f.kind === 'residence' ? `Floor ${f.num}` : f.label)
 
 // Right-hand column: the residence card for the chosen floor and unit (cream, as in the
 // "Floor 17" creative), and the strip of facts beneath it. The card stays mounted; when the

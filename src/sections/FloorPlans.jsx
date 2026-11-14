@@ -9,15 +9,17 @@ import { IcBack, IcLayers as IcPlan } from '../ui/icons.jsx'
 import { UNITS } from '../components/floorUnits.js'
 import { TOWER_FLOORS } from '../components/towerFloors.js'
 
-// What each level of the tower is comes from towerFloors.js. Only residences open the plans
-// (floor plan and isometric); the lobby, parking, amenities and the terrace show their name
+// What each level of the tower is comes from towerFloors.js, which follows the architect's
+// east elevation: the residences are the 11th to the 27th. Only residences open the plans
+// (isometric and floor plan); the ground, retail, podium, service and terrace levels show their name
 // when pointed at, and nothing else.
 const isResidence = (floor) => floor?.kind === 'residence'
-const KIND_LABEL = { lobby: 'Entrance', parking: 'Parking', amenity: 'Amenities', terrace: 'Terrace', residence: 'Floor' }
+const KIND_LABEL = { lobby: 'Entrance', retail: 'Retail', podium: 'Podium', service: 'Service', terrace: 'Terrace', residence: 'Floor' }
 const KIND_NOTE = {
   lobby: 'The entrance lobby. No residences on this level.',
-  parking: 'Car parking for residents. No residences on this level.',
-  amenity: 'Amenities for residents. No residences on this level.',
+  retail: 'The retail level, at the street. No residences on this level.',
+  podium: 'A podium level. No residences on this level.',
+  service: 'A service floor. No residences on this level.',
   terrace: 'The terrace, above the residences.',
 }
 const DEFAULT_FLOOR = '_17th'
@@ -33,13 +35,13 @@ const TOWER_TURN = [-TOWER_FRAMES.length / 2, TOWER_FRAMES.length / 2]
 
 // The reference's paper sidebar and layout table, with the tower in the middle. Clicking
 // a floor on the tower opens the plan page: a big plan, a small residence list on its
-// left, and the floor plan / isometric switch underneath - all on the same beige ground.
+// left, and the isometric / floor plan switch underneath - all on the same beige ground.
 function FloorPlans({ onClose }) {
   const floors = TOWER_FLOORS
   const [selectedFloor, setSelectedFloor] = useState(DEFAULT_FLOOR)
   const [hoveredFloor, setHoveredFloor] = useState(null)
   const [unitId, setUnitId] = useState(UNITS.find((u) => u.iso)?.id ?? UNITS[0].id)
-  const [planView, setPlanView] = useState('2d') // '2d' (floor plan) or 'iso' (isometric)
+  const [planView, setPlanView] = useState('iso') // 'iso' (isometric) or '2d' (floor plan)
   const [zoomOpen, setZoomOpen] = useState(false)
   const rootRef = useRef(null)
   const zoomRef = useRef(null)
@@ -86,7 +88,8 @@ function FloorPlans({ onClose }) {
   const openFloor = (id) => {
     if (!isResidence(floors.find((f) => f.id === id))) return
     setSelectedFloor(id)
-    setPlanView('2d')
+    // a floor opens on the isometric: it is the view that is ready, and the one to see first
+    setPlanView('iso')
     setZoomOpen(true)
   }
 
@@ -330,12 +333,12 @@ function FloorPlans({ onClose }) {
               </div>
             </aside>
 
-            {/* floor plan / isometric, over the plan at the foot - both fill the screen */}
+            {/* isometric / floor plan, over the plan at the foot - both fill the screen */}
             <div className="relative z-10 flex justify-center pb-[max(1.5rem,var(--safe-b))]">
               <div className="flex items-center gap-1 rounded-full border border-[var(--ink)]/15 bg-[color-mix(in_srgb,var(--cream)_92%,transparent)] p-1">
                 {[
-                  ['2d', 'Floor plan'],
                   ['iso', 'Isometric'],
+                  ['2d', 'Floor plan'],
                 ].map(([v, l]) => (
                   <button
                     key={v}
